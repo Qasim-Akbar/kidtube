@@ -37,3 +37,7 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 ## Dev environment
 - Python 3.10 venv at backend/.venv. Run tests with: cd backend && .venv/bin/pytest
 - Use .venv/bin/alembic for migrations. SQLite in dev/tests, Postgres in production.
+
+- Time: never call datetime.now() directly in app code; use the injectable get_now clock (app/core/clock.py).
+- Everything is scoped by family_id. Another family's rows must return 404, not 403.
+- Run uvicorn with a single worker (in-memory rate limiter).
