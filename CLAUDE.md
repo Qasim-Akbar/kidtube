@@ -33,3 +33,7 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 - Python: type hints, pydantic v2, pure-Python engine modules with unit tests.
 - Never commit secrets; use .env and .env.example.
 - Run tests before saying a task is done. Commit after each task with a clear message.
+
+## Dev environment
+- Python 3.10 venv at backend/.venv. Run tests with: cd backend && .venv/bin/pytest
+- Use .venv/bin/alembic for migrations. SQLite in dev/tests, Postgres in production.
