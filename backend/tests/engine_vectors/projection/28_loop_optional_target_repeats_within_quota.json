@@ -8,6 +8,10 @@
           {
             "item_id": "a",
             "video_id": "va"
+          },
+          {
+            "item_id": "a",
+            "video_id": "va"
           }
         ]
       },
@@ -16,34 +20,24 @@
         "status": "scheduled",
         "views": [
           {
-            "item_id": "b",
-            "video_id": "vb"
+            "item_id": "a",
+            "video_id": "va"
           }
         ]
       },
       {
         "date": "2026-01-07",
         "status": "scheduled",
-        "views": [
-          {
-            "item_id": "c",
-            "video_id": "vc"
-          }
-        ]
-      },
-      {
-        "date": "2026-01-08",
-        "status": "scheduled",
         "views": []
       }
     ],
     "excluded_unlimited_item_ids": [],
-    "finish_date": "2026-01-07",
+    "finish_date": "2026-01-06",
     "remaining_finite_views": 3,
     "unscheduled_item_ids": []
   },
   "input": {
-    "days": 4,
+    "days": 3,
     "items": [
       {
         "added_on": "2026-01-05",
@@ -53,36 +47,10 @@
         "id": "a",
         "on_miss": "shift",
         "position": 1,
-        "required": true,
-        "status": "active",
-        "video_id": "va",
-        "view_target": null
-      },
-      {
-        "added_on": "2026-01-05",
-        "anchor_date": null,
-        "daily_cap": null,
-        "duration_seconds": null,
-        "id": "b",
-        "on_miss": "shift",
-        "position": 2,
-        "required": true,
-        "status": "active",
-        "video_id": "vb",
-        "view_target": null
-      },
-      {
-        "added_on": "2026-01-05",
-        "anchor_date": null,
-        "daily_cap": null,
-        "duration_seconds": null,
-        "id": "c",
-        "on_miss": "shift",
-        "position": 3,
         "required": false,
         "status": "active",
-        "video_id": "vc",
-        "view_target": 1
+        "video_id": "va",
+        "view_target": 3
       }
     ],
     "plan": {
@@ -90,12 +58,12 @@
       "end_date": null,
       "max_extra_per_day": 1,
       "pace_type": "videos_per_day",
-      "pace_value": 3,
+      "pace_value": 2,
       "start_date": "2026-01-05"
     },
     "seconds": [],
     "today": "2026-01-05",
     "views": []
   },
-  "name": "required_one_per_day_then_optional"
+  "name": "loop_optional_target_repeats_within_quota"
 }

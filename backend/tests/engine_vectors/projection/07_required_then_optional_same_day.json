@@ -1,0 +1,99 @@
+{
+  "expected": {
+    "days": [
+      {
+        "date": "2026-01-05",
+        "status": "scheduled",
+        "views": [
+          {
+            "item_id": "a",
+            "video_id": "va"
+          },
+          {
+            "item_id": "b",
+            "video_id": "vb"
+          },
+          {
+            "item_id": "c",
+            "video_id": "vc"
+          }
+        ]
+      },
+      {
+        "date": "2026-01-06",
+        "status": "scheduled",
+        "views": []
+      },
+      {
+        "date": "2026-01-07",
+        "status": "scheduled",
+        "views": []
+      },
+      {
+        "date": "2026-01-08",
+        "status": "scheduled",
+        "views": []
+      }
+    ],
+    "excluded_unlimited_item_ids": [],
+    "finish_date": "2026-01-05",
+    "remaining_finite_views": 3,
+    "unscheduled_item_ids": []
+  },
+  "input": {
+    "days": 4,
+    "items": [
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "a",
+        "on_miss": "shift",
+        "position": 1,
+        "required": true,
+        "status": "active",
+        "video_id": "va",
+        "view_target": null
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "b",
+        "on_miss": "shift",
+        "position": 2,
+        "required": true,
+        "status": "active",
+        "video_id": "vb",
+        "view_target": null
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "c",
+        "on_miss": "shift",
+        "position": 3,
+        "required": false,
+        "status": "active",
+        "video_id": "vc",
+        "view_target": 1
+      }
+    ],
+    "plan": {
+      "active_weekdays": 127,
+      "end_date": null,
+      "max_extra_per_day": 1,
+      "pace_type": "videos_per_day",
+      "pace_value": 3,
+      "start_date": "2026-01-05"
+    },
+    "seconds": [],
+    "today": "2026-01-05",
+    "views": []
+  },
+  "name": "required_then_optional_same_day"
+}

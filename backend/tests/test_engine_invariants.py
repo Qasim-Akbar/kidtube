@@ -99,20 +99,32 @@ def test_projection_invariants(seed: int) -> None:
     sim_items = [i for i in c["items"] if not is_unlimited(i)]
     assert set(p.excluded_unlimited_item_ids) == {i.id for i in c["items"] if is_unlimited(i)}
 
-    if p.days:  # day 0 is exactly the feed (over the finite items), catch-up included
+    if p.days:  # the FIRST offered step of day 0 is exactly build_feed (finite items only); day 0 views start with it
         feed = build_feed(plan, sim_items, c["views"], c["seconds"], [], ChildLimits(), c["today"])
-        assert [(v.item_id, v.video_id) for v in p.days[0].views] == [(f.item_id, f.video_id) for f in feed.items]
+        first = [(f.item_id, f.video_id) for f in feed.items]
+        assert [(v.item_id, v.video_id) for v in p.days[0].views][: len(first)] == first
+        if not first:
+            assert p.days[0].views == ()  # an empty first step ends the day
+        if plan.pace_type == "videos_per_day" and feed.status not in ("outside_dates", "day_off"):
+            assert len(p.days[0].views) <= feed.remaining_videos  # the loop never exceeds the day's quota
     by_id = {i.id: i for i in c["items"]}
     for n, d in enumerate(p.days):
         if d.status != "scheduled":
             assert d.views == ()
         ids = [v.item_id for v in d.views]
-        assert len(ids) == len(set(ids))
+        assert all(i in by_id and not is_unlimited(by_id[i]) for i in ids)
         if plan.pace_type == "videos_per_day":
             cap = plan.pace_value + plan.max_extra_per_day if n == 0 else plan.pace_value
             assert len(d.views) <= cap
-        elif n > 0 and d.views:  # a video may only be started while time remains
+        elif n > 0 and d.views:  # a video may only be started while time remains (summed across loop steps)
             assert sum((by_id[i].duration_seconds or 300) for i in ids[:-1]) < plan.pace_value * 60
+        for i in set(ids):  # per-item daily_cap holds across the whole day's loop (later days start from zero views)
+            cap_i = by_id[i].daily_cap
+            if cap_i is not None and n > 0:
+                assert ids.count(i) <= cap_i
+    for d in p.days:  # eligible required items only shrink within a day, so required views always come first
+        flags = [by_id[v.item_id].required for v in d.views]
+        assert flags == sorted(flags, reverse=True)
     if p.finish_date is not None:
         assert p.unscheduled_item_ids == ()
     assert p.remaining_finite_views >= 0
