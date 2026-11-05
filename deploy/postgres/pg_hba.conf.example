@@ -1,0 +1,15 @@
+# Reference for /etc/postgresql/<major>/main/pg_hba.conf. The Ubuntu / PGDG default already looks like this; the point is
+# that NO line may use `trust`, `password` or `md5`, and nothing may allow a non-loopback address.
+#
+# TYPE  DATABASE  USER      ADDRESS         METHOD
+local   all       postgres                  peer            # `sudo -u postgres psql`, backups
+local   all       all                       peer            # same-name OS users over the unix socket
+host    kidtube   kidtube   127.0.0.1/32    scram-sha-256   # the app, over TCP on localhost
+host    kidtube   kidtube   ::1/128         scram-sha-256
+# Everything else is rejected because no other line matches.
+#
+# After editing:   sudo systemctl reload postgresql
+# Check what is active (no line may say trust / md5 / a public address):
+#   sudo -u postgres psql -c "select line_number, type, database, user_name, address, auth_method from pg_hba_file_rules"
+# Check nothing listens publicly (only 127.0.0.1 and ::1 on 5432):
+#   sudo ss -ltnp | grep 5432

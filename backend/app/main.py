@@ -21,7 +21,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         yield
         http_client.close()
 
-    app = FastAPI(title="KidTube", lifespan=lifespan)
+    docs = settings.docs_enabled
+    app = FastAPI(
+        title="KidTube", lifespan=lifespan,
+        docs_url="/docs" if docs else None, redoc_url="/redoc" if docs else None,
+        openapi_url="/openapi.json" if docs else None,  # also hides the schema, which lists every route
+    )
     app.state.http_client = http_client
     app.state.settings = settings
     app.state.pair_limiter = FailureLimiter(

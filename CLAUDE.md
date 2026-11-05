@@ -46,11 +46,14 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 - Time: never call datetime.now() directly in app code; use the injectable get_now clock (app/core/clock.py).
 - Everything is scoped by family_id. Another family's rows must return 404, not 403.
 - Run uvicorn with a single worker (in-memory rate limiter).
+- Production (Ubuntu VPS, no Docker): see DEPLOY.md; files in deploy/ (systemd unit, nginx, deploy.sh, backups, ufw).
+  deploy/constraints.txt pins dependencies (tested on Python 3.12). Interactive docs are off unless APP_ENV=dev.
+  New top-level API routes must also be added to the path list in deploy/nginx/kidtube.conf.
 
 
 ## Status
 Done (backend): scaffold, models + migrations, auth, children, devices/pairing, login rate limit,
 videos + oEmbed, pure plan engine (+ JSON vectors), plan/events/feed/projection endpoints,
 sync (snapshot pull with ETag, combined push), per-child reports.
-Next: deployment, then Android.
+Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS). Next: Android.
 Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic migrations.

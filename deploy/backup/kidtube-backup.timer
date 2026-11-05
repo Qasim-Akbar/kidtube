@@ -1,0 +1,13 @@
+# /etc/systemd/system/kidtube-backup.timer  (enabled by deploy/deploy.sh)
+[Unit]
+Description=Daily KidTube PostgreSQL backup
+
+[Timer]
+# Server local time. Persistent: if the VPS was off at 03:15, it runs at the next boot.
+OnCalendar=*-*-* 03:15:00
+RandomizedDelaySec=10min
+Persistent=true
+Unit=kidtube-backup.service
+
+[Install]
+WantedBy=timers.target

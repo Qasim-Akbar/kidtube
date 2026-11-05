@@ -247,6 +247,8 @@ All routes are scoped by `family_id`: another family's child, plan, item or vide
 - Only recognised URL patterns are accepted, so the backend is not an open "save any URL" endpoint.
 - Device tokens are scoped and revocable. Kid devices cannot reach parent endpoints.
 - Collect minimal child data (name, avatar, usage). No third-party analytics SDKs.
+- The interactive API docs and schema (`/docs`, `/redoc`, `/openapi.json`) are served only when `APP_ENV=dev` (or `ENABLE_DOCS=true`); nginx also forwards only the known API paths.
+- Production runs on one VPS without Docker: nginx, one uvicorn worker (the rate limiter is in memory), local PostgreSQL, systemd, nightly `pg_dump`. See `DEPLOY.md` and `deploy/`.
 
 ## 14. Reports
 

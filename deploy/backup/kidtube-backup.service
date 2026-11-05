@@ -1,0 +1,27 @@
+# /etc/systemd/system/kidtube-backup.service  (installed by deploy/deploy.sh; run by kidtube-backup.timer)
+[Unit]
+Description=KidTube PostgreSQL backup (pg_dump, custom format)
+After=postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=oneshot
+User=postgres
+Group=postgres
+ExecStart=/usr/local/sbin/kidtube-backup
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/backups/kidtube
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+# unix socket to PostgreSQL only; no network needed
+RestrictAddressFamilies=AF_UNIX
+UMask=0077

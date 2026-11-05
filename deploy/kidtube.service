@@ -1,0 +1,73 @@
+# /etc/systemd/system/kidtube.service  (installed by deploy/deploy.sh)
+[Unit]
+Description=KidTube API (FastAPI / uvicorn)
+After=network-online.target postgresql.service
+Wants=network-online.target postgresql.service
+# Give up after 5 crashes in a minute instead of restarting forever; `systemctl reset-failed kidtube` to retry.
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=kidtube
+Group=kidtube
+# No .env file lives here: all settings come from the EnvironmentFile below.
+WorkingDirectory=/opt/kidtube
+EnvironmentFile=/etc/kidtube/kidtube.env
+Environment=PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+
+# EXACTLY ONE WORKER. The login / pairing rate limiters (app/core/ratelimit.py) keep their failure counters in this
+# process's memory. With --workers 2 every worker would count separately, so an attacker would get N times as many
+# guesses, and which worker answers would decide whether a lockout applies. Do not add --workers, do not switch to
+# gunicorn with several workers, and do not run a second instance, unless the limiter is moved to a shared store first.
+#
+# --no-proxy-headers: uvicorn must NOT rewrite the client address or scheme from X-Forwarded-* headers. The app does that
+# itself, and only when TRUST_PROXY_HEADERS=true (see DEPLOY.md, "Proxy headers"), so there is one switch, not two.
+ExecStart=/opt/kidtube/venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 --port 8000 \
+    --workers 1 \
+    --no-proxy-headers \
+    --no-server-header \
+    --no-access-log \
+    --log-level info
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+
+# ---- hardening -------------------------------------------------------------------------------------------------
+# The app writes nothing to disk (PostgreSQL holds all data, logs go to the journal), so there is no ReadWritePaths.
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RemoveIPC=yes
+# TCP to localhost PostgreSQL and to youtube.com (oEmbed), plus the PostgreSQL unix socket.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+UMask=0077
+# Memory ceiling for the whole service; adjust to the VPS. The app itself needs well under 200 MB.
+MemoryMax=512M
+TasksMax=256
+LimitNOFILE=4096
+# MemoryDenyWriteExecute=yes is deliberately NOT set: it can break CPython extensions that use libffi (argon2 / cffi).
+# Try it on a staging box and check `systemctl status kidtube` before enabling it.
+
+[Install]
+WantedBy=multi-user.target

@@ -22,8 +22,14 @@ class Settings(BaseSettings):
     login_max_failures: int = 5
     login_failure_window_minutes: int = 10
     trust_proxy_headers: bool = False
+    # Interactive API docs (/docs, /redoc, /openapi.json). Unset = on only when APP_ENV is 'dev'.
+    enable_docs: bool | None = None
     # Events older than this many days (family-local) are rejected; wide enough for a device offline on a trip.
     event_max_age_days: int = Field(default=30, ge=1, le=365)
+
+    @property
+    def docs_enabled(self) -> bool:
+        return self.app_env == "dev" if self.enable_docs is None else self.enable_docs
 
 
 def validate_settings(settings: Settings) -> None:
