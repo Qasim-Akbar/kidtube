@@ -10,6 +10,7 @@ from app.models.base import Base, Timestamps, UUIDPk
 if TYPE_CHECKING:
     from app.models.child import Child
     from app.models.device import Device
+    from app.models.pairing_code import PairingCode
     from app.models.parent import Parent
     from app.models.video import Video
 
@@ -26,3 +27,4 @@ class Family(UUIDPk, Timestamps, Base):
     children: Mapped[list[Child]] = relationship(back_populates="family", **_CASCADE)
     devices: Mapped[list[Device]] = relationship(back_populates="family", **_CASCADE)
     videos: Mapped[list[Video]] = relationship(back_populates="family", **_CASCADE)
+    pairing_codes: Mapped[list[PairingCode]] = relationship(**_CASCADE)

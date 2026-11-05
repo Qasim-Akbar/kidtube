@@ -89,6 +89,7 @@ All primary keys are UUIDs. Events carry a client-generated UUID for idempotency
 - **Parent**: id, family_id, email, password_hash
 - **Child**: id, family_id, name, avatar, daily_app_minutes (nullable)
 - **Device**: id, family_id, name, role (`parent` | `kid`), token_hash, paired_at, revoked_at
+- **PairingCode**: id, family_id, created_by (parent, nullable), code_hash (keyed hash of the 6-digit code; the code itself is never stored), expires_at (10 min), used_at (single use), created_at
 - **Video**: id, family_id, platform (`youtube` | `facebook`), platform_video_id, url, title, thumbnail_url, duration_seconds, status (`pending` | `verified` | `unavailable`), added_by, added_at
 - **Plan**: id, child_id, pace_type (`videos_per_day` | `minutes_per_day`), pace_value, active_weekdays (bitmask or list), max_extra_per_day (catch-up cap, default 1), start_date, end_date (nullable), version
 - **PlanItem**: id, plan_id, video_id, position, required (bool), view_target (nullable = unlimited), daily_cap (nullable), watch_threshold (default 0.9), anchor_date (nullable), on_miss (`shift` | `skip` | `drop`, default `shift`), status (`active` | `completed` | `dropped`)
@@ -161,6 +162,7 @@ GET    /children/{id}/plan       PUT  /children/{id}/plan
 POST   /children/{id}/plan/items PATCH/DELETE /plan-items/{id}
 GET    /children/{id}/feed       GET  /children/{id}/projection?from=&days=
 POST   /devices/pair-code        POST /devices/pair         POST /devices/{id}/revoke
+GET    /devices
 POST   /sync/push                GET  /sync/pull
 GET    /reports/children/{id}?range=day|week|month
 GET    /health
