@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KidTube</string>
+    <string name="setup_title">Set up this device</string>
+    <string name="setup_prompt">Who will use this device?</string>
+    <string name="setup_role_parent">Parent</string>
+    <string name="setup_role_parent_desc">Manage videos, plans and reports</string>
+    <string name="setup_role_kid">Kid device</string>
+    <string name="setup_role_kid_desc">Watch what the plan allows</string>
+    <string name="setup_continue">Continue</string>
+    <string name="parent_home_title">Parent home</string>
+    <string name="parent_home_placeholder">Library, children, plans and reports will appear here.</string>
+    <string name="kid_picker_title">Who\'s watching?</string>
+    <string name="kid_picker_placeholder">Child profiles will appear here.</string>
+</resources>

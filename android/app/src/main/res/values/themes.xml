@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose draws everything; this only themes the window before the first frame.
+         System bar icon colours are handled by enableEdgeToEdge() in MainActivity. -->
+    <style name="Theme.KidTube" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

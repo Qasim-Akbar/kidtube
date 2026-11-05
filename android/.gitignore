@@ -1,0 +1,27 @@
+# Gradle / build output
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Machine-specific
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Signing material: never commit
+*.keystore
+*.jks
+keystore.properties
+
+# IDE: ignore everything in .idea except shared run configurations
+.idea/*
+!.idea/runConfigurations/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kotlin compiler sessions
+.kotlin/

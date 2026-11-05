@@ -55,5 +55,25 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 Done (backend): scaffold, models + migrations, auth, children, devices/pairing, login rate limit,
 videos + oEmbed, pure plan engine (+ JSON vectors), plan/events/feed/projection endpoints,
 sync (snapshot pull with ETag, combined push), per-child reports.
-Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS). Next: Android.
+Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS).
+Done (android): project skeleton only (build setup, Hilt/Room/Retrofit wiring, placeholder screens).
+Next: Android MVP (PIN, share target, outbox).
 Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic migrations.
+
+## Android (android/)
+- Stack: Kotlin 2.4, Jetpack Compose + Material 3, single module `app`, Gradle Kotlin DSL + version catalog
+  (`android/gradle/libs.versions.toml`), AGP 9.5 on Gradle 9.8.2, KSP (not kapt), Hilt, Room, WorkManager,
+  Retrofit + kotlinx.serialization + OkHttp, DataStore. minSdk 26, compile/target 37. java.time via core library desugaring.
+  `androidx.security:security-crypto` is deprecated: the PIN uses the Keystore AES-GCM wrapper in `core/KeystoreCipher`.
+  android-youtube-player is added later (player task), not yet.
+- Packages under `com.bbro.kidtube`: core, data, data.remote, sync, engine, player, ui.setup, ui.parent, ui.kid,
+  ui.nav, ui.theme, di. Single Activity + NavHost.
+- Clock rule: never call System.currentTimeMillis / Instant.now / LocalDate.now (etc.) in app code. Inject
+  `core.Clock` (the real impl `DeviceClock` is the only exception). `ClockRuleTest` scans src/main|debug|release and fails on violations.
+- Engine semantics live in docs/SPEC.md section 7; the Kotlin engine (package `engine`) must pass every case in
+  backend/tests/engine_vectors (feed/*.json, projection/*.json) exactly.
+- Run checks: `cd android && ./gradlew assembleDebug testDebugUnitTest lintDebug` (Git Bash; `gradlew.bat` on cmd/PowerShell).
+  Needs the Android SDK (platform 37): `sdk.dir` in android/local.properties (git-ignored) or ANDROID_HOME. See android/README.md.
+- Release builds read the backend URL from Gradle property `KIDTUBE_API_BASE_URL` (never in source); they fail while it is
+  missing, CHANGE-ME or not https. Debug uses http://10.0.2.2:8000/ with cleartext allowed to 10.0.2.2 only.
+- android:allowBackup=false and backup/extraction rules exclude databases, prefs and files (PIN blobs). No analytics/ad SDKs.
