@@ -1,0 +1,67 @@
+{
+  "expected": {
+    "backlog": 0,
+    "dropped_item_ids": [],
+    "items": [
+      {
+        "item_id": "b",
+        "locked": false,
+        "required": false,
+        "video_id": "vb"
+      }
+    ],
+    "quota_today": 1,
+    "remaining_seconds": null,
+    "remaining_videos": 1,
+    "skipped_item_ids": [],
+    "status": "ok",
+    "views_today": 0
+  },
+  "input": {
+    "app_seconds": [],
+    "items": [
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "a",
+        "on_miss": "shift",
+        "position": 1,
+        "required": false,
+        "status": "active",
+        "video_id": "va",
+        "view_target": null
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": "2026-01-05",
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "b",
+        "on_miss": "shift",
+        "position": 2,
+        "required": false,
+        "status": "active",
+        "video_id": "vb",
+        "view_target": null
+      }
+    ],
+    "limits": {
+      "app_time_extra_seconds": 0,
+      "daily_app_minutes": null
+    },
+    "plan": {
+      "active_weekdays": 127,
+      "end_date": null,
+      "max_extra_per_day": 1,
+      "pace_type": "videos_per_day",
+      "pace_value": 1,
+      "start_date": "2026-01-05"
+    },
+    "seconds": [],
+    "today": "2026-01-05",
+    "views": []
+  },
+  "name": "anchor_today_sorted_first"
+}

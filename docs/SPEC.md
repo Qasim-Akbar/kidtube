@@ -125,6 +125,23 @@ Also apply the child's optional **daily app-time limit**: when reached, show a "
 - Opening a video and leaving does not use up a view.
 - Parent can override the threshold per item.
 
+### Engine semantics (canonical)
+
+Implemented in `backend/app/engine` (pure: frozen dataclasses, no DB/ORM/clock/timezones; the caller passes the child's local `today`). Weekday: Monday=0..Sunday=6, mask bit `1 << weekday`. Ordering is always `(anchored-today first, position, id)`. Entry points: `build_feed(plan, items, views, seconds, app_seconds, limits, today, default_duration_seconds=300)` and `project(plan, items, views, seconds, today, days, default_duration_seconds=300)`.
+
+1. **Views.** `views_total` / `views_today` per item count `ViewRecord`s (one per `view_complete` event). Records for unknown item ids are ignored, and so are records dated after `today` (clock skew must not complete items early). The client decides when a view happened; the 90% rule is not re-checked here.
+2. **Completion.** Finite target `N = view_target`; a REQUIRED item with no `view_target` has `N = 1`. An OPTIONAL item with no `view_target` is unlimited and never completes. Complete when `views_total >= N`. Items with status `completed`/`dropped` never appear.
+3. **Active day.** `start_date <= today <= end_date` (if set) and the weekday bit is set. Days off are not misses.
+4. **Quota.** Videos mode: `quota_today = pace_value + extra`, `extra = min(backlog, max_extra_per_day)`. `backlog = max(0, expected - done)` over the 14 calendar days before today, clipped to start at `max(start_date, earliest added_on of non-dropped items)`; `expected = pace_value * (active days in window)`, `done` = view records in the window. Minutes mode: the same in seconds (`pace_value*60` per active day, `done` = watch-seconds records), and `max_extra_per_day` is interpreted as **minutes** (`extra_seconds = min(backlog, max_extra_per_day*60)`). `quota_today` and `backlog` are in videos (videos mode) or seconds (minutes mode). The model default `max_extra_per_day = 1` is therefore only one minute of catch-up in minutes mode; the API layer should default it to `pace_value` when creating a minutes plan. Remaining today: videos mode `remaining_videos = max(0, quota - views today across all items)`; minutes mode `remaining_seconds = max(0, quota_seconds - seconds watched today)` (views do not consume a minutes quota; a video may be started while `remaining_seconds > 0` and may overrun).
+5. **App-time limit.** If `daily_app_minutes` is set and today's app seconds `>= daily_app_minutes*60 + app_time_extra_seconds`, status is `time_up`.
+6. **Eligible today.** Status `active`, not complete, `views_today < daily_cap` (if set), and anchors: `anchor_date > today` is not yet eligible; `== today` is eligible and sorted before non-anchored items; `< today` and incomplete applies `on_miss`: `shift` = ordinary queue item, `skip` = excluded and listed in `skipped_item_ids`, `drop` = excluded and listed in `dropped_item_ids`.
+7. **Required-first.** If remaining quota > 0 and any eligible item is required, the feed is ONLY the first such item with `locked=true`. Required items consume quota (they do not bypass the pace). A required item whose `daily_cap` is reached today is not eligible and does not block the others.
+8. **Optional items.** Eligible non-required items, each at most once. Videos mode: at most `remaining_videos` items. Minutes mode: keep adding while the accumulated duration before adding `< remaining_seconds` (duration `null` = `default_duration_seconds`).
+9. **Status precedence.** `outside_dates`, `day_off`, `empty` (no non-dropped items), `all_done` (no active item is still pending: every finite item complete, no unlimited items, nothing anchored in the future), `time_up`, `done_today` (quota exhausted or nothing eligible), `ok`. For `outside_dates`/`day_off`, `quota_today` and `backlog` are 0.
+10. **FeedResult.** `status, items[{item_id, video_id, locked, required}], quota_today, views_today, remaining_videos|null, remaining_seconds|null, backlog, skipped_item_ids, dropped_item_ids`.
+
+**Projection** simulates day offsets 0..90 assuming every offered view is completed. Offset 0 is exactly `build_feed` (catch-up included, app-time limit ignored); later days use the base pace with no catch-up. Each day evaluates the feed once (no re-query after a completion), so with required items the projection schedules one required view per day, which is pessimistic when `pace > 1`. Unlimited optional items are excluded from every day, including day 0, and listed in `excluded_unlimited_item_ids`. `days` only truncates the output (0..91 entries); `finish_date` is the date of the last scheduled view once every finite item is complete within the horizon, else `null` (also `null` when nothing is scheduled). `remaining_finite_views` is the finite views still owed as of today; `unscheduled_item_ids` are finite items still incomplete at the end of the horizon.
+
 ## 8. Tracking
 
 - **Watch time:** with the YouTube IFrame Player API (via the `android-youtube-player` library), accumulate seconds only while the player state is *playing*. Handle seeking (don't count skipped time as watched).
@@ -226,7 +243,7 @@ backend/
 ## 16. Testing
 
 - Engine: pytest cases for missed days shifting the queue, weekends off, catch-up cap, required-first locking, daily_cap, view_target, 90% completion, anchored items (shift/skip/drop), time budget, and two children with separate plans.
-- Shared **test vectors** (JSON) used by both Python and Kotlin engine tests, so the two stay identical.
+- Shared **test vectors** (JSON) used by both Python and Kotlin engine tests, so the two stay identical. Files live in `backend/tests/engine_vectors/feed/*.json` and `projection/*.json`, each `{"name", "input", "expected"}`. Feed `input`: `{plan, items, views, seconds, app_seconds, limits, today, default_duration_seconds?}`, `expected`: a `FeedResult` dict. Projection `input`: `{plan, items, views, seconds, today, days, default_duration_seconds?}`, `expected`: a `Projection` dict. Dates are `YYYY-MM-DD` strings; expected values are written by hand, not generated from engine output. The Python runner is `app.engine.run_feed` / `run_projection`; the Kotlin port must reproduce every `expected` exactly.
 - Sync: duplicate pushes, out-of-order events, offline then reconnect.
 - Auth: device token scope enforcement.
 - oEmbed: mocked HTTP, SSRF guard cases.

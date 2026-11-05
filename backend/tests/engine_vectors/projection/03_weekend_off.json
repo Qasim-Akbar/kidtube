@@ -1,0 +1,88 @@
+{
+  "expected": {
+    "days": [
+      {
+        "date": "2026-01-09",
+        "status": "scheduled",
+        "views": [
+          {
+            "item_id": "a",
+            "video_id": "va"
+          }
+        ]
+      },
+      {
+        "date": "2026-01-10",
+        "status": "day_off",
+        "views": []
+      },
+      {
+        "date": "2026-01-11",
+        "status": "day_off",
+        "views": []
+      },
+      {
+        "date": "2026-01-12",
+        "status": "scheduled",
+        "views": [
+          {
+            "item_id": "b",
+            "video_id": "vb"
+          }
+        ]
+      },
+      {
+        "date": "2026-01-13",
+        "status": "scheduled",
+        "views": []
+      }
+    ],
+    "excluded_unlimited_item_ids": [],
+    "finish_date": "2026-01-12",
+    "remaining_finite_views": 2,
+    "unscheduled_item_ids": []
+  },
+  "input": {
+    "days": 5,
+    "items": [
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "a",
+        "on_miss": "shift",
+        "position": 1,
+        "required": false,
+        "status": "active",
+        "video_id": "va",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "b",
+        "on_miss": "shift",
+        "position": 2,
+        "required": false,
+        "status": "active",
+        "video_id": "vb",
+        "view_target": 1
+      }
+    ],
+    "plan": {
+      "active_weekdays": 31,
+      "end_date": null,
+      "max_extra_per_day": 1,
+      "pace_type": "videos_per_day",
+      "pace_value": 1,
+      "start_date": "2026-01-09"
+    },
+    "seconds": [],
+    "today": "2026-01-09",
+    "views": []
+  },
+  "name": "weekend_off"
+}

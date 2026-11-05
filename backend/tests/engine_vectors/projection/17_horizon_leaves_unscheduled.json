@@ -1,0 +1,235 @@
+{
+  "expected": {
+    "days": [
+      {
+        "date": "2026-01-05",
+        "status": "scheduled",
+        "views": [
+          {
+            "item_id": "i01",
+            "video_id": "vi01"
+          }
+        ]
+      }
+    ],
+    "excluded_unlimited_item_ids": [],
+    "finish_date": null,
+    "remaining_finite_views": 15,
+    "unscheduled_item_ids": [
+      "i14",
+      "i15"
+    ]
+  },
+  "input": {
+    "days": 1,
+    "items": [
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i01",
+        "on_miss": "shift",
+        "position": 1,
+        "required": false,
+        "status": "active",
+        "video_id": "vi01",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i02",
+        "on_miss": "shift",
+        "position": 2,
+        "required": false,
+        "status": "active",
+        "video_id": "vi02",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i03",
+        "on_miss": "shift",
+        "position": 3,
+        "required": false,
+        "status": "active",
+        "video_id": "vi03",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i04",
+        "on_miss": "shift",
+        "position": 4,
+        "required": false,
+        "status": "active",
+        "video_id": "vi04",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i05",
+        "on_miss": "shift",
+        "position": 5,
+        "required": false,
+        "status": "active",
+        "video_id": "vi05",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i06",
+        "on_miss": "shift",
+        "position": 6,
+        "required": false,
+        "status": "active",
+        "video_id": "vi06",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i07",
+        "on_miss": "shift",
+        "position": 7,
+        "required": false,
+        "status": "active",
+        "video_id": "vi07",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i08",
+        "on_miss": "shift",
+        "position": 8,
+        "required": false,
+        "status": "active",
+        "video_id": "vi08",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i09",
+        "on_miss": "shift",
+        "position": 9,
+        "required": false,
+        "status": "active",
+        "video_id": "vi09",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i10",
+        "on_miss": "shift",
+        "position": 10,
+        "required": false,
+        "status": "active",
+        "video_id": "vi10",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i11",
+        "on_miss": "shift",
+        "position": 11,
+        "required": false,
+        "status": "active",
+        "video_id": "vi11",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i12",
+        "on_miss": "shift",
+        "position": 12,
+        "required": false,
+        "status": "active",
+        "video_id": "vi12",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i13",
+        "on_miss": "shift",
+        "position": 13,
+        "required": false,
+        "status": "active",
+        "video_id": "vi13",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i14",
+        "on_miss": "shift",
+        "position": 14,
+        "required": false,
+        "status": "active",
+        "video_id": "vi14",
+        "view_target": 1
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "i15",
+        "on_miss": "shift",
+        "position": 15,
+        "required": false,
+        "status": "active",
+        "video_id": "vi15",
+        "view_target": 1
+      }
+    ],
+    "plan": {
+      "active_weekdays": 1,
+      "end_date": null,
+      "max_extra_per_day": 1,
+      "pace_type": "videos_per_day",
+      "pace_value": 1,
+      "start_date": "2026-01-05"
+    },
+    "seconds": [],
+    "today": "2026-01-05",
+    "views": []
+  },
+  "name": "horizon_leaves_unscheduled"
+}

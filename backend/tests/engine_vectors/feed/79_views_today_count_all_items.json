@@ -1,0 +1,85 @@
+{
+  "expected": {
+    "backlog": 0,
+    "dropped_item_ids": [],
+    "items": [
+      {
+        "item_id": "a",
+        "locked": false,
+        "required": false,
+        "video_id": "va"
+      }
+    ],
+    "quota_today": 2,
+    "remaining_seconds": null,
+    "remaining_videos": 1,
+    "skipped_item_ids": [],
+    "status": "ok",
+    "views_today": 1
+  },
+  "input": {
+    "app_seconds": [],
+    "items": [
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "a",
+        "on_miss": "shift",
+        "position": 1,
+        "required": false,
+        "status": "active",
+        "video_id": "va",
+        "view_target": 3
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "b",
+        "on_miss": "shift",
+        "position": 2,
+        "required": false,
+        "status": "active",
+        "video_id": "vb",
+        "view_target": 3
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "duration_seconds": null,
+        "id": "c",
+        "on_miss": "shift",
+        "position": 3,
+        "required": false,
+        "status": "active",
+        "video_id": "vc",
+        "view_target": null
+      }
+    ],
+    "limits": {
+      "app_time_extra_seconds": 0,
+      "daily_app_minutes": null
+    },
+    "plan": {
+      "active_weekdays": 127,
+      "end_date": null,
+      "max_extra_per_day": 1,
+      "pace_type": "videos_per_day",
+      "pace_value": 2,
+      "start_date": "2026-01-05"
+    },
+    "seconds": [],
+    "today": "2026-01-05",
+    "views": [
+      {
+        "item_id": "b",
+        "local_date": "2026-01-05"
+      }
+    ]
+  },
+  "name": "views_today_count_all_items"
+}

@@ -33,6 +33,7 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 - Python: type hints, pydantic v2, pure-Python engine modules with unit tests.
 - Never commit secrets; use .env and .env.example.
 - Run tests before saying a task is done. Commit after each task with a clear message.
+- Engine semantics live in docs/SPEC.md section 7; backend/tests/engine_vectors is the contract with the Kotlin port.
 
 ## Dev environment
 - Python 3.10 venv at backend/.venv. Run tests with: cd backend && .venv/bin/pytest

@@ -1,0 +1,33 @@
+{
+  "expected": {
+    "backlog": 0,
+    "dropped_item_ids": [],
+    "items": [],
+    "quota_today": 1,
+    "remaining_seconds": null,
+    "remaining_videos": 1,
+    "skipped_item_ids": [],
+    "status": "empty",
+    "views_today": 0
+  },
+  "input": {
+    "app_seconds": [],
+    "items": [],
+    "limits": {
+      "app_time_extra_seconds": 0,
+      "daily_app_minutes": null
+    },
+    "plan": {
+      "active_weekdays": 127,
+      "end_date": null,
+      "max_extra_per_day": 1,
+      "pace_type": "videos_per_day",
+      "pace_value": 1,
+      "start_date": "2026-01-05"
+    },
+    "seconds": [],
+    "today": "2026-01-05",
+    "views": []
+  },
+  "name": "empty_no_items"
+}
