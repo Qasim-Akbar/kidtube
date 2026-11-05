@@ -7,9 +7,7 @@ from sqlalchemy import DateTime, Enum, Uuid
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.types import TypeDecorator
 
-
-def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from app.core.clock import now as utcnow  # model defaults share the one clock (no direct datetime.now)
 
 
 class UTCDateTime(TypeDecorator):

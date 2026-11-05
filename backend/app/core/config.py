@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     pair_code_minutes: int = 10
     pair_max_failures: int = 5
     pair_failure_window_minutes: int = 10
+    login_max_failures: int = 5
+    login_failure_window_minutes: int = 10
     trust_proxy_headers: bool = False
 
 

@@ -15,6 +15,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.pair_limiter = FailureLimiter(
         settings.pair_max_failures, timedelta(minutes=settings.pair_failure_window_minutes)
     )
+    login_window = timedelta(minutes=settings.login_failure_window_minutes)
+    app.state.login_ip_limiter = FailureLimiter(settings.login_max_failures, login_window)
+    app.state.login_email_limiter = FailureLimiter(settings.login_max_failures, login_window)
     app.include_router(api_router)
     return app
 

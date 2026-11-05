@@ -6,8 +6,9 @@ from threading import Lock
 class FailureLimiter:
     """In-memory sliding-window limiter on failed attempts per key (single process only)."""
 
-    def __init__(self, max_failures: int, window: timedelta) -> None:
+    def __init__(self, max_failures: int, window: timedelta, max_keys: int = 10_000) -> None:
         self.max_failures = max_failures
+        self.max_keys = max_keys
         self.window = window
         self._failures: dict[str, list[datetime]] = {}
         self._lock = Lock()
@@ -28,8 +29,14 @@ class FailureLimiter:
                 return None
             return max(1, math.ceil((recent[0] + self.window - now).total_seconds()))
 
+    def _sweep(self, now: datetime) -> None:
+        for key in list(self._failures):
+            self._prune(key, now)
+
     def record_failure(self, key: str, now: datetime) -> None:
         with self._lock:
+            if len(self._failures) >= self.max_keys:  # bound memory against floods of distinct keys
+                self._sweep(now)
             self._prune(key, now)
             self._failures.setdefault(key, []).append(now)
 

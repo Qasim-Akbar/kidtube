@@ -16,12 +16,22 @@ from app.models import Device, Parent
 _bearer = HTTPBearer(auto_error=False)
 
 
+@dataclass(frozen=True)
+class LoginLimiters:
+    by_ip: FailureLimiter
+    by_email: FailureLimiter
+
+
 def get_app_settings(request: Request) -> Settings:
     return request.app.state.settings
 
 
 def get_pair_limiter(request: Request) -> FailureLimiter:
     return request.app.state.pair_limiter
+
+
+def get_login_limiters(request: Request) -> "LoginLimiters":
+    return LoginLimiters(request.app.state.login_ip_limiter, request.app.state.login_email_limiter)
 
 
 def client_ip(request: Request, settings: Settings) -> str:
