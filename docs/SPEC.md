@@ -158,6 +158,7 @@ Also apply the child's optional **daily app-time limit**: when reached, show a "
 POST   /auth/register            POST /auth/login           POST /auth/refresh
 POST   /children                 GET  /children             PATCH /children/{id}
 POST   /videos                   GET  /videos               DELETE /videos/{id}
+POST   /videos/{id}/reverify
 GET    /children/{id}/plan       PUT  /children/{id}/plan
 POST   /children/{id}/plan/items PATCH/DELETE /plan-items/{id}
 GET    /children/{id}/feed       GET  /children/{id}/projection?from=&days=
@@ -169,6 +170,8 @@ GET    /health
 ```
 
 `POST /videos` accepts a URL: validates the pattern, normalises to a platform video ID, dedupes per family, fetches YouTube oEmbed (`youtube.com/oembed?url=...&format=json`), and marks the status.
+
+Details: the body is a single bare URL (surrounding text is rejected). Returns 201 for a new video, or 200 with the existing one when it is a duplicate (so offline sync retries are safe). YouTube is verified via oEmbed (200 `verified`; 401/403/404 `unavailable`; timeout/5xx leave it `pending`). Facebook is not verified and stays `pending` with title "Facebook video". The oEmbed request is built only from the parsed 11-character video ID against the fixed host `www.youtube.com` (no redirects, 5 s timeout, size cap); a user-supplied URL is never fetched. `POST /videos/{id}/reverify` retries verification and never downgrades a status on a transient failure. Facebook short links are stored with a prefixed `platform_video_id` (`fb.watch:<code>`, `share:<code>`) so their namespaces cannot collide with numeric video IDs.
 
 ## 12. Android app
 

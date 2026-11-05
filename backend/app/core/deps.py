@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import dataclass
 
+import httpx
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
@@ -32,6 +33,11 @@ def get_pair_limiter(request: Request) -> FailureLimiter:
 
 def get_login_limiters(request: Request) -> "LoginLimiters":
     return LoginLimiters(request.app.state.login_ip_limiter, request.app.state.login_email_limiter)
+
+
+def get_http_client(request: Request) -> httpx.Client:
+    """Outbound HTTP client (oEmbed). Overridden in tests with an httpx.MockTransport client."""
+    return request.app.state.http_client
 
 
 def client_ip(request: Request, settings: Settings) -> str:
