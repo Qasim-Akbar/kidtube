@@ -1,3 +1,4 @@
+import os
 from collections.abc import Iterator
 from datetime import datetime, timedelta, timezone
 
@@ -5,7 +6,7 @@ import httpx
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, make_url, text
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
@@ -81,8 +82,47 @@ def settings() -> Settings:
     )
 
 
+def _test_database_url() -> str | None:
+    """TEST_DATABASE_URL selects a real database. The fixtures wipe it, so only '*_test' databases are allowed."""
+    url = os.environ.get("TEST_DATABASE_URL")
+    if not url:
+        return None
+    database = make_url(url).database or ""
+    if not database.endswith("_test"):
+        raise pytest.UsageError(
+            f"Refusing to run: TEST_DATABASE_URL database {database!r} does not end with '_test'. "
+            "The test fixtures drop and truncate tables."
+        )
+    return url
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    _test_database_url()  # fail fast, once, with a clear message, before any fixture can touch the database
+
+
+@pytest.fixture(scope="session")
+def _pg_engine() -> Iterator[Engine | None]:
+    """One engine and one schema for the whole session on Postgres (create_all once, truncate per test)."""
+    url = _test_database_url()
+    if url is None:
+        yield None
+        return
+    eng = create_engine(url)
+    Base.metadata.drop_all(eng)
+    Base.metadata.create_all(eng)
+    yield eng
+    Base.metadata.drop_all(eng)
+    eng.dispose()
+
+
 @pytest.fixture
-def engine() -> Iterator[Engine]:
+def engine(_pg_engine: Engine | None) -> Iterator[Engine]:
+    if _pg_engine is not None:
+        names = ", ".join(f'"{t.name}"' for t in Base.metadata.sorted_tables)
+        with _pg_engine.begin() as conn:
+            conn.execute(text(f"TRUNCATE {names} RESTART IDENTITY CASCADE"))
+        yield _pg_engine
+        return
     eng = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     enable_sqlite_fks(eng)
     Base.metadata.create_all(eng)

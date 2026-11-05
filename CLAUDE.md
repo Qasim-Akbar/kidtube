@@ -37,7 +37,11 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 
 ## Dev environment
 - Python 3.10 venv at backend/.venv. Run tests with: cd backend && .venv/bin/pytest
-- Use .venv/bin/alembic for migrations. SQLite in dev/tests, Postgres in production.
+- Use .venv/bin/alembic for migrations. SQLite in dev, Postgres in production.
+- Tests on SQLite (default, in-memory): cd backend && .venv/bin/pytest
+- Tests on Postgres (database name must end in _test; fixtures wipe it):
+  cd backend && TEST_DATABASE_URL=postgresql+psycopg://kidtube_test:test-only-pw@localhost:5432/kidtube_test .venv/bin/pytest
+  Run both before committing.
 
 - Time: never call datetime.now() directly in app code; use the injectable get_now clock (app/core/clock.py).
 - Everything is scoped by family_id. Another family's rows must return 404, not 403.
@@ -49,4 +53,4 @@ Done (backend): scaffold, models + migrations, auth, children, devices/pairing, 
 videos + oEmbed, pure plan engine (+ JSON vectors), plan/events/feed/projection endpoints,
 sync (snapshot pull with ETag, combined push), per-child reports.
 Next: deployment, then Android.
-Migrations are verified on SQLite only; verify on Postgres before deploying.
+Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic migrations.

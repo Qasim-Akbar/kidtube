@@ -266,3 +266,35 @@ def test_parent_access_token_is_required_to_be_an_access_token(client, fam) -> N
 
     refresh = login(client, "a@example.com")["refresh_token"]
     assert post_events(client, bearer(refresh), []).status_code == 401
+
+
+def test_duplicate_in_a_batch_does_not_poison_the_other_events(client, fam, engine) -> None:
+    """On PostgreSQL a failed INSERT aborts the whole transaction unless it is isolated; run on both backends."""
+    c, v = fam["child"], fam["videos"][0]
+    already = view_ev(c, fam["items"][0])
+    assert statuses(post_events(client, fam["h"], [already])) == ["accepted"]
+    fresh = [ev(c, "watch_progress", {"video_id": v, "seconds": n}) for n in (1, 2, 3)]
+    batch = [fresh[0], already, fresh[1], {**fresh[0]}, fresh[2]]  # DB duplicate and in-batch duplicate in between
+    r = post_events(client, fam["h"], batch)
+    assert statuses(r) == ["accepted", "duplicate", "accepted", "duplicate", "accepted"]
+    assert [x["id"] for x in r.json()["results"]] == [e["id"] for e in batch]
+    assert count_events(engine) == 4  # 1 earlier + 3 new, each exactly once
+    with Session(engine) as s:
+        assert {str(i) for i in s.scalars(select(Event.id))} == {e["id"] for e in fresh} | {already["id"]}
+
+
+def test_concurrent_duplicate_hits_the_savepoint_path(client, fam, engine, monkeypatch) -> None:
+    """Simulate losing a race: the pre-check says 'new' but the row already exists, so the INSERT itself fails."""
+    c = fam["child"]
+    first = ev(c, "watch_progress", {"video_id": fam["videos"][0], "seconds": 1})
+    assert statuses(post_events(client, fam["h"], [first])) == ["accepted"]
+    import app.services.events as svc
+
+    real_get = Session.get
+    monkeypatch.setattr(
+        Session, "get", lambda self, entity, ident, *a, **kw: None if entity is svc.Event else real_get(self, entity, ident, *a, **kw)
+    )
+    others = [ev(c, "watch_progress", {"video_id": fam["videos"][0], "seconds": n}) for n in (5, 6)]
+    r = post_events(client, fam["h"], [others[0], first, others[1]])
+    assert statuses(r) == ["accepted", "duplicate", "accepted"]  # the failed INSERT did not abort the transaction
+    assert count_events(engine) == 3

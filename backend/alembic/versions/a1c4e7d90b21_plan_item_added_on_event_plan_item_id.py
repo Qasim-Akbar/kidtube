@@ -16,8 +16,12 @@ def upgrade() -> None:
     with op.batch_alter_table('plan_items', schema=None) as batch_op:
         batch_op.add_column(sa.Column('added_on', sa.Date(), nullable=True))
     # Existing rows: the UTC date of created_at (the family timezone is not available inside a migration).
-    # date(...) exists on both SQLite and PostgreSQL.
-    op.execute("UPDATE plan_items SET added_on = date(created_at)")
+    # On PostgreSQL created_at is timestamptz, and a bare date() would use the server's session timezone, so the
+    # result would depend on server configuration. SQLite stores created_at as UTC text, where date() is already UTC.
+    if op.get_bind().dialect.name == "postgresql":
+        op.execute("UPDATE plan_items SET added_on = (created_at AT TIME ZONE 'UTC')::date")
+    else:
+        op.execute("UPDATE plan_items SET added_on = date(created_at)")
     with op.batch_alter_table('plan_items', schema=None) as batch_op:
         batch_op.alter_column('added_on', existing_type=sa.Date(), nullable=False)
 
