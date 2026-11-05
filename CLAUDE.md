@@ -46,6 +46,7 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 
 ## Status
 Done (backend): scaffold, models + migrations, auth, children, devices/pairing, login rate limit,
-videos + oEmbed, pure plan engine (+ JSON vectors), plan/events/feed/projection endpoints.
-Next: sync snapshot, reports, deployment, then Android.
+videos + oEmbed, pure plan engine (+ JSON vectors), plan/events/feed/projection endpoints,
+sync (snapshot pull with ETag, combined push), per-child reports.
+Next: deployment, then Android.
 Migrations are verified on SQLite only; verify on Postgres before deploying.

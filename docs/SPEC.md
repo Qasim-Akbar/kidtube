@@ -159,14 +159,23 @@ Implemented in `backend/app/engine` (pure: frozen dataclasses, no DB/ORM/clock/t
 
 ## 9. Sync
 
-- Local writes go to Room and to an **outbox**.
-- `POST /sync/push`: batch of new videos, plan edits, and events. Server dedupes by client UUID, so retries are safe.
-- `GET /sync/pull?cursor=`: changes since cursor (videos, plans, children, settings).
+KidTube is a private family app with tens of videos, so sync is a **snapshot** design: no cursors, no tombstones.
+
+- Local writes go to Room and to an **outbox** (new links, events).
+- **Pull:** `GET /sync/pull` (parent or kid device) returns the whole family snapshot in one response: `server_time` (UTC), family `timezone`, `children` (each with its `plan`: config plus ordered items, or `null` when it has none) and `videos`. Shapes are exactly those of `GET /children`, `GET /children/{id}/plan` and `GET /videos`. The client **replaces** its cache with the snapshot, so deleted videos and plan items vanish without tombstones.
+- `snapshot_version` is a hash of the content (everything except `server_time`) and is sent as the `ETag`. With `If-None-Match` matching it (weak validators, lists and `*` are understood) the server answers **304 with no body**. Any child, video, plan or plan-item change changes it; a no-op edit does not. The cost is constant: five queries, however large the family is.
+- **Push:** `POST /sync/push` is what the app sends when the network returns. Body `{videos: [{url}], events: [...]}` (at most 50 videos and 200 events, more is a 422). It calls the same services as `POST /videos` and `POST /events` and returns one result per item; one bad item never fails the batch:
+  - `videos[]`: `{index, status: created | existing | rejected, video_id, video_status, reason, retryable}`.
+  - `events[]`: `{index, id, status: accepted | duplicate | rejected, reason, retryable}`.
+  - Videos need a **parent** token. A kid device that sends videos gets each one `rejected` with reason `forbidden`; its events are still processed.
+  - `retryable` tells a permanent rejection from a retryable situation. It is `false` for every rejection (invalid URL, `forbidden`, unknown child, bad payload): resending the same item cannot succeed. It is `true` only on a `created` video whose YouTube verification could not complete (oEmbed network trouble). That video **does exist** (status `pending`), so it is not an error and must not be resent; call `POST /videos/{id}/reverify` later.
+- Resending an identical batch changes nothing: videos come back `existing` (no outbound request), events `duplicate`.
 - **Conflict rules:**
-  - Events are append-only, so no conflicts.
-  - Plan edits are versioned. The latest edit wins, and a parent device edit always beats a kid device's cached copy.
+  - Events are append-only (client UUID is the idempotency key), so no conflicts.
+  - Plan edits are server-side and versioned (`plan.version`, bumped on every actual change); kid devices cannot edit plans, so a parent edit always wins and devices simply take the next snapshot.
   - Daily limits are recomputed from the merged event log, so two devices cannot both grant "one more view" after syncing.
-- Every event stores the child's `local_date` (family timezone) so day boundaries follow the child's day, not UTC.
+- Every event stores the child's `local_date` (family timezone), so day boundaries follow the child's day, not UTC. The server accepts a `local_date` from `today - EVENT_MAX_AGE_DAYS` (default 30, so a device can stay offline for a family trip) to `today + 1`.
+- Deleting a video also removes its plan items; the affected plans are renumbered (positions stay dense) and their `version` is bumped.
 
 ## 10. Auth and devices
 
@@ -190,7 +199,7 @@ GET    /children/{id}/feed       GET  /children/{id}/projection?from=&days=
 POST   /devices/pair-code        POST /devices/pair         POST /devices/{id}/revoke
 GET    /devices
 POST   /sync/push                GET  /sync/pull
-GET    /reports/children/{id}?range=day|week|month
+GET    /reports/children/{id}?range=day|week|month&date=
 GET    /health
 ```
 
@@ -205,9 +214,14 @@ All routes are scoped by `family_id`: another family's child, plan, item or vide
 - `GET /children/{id}/plan` (parent or device): config plus items in order, each with video title, thumbnail, platform, status. 404 when the child has no plan; GET never creates one.
 - `PUT /children/{id}/plan` (parent): creates (201) or updates (200). `pace_value >= 1`, `active_weekdays` 1..127, `end_date >= start_date`. If `max_extra_per_day` is omitted it defaults to 1 in videos mode and to `pace_value` in minutes mode (where it counts minutes). `version` is bumped on every actual change (a PUT that changes nothing leaves it alone).
 - `POST /children/{id}/plan/items`: `{video_id, required, view_target, daily_cap, anchor_date, on_miss, watch_threshold, position?}`. The video must belong to the family (404) and must not be `unavailable` (422); the same video twice as an active item is 409. `position` is a zero-based index (omitted = append); `added_on` is the family-local date. `PATCH /plan-items/{id}` (including `status`, set by a parent only), `DELETE /plan-items/{id}` and `POST /children/{id}/plan/reorder {item_ids}` (must list every item exactly once, else 422) each bump `version` when something changed.
-- `POST /events` (parent or device): up to 200 events per request (more is a 422). Each event gets its own result `{index, id, status: accepted | duplicate | rejected, reason}`; one bad event never fails the batch and resending a batch is harmless (the client UUID is the idempotency key, backed by the primary key). Validation: the child belongs to the caller's family; known type; per-type payload shape (above); `occurred_at` is timezone-aware; `local_date` is within [today-7, today+1] in the family timezone; `time_extension` is rejected for device tokens. A device may write events for any child of its family (shared phones). Unknown payload keys are dropped.
+- `POST /events` (parent or device): up to 200 events per request (more is a 422). Each event gets its own result `{index, id, status: accepted | duplicate | rejected, reason}`; one bad event never fails the batch and resending a batch is harmless (the client UUID is the idempotency key, backed by the primary key). Validation: the child belongs to the caller's family; known type; per-type payload shape (above); `occurred_at` is timezone-aware; `local_date` is within [today - `EVENT_MAX_AGE_DAYS`, today + 1] in the family timezone (setting, default 30); `time_extension` is rejected for device tokens. A device may write events for any child of its family (shared phones). Unknown payload keys are dropped.
 - `GET /children/{id}/feed` (parent or device): local "today" is the injected clock converted to the family timezone. The loader (`app/services/engine_input.py`) builds the engine input from the plan, the child's events (views aggregated in one grouped query), watch seconds (last 14 days), today's app-session seconds, and `Child.daily_app_minutes` plus today's `time_extension` seconds; it then calls the engine's JSON entry point. Active items whose video is `unavailable` are not passed to the engine and are listed in `unavailable_item_ids`. Returned items carry title, thumbnail, platform, platform_video_id and duration. **Units: `quota_today`, `backlog` are videos in `videos_per_day` mode and seconds in `minutes_per_day` mode** (the response includes `pace_type`). The parent-only query parameter `?date=YYYY-MM-DD` previews another local day; a device using it gets 403.
 - `GET /children/{id}/projection?days=30` (parent or device; 1..91): same loading, runs `project()`; views are enriched with title and thumbnail.
+
+### Sync and reports (implemented)
+
+- `GET /sync/pull` and `POST /sync/push`: see section 9. Pull answers `ETag` / `Cache-Control: private, no-cache` and 304 on `If-None-Match`.
+- `GET /reports/children/{id}?range=day|week|month&date=YYYY-MM-DD`: **parent only** (a device token is 401; another family's child is 404). `range` is required; `date` defaults to the family-local today. Details in section 14.
 
 ## 12. Android app
 
@@ -236,12 +250,18 @@ All routes are scoped by `family_id`: another family's child, plan, item or vide
 
 ## 14. Reports
 
-Per child, for day / week / month:
-- Watch time and app time (and the difference, which shows browsing vs watching)
-- Videos completed vs planned
-- Completion per video, most watched
-- Plan progress and projected finish date
-- Playback errors / unavailable videos
+`GET /reports/children/{id}?range=day|week|month&date=YYYY-MM-DD` (parent only). `day` is that date, `week` is Monday..Sunday containing it, `month` is the calendar month containing it. Everything is grouped by `events.local_date` (the child's day), never by UTC timestamps.
+
+Response:
+- `start`, `end` and `days[]`: **every** date in the range (zeros included) with `watch_seconds` (sum of `watch_progress`), `app_seconds` (sum of `app_session` durations), `views_completed` (count of `view_complete`) and `browsing_seconds = max(0, app_seconds - watch_seconds)`. Seconds are rounded to whole seconds once per day.
+- `totals`: the same four numbers for the range. Total `browsing_seconds` is `max(0, total app - total watch)`; it is not the sum of the daily values (a day where watching exceeds app time contributes 0 per day, but offsets other days in the total).
+- `top_videos`: up to 10 by views in the range (then by watch seconds): `video_id, title, thumbnail_url, views, watch_seconds`. Views are attributed to a video through the plan item, so views of a since-deleted plan item still count in `days` and `totals` but not here.
+- `per_video`: every non-dropped plan item with `views_total` (all-time, up to today) against `view_target`, `views_in_range`, `required` and `completed` (the engine's completion rule: status `completed`, or finite target reached; an optional item without a target never completes).
+- `playback_errors`: `{video_id, title, code, count}` in the range (a code stored as `150` and as `"150"` is one code, returned as a string).
+- `planned_vs_watched`: expected vs actual over the range **clipped to the plan's start/end dates and to today** (today counts, future days do not). Videos mode: `expected = pace_value * active days`, `actual` = views, `unit: videos`. Minutes mode: `expected = pace_value * 60 * active days`, `actual` = watch seconds, `unit: seconds`. `actual` is summed over the same clipped window. `null` when the child has no plan. Catch-up quota is not part of "expected".
+- `plan_progress`: `finish_date` and `remaining_finite_views` from the engine's `project()` as of today (same loader as the projection endpoint, whatever the range). `null` when there is no plan.
+
+Implementation notes: group-by queries over `(local_date, plan_item_id)`, `(local_date, video_id)` and `(video_id, code)`; the JSON payload keys are only grouped on, never filtered on. App-session durations are the exception: end minus start of two ISO strings has no portable SQL form, so that one query returns the range's `app_session` payloads and sums them in Python. The number of queries is constant (it does not grow with days, videos or events).
 
 ## 15. Backend project layout
 

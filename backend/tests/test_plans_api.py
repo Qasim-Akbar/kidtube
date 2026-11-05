@@ -333,3 +333,15 @@ def test_cross_family_isolation(client, engine, fam) -> None:
     # their own child still works and is independent
     assert put_plan(client, other_h, other_child).status_code == 201
     assert plan_of(client, fam).json() == before
+
+
+def test_deleting_a_video_keeps_positions_dense_and_bumps_the_plan_version(client, engine) -> None:
+    h, family_id = make_family(client, "del@example.com")
+    child = make_child(client, h)
+    videos = [make_video(engine, family_id, n) for n in range(1, 4)]
+    items = make_plan(client, h, child, videos)
+    before = client.get(f"/children/{child}/plan", headers=h).json()["version"]
+    assert client.delete(f"/videos/{videos[0]}", headers=h).status_code == 204
+    plan = client.get(f"/children/{child}/plan", headers=h).json()
+    assert [(i["id"], i["position"]) for i in plan["items"]] == [(items[1], 0), (items[2], 1)]
+    assert plan["version"] == before + 1

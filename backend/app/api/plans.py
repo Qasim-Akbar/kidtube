@@ -10,48 +10,10 @@ from app.core.db import get_db
 from app.core.deps import FamilyAccess, get_current_parent, get_family_access
 from app.models import Child, Parent, Plan, PlanItem, Video
 from app.models.enums import PaceType, PlanItemStatus, VideoStatus
-from app.schemas.plan import (
-    PlanItemCreate, PlanItemOut, PlanItemPatch, PlanOut, PlanWrite, ReorderRequest, VideoSummary,
-)
+from app.schemas.plan import PlanItemCreate, PlanItemOut, PlanItemPatch, PlanOut, PlanWrite, ReorderRequest
+from app.services.plan_views import item_out, load_plan_out, ordered_items, renumber
 
 router = APIRouter(tags=["plans"])
-
-
-def _ordered_items(db: Session, plan: Plan) -> list[PlanItem]:
-    return list(db.scalars(select(PlanItem).where(PlanItem.plan_id == plan.id).order_by(PlanItem.position, PlanItem.id)))
-
-
-def _item_out(item: PlanItem, video: Video) -> PlanItemOut:
-    return PlanItemOut(
-        id=item.id, video_id=item.video_id, position=item.position, required=item.required,
-        view_target=item.view_target, daily_cap=item.daily_cap, watch_threshold=item.watch_threshold,
-        anchor_date=item.anchor_date, on_miss=item.on_miss, status=item.status, added_on=item.added_on,
-        video=VideoSummary(
-            id=video.id, title=video.title, thumbnail_url=video.thumbnail_url, platform=video.platform,
-            platform_video_id=video.platform_video_id, status=video.status, duration_seconds=video.duration_seconds,
-        ),
-    )
-
-
-def _plan_out(db: Session, plan: Plan) -> PlanOut:
-    rows = db.execute(
-        select(PlanItem, Video).join(Video, Video.id == PlanItem.video_id)
-        .where(PlanItem.plan_id == plan.id).order_by(PlanItem.position, PlanItem.id)
-    ).all()
-    return PlanOut(
-        id=plan.id, child_id=plan.child_id, pace_type=plan.pace_type, pace_value=plan.pace_value,
-        active_weekdays=plan.active_weekdays, max_extra_per_day=plan.max_extra_per_day, start_date=plan.start_date,
-        end_date=plan.end_date, version=plan.version, items=[_item_out(i, v) for i, v in rows],
-    )
-
-
-def _renumber(items: list[PlanItem]) -> bool:
-    changed = False
-    for index, item in enumerate(items):
-        if item.position != index:
-            item.position = index
-            changed = True
-    return changed
 
 
 def _item_for_parent(db: Session, parent: Parent, item_id: uuid.UUID) -> tuple[PlanItem, Plan]:
@@ -76,7 +38,7 @@ def _has_active_item_for_video(db: Session, plan_id: uuid.UUID, video_id: uuid.U
 @router.get("/children/{child_id}/plan", response_model=PlanOut)
 def get_plan(child_id: uuid.UUID, access: FamilyAccess = Depends(get_family_access), db: Session = Depends(get_db)) -> PlanOut:
     child = get_child_or_404(db, access.family_id, child_id)
-    return _plan_out(db, get_plan_or_404(db, child))
+    return load_plan_out(db, get_plan_or_404(db, child))
 
 
 @router.put("/children/{child_id}/plan", response_model=PlanOut)
@@ -110,7 +72,7 @@ def put_plan(
                 setattr(plan, k, v)
             plan.version += 1
     db.commit()
-    return _plan_out(db, plan)
+    return load_plan_out(db, plan)
 
 
 @router.post("/children/{child_id}/plan/items", response_model=PlanItemOut, status_code=status.HTTP_201_CREATED)
@@ -137,14 +99,14 @@ def add_plan_item(
         on_miss=body.on_miss, status=PlanItemStatus.active,
         added_on=family_today(now(), child.family.timezone),
     )
-    items = _ordered_items(db, plan)
+    items = ordered_items(db, plan)
     index = len(items) if body.position is None else min(body.position, len(items))
     items.insert(index, item)
     db.add(item)
-    _renumber(items)
+    renumber(items)
     plan.version += 1
     db.commit()
-    return _item_out(item, video)
+    return item_out(item, video)
 
 
 @router.patch("/plan-items/{item_id}", response_model=PlanItemOut)
@@ -166,7 +128,7 @@ def patch_plan_item(
             setattr(item, k, v)
         plan.version += 1
     db.commit()
-    return _item_out(item, db.get(Video, item.video_id))  # type: ignore[arg-type]
+    return item_out(item, db.get(Video, item.video_id))  # type: ignore[arg-type]
 
 
 @router.delete("/plan-items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -176,7 +138,7 @@ def delete_plan_item(
     item, plan = _item_for_parent(db, parent, item_id)
     db.delete(item)
     db.flush()
-    _renumber(_ordered_items(db, plan))
+    renumber(ordered_items(db, plan))
     plan.version += 1
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -191,11 +153,11 @@ def reorder_plan(
 ) -> PlanOut:
     child = get_child_or_404(db, parent.family_id, child_id)
     plan = get_plan_or_404(db, child)
-    items = _ordered_items(db, plan)
+    items = ordered_items(db, plan)
     by_id = {i.id: i for i in items}
     if len(body.item_ids) != len(set(body.item_ids)) or set(body.item_ids) != set(by_id):
         raise HTTPException(422, "item_ids must list every item of the plan exactly once")
-    if _renumber([by_id[i] for i in body.item_ids]):
+    if renumber([by_id[i] for i in body.item_ids]):
         plan.version += 1
     db.commit()
-    return _plan_out(db, plan)
+    return load_plan_out(db, plan)

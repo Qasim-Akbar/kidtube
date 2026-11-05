@@ -147,7 +147,7 @@ def rejected(client, fam, event: dict) -> str:
         ("view_complete", {"local_date": "2026-1-5"}, "invalid local_date"),
         ("view_complete", {"local_date": "2026-02-30"}, "invalid local_date"),
         ("view_complete", {"local_date": ...}, "invalid local_date"),
-        ("view_complete", {"local_date": "2025-12-28"}, "local_date outside the accepted range"),
+        ("view_complete", {"local_date": "2025-12-05"}, "local_date outside the accepted range"),
         ("view_complete", {"local_date": "2026-01-07"}, "local_date outside the accepted range"),
         ("view_complete", {"type": "bogus"}, "unknown type"),
         ("view_complete", {"type": 5}, "unknown type"),
@@ -179,11 +179,19 @@ def test_non_finite_numbers_are_rejected(client, fam) -> None:
 
 
 def test_local_date_window_boundaries(client, fam) -> None:
-    # fake "now" is 2026-01-05 10:00 UTC = 15:00 in Karachi, so today = 2026-01-05: accepted range is [Dec 29, Jan 6]
-    ok = [view_ev(fam["child"], fam["items"][0], d) for d in ("2025-12-29", "2026-01-06", "2026-01-05")]
-    assert statuses(post_events(client, fam["h"], ok)) == ["accepted"] * 3
-    bad = [view_ev(fam["child"], fam["items"][0], d) for d in ("2025-12-28", "2026-01-07")]
-    assert statuses(post_events(client, fam["h"], bad)) == ["rejected"] * 2
+    # fake "now" is 2026-01-05 10:00 UTC = 15:00 in Karachi, so today = 2026-01-05.
+    # Default EVENT_MAX_AGE_DAYS=30: accepted range is [2025-12-06, 2026-01-06].
+    ok = [view_ev(fam["child"], fam["items"][0], d) for d in ("2025-12-06", "2026-01-06", "2026-01-05")]
+    assert statuses(post_events(client, fam["h"], ok)) == ["accepted"] * 3  # 30 days back is still accepted
+    bad = [view_ev(fam["child"], fam["items"][0], d) for d in ("2025-12-05", "2026-01-07")]
+    assert statuses(post_events(client, fam["h"], bad)) == ["rejected"] * 2  # 31 days back is rejected
+
+
+def test_local_date_window_is_configurable(app, client, fam) -> None:
+    app.state.settings.event_max_age_days = 3
+    days = ("2026-01-02", "2026-01-01")
+    r = post_events(client, fam["h"], [view_ev(fam["child"], fam["items"][0], d) for d in days])
+    assert statuses(r) == ["accepted", "rejected"]
 
 
 def test_local_date_window_uses_the_family_timezone(client, engine, clock) -> None:
@@ -191,7 +199,7 @@ def test_local_date_window_uses_the_family_timezone(client, engine, clock) -> No
     h, family_id = make_family(client, "tz@example.com")
     child = make_child(client, h)
     base = lambda d: ev(child, "watch_progress", {"video_id": str(uuid.uuid4()), "seconds": 1}, d)  # noqa: E731
-    r = post_events(client, h, [base(d) for d in ("2026-10-30", "2026-10-29", "2026-11-07", "2026-11-08")])
+    r = post_events(client, h, [base(d) for d in ("2026-10-07", "2026-10-06", "2026-11-07", "2026-11-08")])
     assert statuses(r) == ["accepted", "rejected", "accepted", "rejected"]  # window is centred on the Karachi date Nov 6
 
 

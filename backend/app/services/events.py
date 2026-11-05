@@ -22,7 +22,7 @@ MAX_BATCH = 200
 MAX_SESSION = timedelta(hours=24)
 MAX_SECONDS = 24 * 3600
 PARENT_ONLY_TYPES = frozenset({EventType.time_extension})  # a kid must never extend their own screen time
-LOCAL_DATE_PAST_DAYS = 7
+DEFAULT_MAX_AGE_DAYS = 30
 LOCAL_DATE_FUTURE_DAYS = 1
 
 
@@ -104,7 +104,8 @@ def _payload(event_type: EventType, raw: Any) -> tuple[dict[str, Any], uuid.UUID
 
 
 def validate_event(
-    raw: Any, *, family_child_ids: set[uuid.UUID], today: date, is_parent: bool
+    raw: Any, *, family_child_ids: set[uuid.UUID], today: date, is_parent: bool,
+    max_age_days: int = DEFAULT_MAX_AGE_DAYS,
 ) -> ValidEvent:
     if not isinstance(raw, dict):
         raise Rejected("event must be an object")
@@ -129,7 +130,7 @@ def validate_event(
         local_date = date.fromisoformat(local)
     except ValueError:
         raise Rejected("invalid local_date") from None
-    if not today - timedelta(days=LOCAL_DATE_PAST_DAYS) <= local_date <= today + timedelta(days=LOCAL_DATE_FUTURE_DAYS):
+    if not today - timedelta(days=max_age_days) <= local_date <= today + timedelta(days=LOCAL_DATE_FUTURE_DAYS):
         raise Rejected("local_date outside the accepted range")
     payload, plan_item_id = _payload(event_type, raw.get("payload"))
     return ValidEvent(event_id, child_id, event_type, occurred_at, local_date, payload, plan_item_id)
@@ -143,6 +144,7 @@ def ingest_events(
     today: date,
     is_parent: bool,
     device_id: uuid.UUID | None,
+    max_age_days: int = DEFAULT_MAX_AGE_DAYS,
 ) -> list[dict[str, Any]]:
     family_child_ids = set(db.scalars(select(Child.id).where(Child.family_id == family_id)))
     results: list[dict[str, Any]] = []
@@ -151,7 +153,9 @@ def ingest_events(
         raw_id = raw.get("id") if isinstance(raw, dict) else None
         shown_id = raw_id if isinstance(raw_id, str) else None
         try:
-            ev = validate_event(raw, family_child_ids=family_child_ids, today=today, is_parent=is_parent)
+            ev = validate_event(
+                raw, family_child_ids=family_child_ids, today=today, is_parent=is_parent, max_age_days=max_age_days
+            )
         except Rejected as exc:
             results.append({"index": index, "id": shown_id, "status": "rejected", "reason": exc.reason})
             continue

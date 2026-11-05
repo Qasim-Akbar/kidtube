@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_JWT_SECRET = "change-me"
@@ -21,6 +22,8 @@ class Settings(BaseSettings):
     login_max_failures: int = 5
     login_failure_window_minutes: int = 10
     trust_proxy_headers: bool = False
+    # Events older than this many days (family-local) are rejected; wide enough for a device offline on a trip.
+    event_max_age_days: int = Field(default=30, ge=1, le=365)
 
 
 def validate_settings(settings: Settings) -> None:
