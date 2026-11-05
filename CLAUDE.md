@@ -42,3 +42,10 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 - Time: never call datetime.now() directly in app code; use the injectable get_now clock (app/core/clock.py).
 - Everything is scoped by family_id. Another family's rows must return 404, not 403.
 - Run uvicorn with a single worker (in-memory rate limiter).
+
+
+## Status
+Done (backend): scaffold, models + migrations, auth, children, devices/pairing, login rate limit,
+videos + oEmbed, pure plan engine (+ JSON vectors), plan/events/feed/projection endpoints.
+Next: sync snapshot, reports, deployment, then Android.
+Migrations are verified on SQLite only; verify on Postgres before deploying.
