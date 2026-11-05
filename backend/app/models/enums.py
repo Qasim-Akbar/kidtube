@@ -39,3 +39,4 @@ class EventType(str, Enum):
     watch_progress = "watch_progress"
     app_session = "app_session"
     playback_error = "playback_error"
+    time_extension = "time_extension"  # parent-only: grants extra app time for the day

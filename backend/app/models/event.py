@@ -22,6 +22,10 @@ class Event(Base):
     __table_args__ = (
         Index("ix_events_child_id_local_date", "child_id", "local_date"),
         Index("ix_events_child_id_type_occurred_at", "child_id", "type", "occurred_at"),
+        # views per plan item per day (feed loader): GROUP BY plan_item_id, local_date
+        Index("ix_events_child_id_type_plan_item_id_local_date", "child_id", "type", "plan_item_id", "local_date"),
+        # per-day sums of watch_progress / time_extension seconds
+        Index("ix_events_child_id_type_local_date", "child_id", "type", "local_date"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
@@ -31,6 +35,8 @@ class Event(Base):
     occurred_at: Mapped[datetime] = mapped_column(UTCDateTime)
     local_date: Mapped[date] = mapped_column(Date)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    # Denormalised from payload["plan_item_id"] for view_complete events so views can be aggregated in plain SQL.
+    plan_item_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
     child: Mapped[Child] = relationship(back_populates="events")

@@ -92,10 +92,12 @@ All primary keys are UUIDs. Events carry a client-generated UUID for idempotency
 - **PairingCode**: id, family_id, created_by (parent, nullable), code_hash (keyed hash of the 6-digit code; the code itself is never stored), expires_at (10 min), used_at (single use), created_at
 - **Video**: id, family_id, platform (`youtube` | `facebook`), platform_video_id, url, title, thumbnail_url, duration_seconds, status (`pending` | `verified` | `unavailable`), added_by, added_at
 - **Plan**: id, child_id, pace_type (`videos_per_day` | `minutes_per_day`), pace_value, active_weekdays (bitmask or list), max_extra_per_day (catch-up cap, default 1), start_date, end_date (nullable), version
-- **PlanItem**: id, plan_id, video_id, position, required (bool), view_target (nullable = unlimited), daily_cap (nullable), watch_threshold (default 0.9), anchor_date (nullable), on_miss (`shift` | `skip` | `drop`, default `shift`), status (`active` | `completed` | `dropped`)
+- **PlanItem**: id, plan_id, video_id, position, required (bool), view_target (nullable = unlimited), daily_cap (nullable), watch_threshold (default 0.9), anchor_date (nullable), on_miss (`shift` | `skip` | `drop`, default `shift`), status (`active` | `completed` | `dropped`), added_on (date: the child's local date when the item joined the plan, in the family timezone; feeds the catch-up window). Item `status` is only changed by a parent; view events never mutate it (completion is derived by the engine from the event log). Positions are kept dense (0..n-1) by the API. A video can be an `active` item of a given plan only once.
 - **Event** (append-only log):
   - id (client UUID), child_id, device_id, type, occurred_at (UTC), local_date (child's local date), payload (JSON)
-  - Types: `view_complete` (video_id, plan_item_id, watched_pct), `watch_progress` (video_id, seconds), `app_session` (start, end), `playback_error` (video_id, code)
+  - Types: `view_complete` (plan_item_id, watched_pct 0..1), `watch_progress` (video_id, seconds >= 0), `app_session` (start, end: ISO-8601 with offset, end >= start, at most 24 h), `playback_error` (video_id, code), `time_extension` (seconds > 0; **parent-only**: grants extra app time for the event's `local_date`, so a kid device can never extend its own screen time)
+  - `plan_item_id` is also stored as a nullable column on `view_complete` rows (denormalised from the payload) so views can be aggregated in plain SQL, portable across SQLite and Postgres. Indexes: `(child_id, local_date)`, `(child_id, type, occurred_at)`, `(child_id, type, plan_item_id, local_date)` (views per item per day), `(child_id, type, local_date)` (per-day second sums).
+  - Event `type` is stored as a plain string without a database constraint, so adding a type needs no migration.
 
 A child's "views done" and "today's count" are always **computed from events**, never stored as counters.
 
@@ -183,6 +185,7 @@ POST   /videos                   GET  /videos               DELETE /videos/{id}
 POST   /videos/{id}/reverify
 GET    /children/{id}/plan       PUT  /children/{id}/plan
 POST   /children/{id}/plan/items PATCH/DELETE /plan-items/{id}
+POST   /children/{id}/plan/reorder   POST /events
 GET    /children/{id}/feed       GET  /children/{id}/projection?from=&days=
 POST   /devices/pair-code        POST /devices/pair         POST /devices/{id}/revoke
 GET    /devices
@@ -194,6 +197,17 @@ GET    /health
 `POST /videos` accepts a URL: validates the pattern, normalises to a platform video ID, dedupes per family, fetches YouTube oEmbed (`youtube.com/oembed?url=...&format=json`), and marks the status.
 
 Details: the body is a single bare URL (surrounding text is rejected). Returns 201 for a new video, or 200 with the existing one when it is a duplicate (so offline sync retries are safe). YouTube is verified via oEmbed (200 `verified`; 401/403/404 `unavailable`; timeout/5xx leave it `pending`). Facebook is not verified and stays `pending` with title "Facebook video". The oEmbed request is built only from the parsed 11-character video ID against the fixed host `www.youtube.com` (no redirects, 5 s timeout, size cap); a user-supplied URL is never fetched. `POST /videos/{id}/reverify` retries verification and never downgrades a status on a transient failure. Facebook short links are stored with a prefixed `platform_video_id` (`fb.watch:<code>`, `share:<code>`) so their namespaces cannot collide with numeric video IDs.
+
+### Plans, events, feed and projection (implemented)
+
+All routes are scoped by `family_id`: another family's child, plan, item or video is a 404. Device tokens can read (`GET` plan, feed, projection, children, videos) and write events; everything else is parent-only (401 for a device token).
+
+- `GET /children/{id}/plan` (parent or device): config plus items in order, each with video title, thumbnail, platform, status. 404 when the child has no plan; GET never creates one.
+- `PUT /children/{id}/plan` (parent): creates (201) or updates (200). `pace_value >= 1`, `active_weekdays` 1..127, `end_date >= start_date`. If `max_extra_per_day` is omitted it defaults to 1 in videos mode and to `pace_value` in minutes mode (where it counts minutes). `version` is bumped on every actual change (a PUT that changes nothing leaves it alone).
+- `POST /children/{id}/plan/items`: `{video_id, required, view_target, daily_cap, anchor_date, on_miss, watch_threshold, position?}`. The video must belong to the family (404) and must not be `unavailable` (422); the same video twice as an active item is 409. `position` is a zero-based index (omitted = append); `added_on` is the family-local date. `PATCH /plan-items/{id}` (including `status`, set by a parent only), `DELETE /plan-items/{id}` and `POST /children/{id}/plan/reorder {item_ids}` (must list every item exactly once, else 422) each bump `version` when something changed.
+- `POST /events` (parent or device): up to 200 events per request (more is a 422). Each event gets its own result `{index, id, status: accepted | duplicate | rejected, reason}`; one bad event never fails the batch and resending a batch is harmless (the client UUID is the idempotency key, backed by the primary key). Validation: the child belongs to the caller's family; known type; per-type payload shape (above); `occurred_at` is timezone-aware; `local_date` is within [today-7, today+1] in the family timezone; `time_extension` is rejected for device tokens. A device may write events for any child of its family (shared phones). Unknown payload keys are dropped.
+- `GET /children/{id}/feed` (parent or device): local "today" is the injected clock converted to the family timezone. The loader (`app/services/engine_input.py`) builds the engine input from the plan, the child's events (views aggregated in one grouped query), watch seconds (last 14 days), today's app-session seconds, and `Child.daily_app_minutes` plus today's `time_extension` seconds; it then calls the engine's JSON entry point. Active items whose video is `unavailable` are not passed to the engine and are listed in `unavailable_item_ids`. Returned items carry title, thumbnail, platform, platform_video_id and duration. **Units: `quota_today`, `backlog` are videos in `videos_per_day` mode and seconds in `minutes_per_day` mode** (the response includes `pace_type`). The parent-only query parameter `?date=YYYY-MM-DD` previews another local day; a device using it gets 403.
+- `GET /children/{id}/projection?days=30` (parent or device; 1..91): same loading, runs `project()`; views are enriched with title and thumbnail.
 
 ## 12. Android app
 

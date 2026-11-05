@@ -1,7 +1,9 @@
 import uuid
 from typing import Annotated
 
-from pydantic import BaseModel, BeforeValidator, EmailStr, Field
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from pydantic import BaseModel, BeforeValidator, EmailStr, Field, field_validator
 
 
 def _normalize_email(v: object) -> object:
@@ -16,6 +18,17 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     family_name: str = Field(default="My Family", min_length=1, max_length=100)
     timezone: str | None = Field(default=None, max_length=64)
+
+    @field_validator("timezone")
+    @classmethod
+    def _known_timezone(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        try:
+            ZoneInfo(v)
+        except (ZoneInfoNotFoundError, ValueError, OSError):
+            raise ValueError("unknown timezone (use an IANA name such as 'Asia/Karachi')") from None
+        return v
 
 
 class RegisterResponse(BaseModel):

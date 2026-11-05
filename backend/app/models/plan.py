@@ -6,7 +6,7 @@ from datetime import date
 from sqlalchemy import Boolean, Date, Float, ForeignKey, Index, Integer, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, Timestamps, UUIDPk, str_enum
+from app.models.base import Base, Timestamps, UUIDPk, str_enum, utcnow
 from app.models.child import Child
 from app.models.enums import OnMiss, PaceType, PlanItemStatus
 from app.models.video import Video
@@ -55,6 +55,9 @@ class PlanItem(UUIDPk, Timestamps, Base):
     anchor_date: Mapped[date | None] = mapped_column(Date)
     on_miss: Mapped[OnMiss] = mapped_column(str_enum(OnMiss), default=OnMiss.shift)
     status: Mapped[PlanItemStatus] = mapped_column(str_enum(PlanItemStatus), default=PlanItemStatus.active)
+    # The child's local date (family timezone) when the item joined the plan; the API sets it explicitly.
+    # The fallback is only the UTC date and exists for code paths that build items without a timezone.
+    added_on: Mapped[date] = mapped_column(Date, default=lambda: utcnow().date())
 
     plan: Mapped[Plan] = relationship(back_populates="items")
     video: Mapped[Video] = relationship(back_populates="plan_items")
