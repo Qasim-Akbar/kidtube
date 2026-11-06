@@ -15,6 +15,8 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 - Several kids can share one device. Plans, limits, watch time and app time are all per child_id.
 - Kids need no login. Kid devices use a device-scoped token (read plan, write events only).
 - Parents log in with JWT. A parent PIN (hashed locally) gates sharing and exiting kid mode.
+- A phone is either a Parent device (can also switch to Kid mode; active mode is persisted; leaving kid mode needs the PIN)
+  or a Kid-only device (paired by code). Several kids share one device through the profile picker.
 - Playback: YouTube only via official IFrame embed. Never download or re-stream videos.
   Facebook is best-effort (open-count only). Store links and metadata, never video files.
 - A view counts at >=90% watched (parent can override per item).
@@ -50,22 +52,16 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
   deploy/constraints.txt pins dependencies (tested on Python 3.12). Interactive docs are off unless APP_ENV=dev.
   New top-level API routes must also be added to the path list in deploy/nginx/kidtube.conf.
 
-
-- A phone is either a Parent device (can also switch to Kid mode; active mode is persisted; leaving kid mode needs the PIN)
-  or a Kid-only device (paired by code). Several kids share one device through the profile picker.
-
 ## Status
 Done (backend): scaffold, models + migrations, auth, children, devices/pairing, login rate limit,
 videos + oEmbed, pure plan engine (+ JSON vectors), plan/events/feed/projection endpoints,
-sync (snapshot pull with ETag, combined push), per-child reports.
+sync (snapshot pull with ETag; per-child event history in the snapshot for offline engine use, built by the same
+loader as the feed; combined push), per-child reports.
 Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS).
-Done (android): project skeleton only (build setup, Hilt/Room/Retrofit wiring, placeholder screens).
-Next: Android MVP (PIN, share target, outbox).
-sync (snapshot pull with ETag, combined push; per-child event history in the snapshot for offline engine use,
-built by the same loader as the feed), per-child reports.
-Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS). Next: Android.
 Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic migrations.
-
+Done (android): project skeleton; data layer, networking and auth (Retrofit API + DTOs, SessionStore, token refresh,
+Room schema v1, repositories). Not yet: UI, sync worker (push/pull scheduling), Kotlin engine port.
+Next: Android MVP (PIN, share target, outbox flush / sync worker).
 
 ## Android (android/)
 - Stack: Kotlin 2.4, Jetpack Compose + Material 3, single module `app`, Gradle Kotlin DSL + version catalog
@@ -73,8 +69,34 @@ Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic
   Retrofit + kotlinx.serialization + OkHttp, DataStore. minSdk 26, compile/target 37. java.time via core library desugaring.
   `androidx.security:security-crypto` is deprecated: the PIN uses the Keystore AES-GCM wrapper in `core/KeystoreCipher`.
   android-youtube-player is added later (player task), not yet.
-- Packages under `com.bbro.kidtube`: core, data, data.remote, sync, engine, player, ui.setup, ui.parent, ui.kid,
-  ui.nav, ui.theme, di. Single Activity + NavHost.
+- Packages under `com.bbro.kidtube`: core, data (+ data.entity, data.dao, data.repo), data.remote (+ data.remote.auth),
+  sync, engine, player, ui.setup, ui.parent, ui.kid, ui.nav, ui.theme, di. Single Activity + NavHost.
+- Backend shapes: DTOs in data.remote/Dtos.kt mirror backend/app/schemas field for field (UUIDs are Strings). Read the
+  backend schema, never guess a field name; when a shape is unclear, stop and ask. Enums have an UNKNOWN fallback so a
+  newer server never crashes an older app. Json = `KidTubeJson` (ignoreUnknownKeys, explicitNulls=false,
+  coerceInputValues, encodeDefaults); PATCH bodies are JsonObjects (`PatchField`) so an explicit null can be sent.
+- Networking: `AuthApi` (anonymous: register/login/refresh/pair/health) and `KidTubeApi` (bearer) are Retrofit interfaces;
+  app code calls `KidTubeRemote`, whose methods all return `ApiResult` (Success | HttpError | RateLimited | NetworkError),
+  never an exception. `ApiWiring.create` builds the stack for both Hilt and the tests.
+- Session/auth (`core/SessionStore`, `data/remote/auth`): non-secret info (device role parent|kid|unset, family id and
+  timezone, a SEPARATE persisted ActiveMode used only when role = parent) is plain DataStore; parent access/refresh tokens and
+  the device token are encrypted with `SecretCipher` (Keystore AES-GCM). Never log tokens (debug logging is headers only,
+  Authorization redacted, DebugLogRedactionTest). `sessionState` = Unauthenticated | ParentDevice(mode) | KidDevice |
+  NeedsLogin | DeviceRevoked. Parent devices send the parent token in both modes (the UI hides parent screens in kid mode);
+  kid devices send the device token and ignore setActiveMode. Refresh is single-flight (Mutex), proactive within 60 s of the
+  JWT exp (Clock), a 401 is retried once; refresh rejected -> NeedsLogin (data kept); kid-token 401 -> DeviceRevoked.
+  Logout clears secrets only.
+- Room: schema version 1 is committed in app/schemas; EVERY later schema change needs a version bump + Migration (no
+  destructive fallback). `SnapshotDao.replaceSnapshot` swaps children/videos/plans/items/history and sets history_cycle in one
+  transaction. Overlay rule (SPEC section 9, the source of truth): currentCycle is bumped when a pull starts; a pushed event that
+  is acked gets ackedCycle = currentCycle + 1; historyCycle = the pull that produced the stored snapshot (also advanced
+  on a 304); an event is laid over the history iff it is pending, or acked with ackedCycle > historyCycle; rejected
+  never. See `EventRepository.overlayEvents(childId)`. local_date = Clock in the FAMILY timezone from the snapshot
+  (fallback Asia/Karachi).
+- Tests: Room tests run on Robolectric (in-memory), network tests on MockWebServer, and the session store uses an in-memory
+  DataStore in tests (the real file-backed DataStore cannot replace its file on a Windows JVM; it works on Android).
+- Gradle needs a JDK 21. If JAVA_HOME points at a missing Android Studio JBR, set it for the shell, e.g. to the Temurin 21
+  that Gradle downloads into ~/.gradle/jdks.
 - Clock rule: never call System.currentTimeMillis / Instant.now / LocalDate.now (etc.) in app code. Inject
   `core.Clock` (the real impl `DeviceClock` is the only exception). `ClockRuleTest` scans src/main|debug|release and fails on violations.
 - Engine semantics live in docs/SPEC.md section 7; the Kotlin engine (package `engine`) must pass every case in

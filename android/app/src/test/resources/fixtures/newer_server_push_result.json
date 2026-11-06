@@ -1,0 +1,5 @@
+{
+  "videos": [{"index": 0, "status": "queued", "video_id": null, "video_status": "transcoding", "reason": null, "retryable": false, "eta": 5}],
+  "events": [{"index": 0, "id": "88888888-8888-4888-8888-888888888881", "status": "deferred", "reason": null, "retryable": false}],
+  "new_field": "x"
+}

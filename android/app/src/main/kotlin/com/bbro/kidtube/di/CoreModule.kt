@@ -1,11 +1,23 @@
 package com.bbro.kidtube.di
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import com.bbro.kidtube.core.Clock
 import com.bbro.kidtube.core.DeviceClock
+import com.bbro.kidtube.core.KeystoreCipher
+import com.bbro.kidtube.core.SecretCipher
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -14,4 +26,22 @@ abstract class CoreModule {
     @Binds
     @Singleton
     abstract fun bindClock(impl: DeviceClock): Clock
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+object SessionModule {
+    @Provides
+    @Singleton
+    fun secretCipher(): SecretCipher = KeystoreCipher(SESSION_KEY_ALIAS)
+
+    /** File `files/datastore/session.preferences_pb`; excluded from backup like all app files. */
+    @Provides
+    @Singleton
+    fun sessionDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create(scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)) {
+            context.preferencesDataStoreFile("session")
+        }
+
+    private const val SESSION_KEY_ALIAS = "kidtube_session_v1"
 }
