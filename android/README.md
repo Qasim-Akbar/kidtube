@@ -31,6 +31,13 @@ Status: project skeleton only. Placeholder screens (Setup, Parent Home, Kid Prof
 ```
 (`gradlew.bat` on Windows cmd/PowerShell; `./gradlew` works in Git Bash.) Reports: `app/build/reports/`.
 
+Gradle needs a JDK 21 (Android Studio's bundled JBR works). If `JAVA_HOME` points at a JBR that no longer exists
+("could not open ...\jvm.cfg"), point it at another JDK 21 for that shell, e.g. the one Gradle downloaded into
+`~/.gradle/jdks/`.
+
+Test notes: Room tests use Robolectric (the first run downloads its Android jar); network tests use MockWebServer; the
+session store runs on an in-memory DataStore in tests because the real file-backed one cannot replace its file on a Windows JVM.
+
 ## Release build and the backend URL
 The release API base URL is never in source. It comes from the Gradle property `KIDTUBE_API_BASE_URL`
 (default in `gradle.properties` is the placeholder `CHANGE-ME`). Put the real value in your **user** Gradle
@@ -48,9 +55,9 @@ Release builds block all cleartext traffic. Signing is not configured yet; `asse
 ## Layout (packages under `com.bbro.kidtube`)
 | Package | Purpose |
 |---|---|
-| `core` | `Clock`, family time zone, device role, Keystore AES-GCM wrapper (for the PIN) |
-| `data` | Room database, DAOs, (later) repositories |
-| `data.remote` | Retrofit API + DTOs |
+| `core` | `Clock`, family time zone, device role, `SessionStore` (role, active mode, encrypted tokens), Keystore AES-GCM wrapper |
+| `data`, `data.entity`, `data.dao`, `data.repo` | Room (schema v1), DAOs, repositories (children, videos, plans, events + overlay, outbox, snapshot pull, auth) |
+| `data.remote`, `data.remote.auth` | Retrofit APIs, DTOs mirroring the backend schemas, `ApiResult`, token interceptor/authenticator/refresher |
 | `sync` | WorkManager + outbox (empty for now) |
 | `engine` | Kotlin port of the plan engine (empty for now) |
 | `player` | YouTube IFrame wrapper + tracking (empty for now) |

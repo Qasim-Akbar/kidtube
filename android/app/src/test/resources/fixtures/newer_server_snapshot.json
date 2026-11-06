@@ -1,0 +1,75 @@
+{
+  "server_time": "2026-11-05T10:00:00Z",
+  "timezone": "Asia/Karachi",
+  "snapshot_version": "feedfacefeedfacefeedfacefeedface",
+  "new_top_level_field": {"anything": [1, 2, 3]},
+  "children": [
+    {
+      "id": "33333333-3333-4333-8333-333333333333",
+      "name": "Amna",
+      "avatar": null,
+      "daily_app_minutes": null,
+      "favourite_colour": "green",
+      "plan": {
+        "id": "66666666-6666-4666-8666-666666666666",
+        "child_id": "33333333-3333-4333-8333-333333333333",
+        "pace_type": "stories_per_week",
+        "pace_value": 2,
+        "active_weekdays": 127,
+        "max_extra_per_day": 1,
+        "start_date": "2026-11-02",
+        "end_date": null,
+        "version": 9,
+        "new_plan_field": true,
+        "items": [
+          {
+            "id": "77777777-7777-4777-8777-777777777771",
+            "video_id": "55555555-5555-4555-8555-555555555555",
+            "position": 0,
+            "required": false,
+            "view_target": null,
+            "daily_cap": null,
+            "watch_threshold": 0.9,
+            "anchor_date": null,
+            "on_miss": "ask_parent",
+            "status": "snoozed",
+            "added_on": "2026-11-02",
+            "new_item_field": null,
+            "video": {
+              "id": "55555555-5555-4555-8555-555555555555",
+              "title": "Clip",
+              "thumbnail_url": null,
+              "platform": "vimeo",
+              "platform_video_id": "123",
+              "status": "archived",
+              "duration_seconds": 10,
+              "new_summary_field": 1
+            }
+          }
+        ]
+      },
+      "history": {
+        "views": [],
+        "watch_seconds": [],
+        "app_seconds": [],
+        "time_extension_seconds": [],
+        "quiz_seconds": [{"local_date": "2026-11-05", "seconds": 5}]
+      }
+    }
+  ],
+  "videos": [
+    {
+      "id": "55555555-5555-4555-8555-555555555555",
+      "platform": "vimeo",
+      "platform_video_id": "123",
+      "url": "https://vimeo.com/123",
+      "title": "Clip",
+      "thumbnail_url": null,
+      "duration_seconds": 10,
+      "status": "archived",
+      "added_by": null,
+      "added_at": "2026-11-01T08:30:00Z",
+      "license": "cc-by"
+    }
+  ]
+}

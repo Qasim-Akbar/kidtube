@@ -52,6 +52,10 @@ android {
         abortOnError = true
     }
 
+    testOptions {
+        // Robolectric (in-memory Room tests) needs merged resources/manifest on the unit-test classpath.
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 kotlin {
@@ -105,10 +109,12 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.okhttp.mockwebserver)
 }
 
 // ---- Fail release builds early when the base URL is not configured ---------------------------
-val verifyReleaseApiBaseUrl by tasks.registering {
+val verifyReleaseApiBaseUrl = tasks.register("verifyReleaseApiBaseUrl") {
     group = "verification"
     description = "Fails if KIDTUBE_API_BASE_URL is missing, CHANGE-ME or not an https URL."
     val raw = releaseApiBaseUrlRaw

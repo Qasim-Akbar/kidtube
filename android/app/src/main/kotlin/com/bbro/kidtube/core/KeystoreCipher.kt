@@ -15,9 +15,9 @@ import javax.crypto.spec.GCMParameterSpec
  * Blob layout: 1 byte IV length | IV | ciphertext + 128-bit GCM tag.
  * [aad] binds a blob to its purpose (e.g. "parent-pin"); decrypting with different aad fails.
  */
-class KeystoreCipher(private val keyAlias: String) {
+class KeystoreCipher(private val keyAlias: String) : SecretCipher {
 
-    fun encrypt(plain: ByteArray, aad: ByteArray? = null): ByteArray {
+    override fun encrypt(plain: ByteArray, aad: ByteArray?): ByteArray {
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, getOrCreateKey())
         aad?.let(cipher::updateAAD)
@@ -26,7 +26,7 @@ class KeystoreCipher(private val keyAlias: String) {
     }
 
     /** @throws java.security.GeneralSecurityException if the blob was tampered with, or the key is gone. */
-    fun decrypt(blob: ByteArray, aad: ByteArray? = null): ByteArray {
+    override fun decrypt(blob: ByteArray, aad: ByteArray?): ByteArray {
         require(blob.isNotEmpty()) { "empty blob" }
         val ivLength = blob[0].toInt() and 0xFF
         require(blob.size > 1 + ivLength) { "blob too short" }
