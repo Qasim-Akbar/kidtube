@@ -56,6 +56,7 @@ def build_report(
         select(Event.local_date, Event.plan_item_id, func.count())
         .where(*in_range, Event.type == EventType.view_complete)
         .group_by(Event.local_date, Event.plan_item_id)
+        .order_by(Event.local_date, Event.plan_item_id)
     ).all()
     # 2. watch seconds per (day, video); grouping (not filtering) on the JSON key keeps it portable
     video_key = Event.payload["video_id"].as_string()
@@ -63,10 +64,12 @@ def build_report(
         select(Event.local_date, video_key.label("video_id"), func.sum(Event.payload["seconds"].as_float()))
         .where(*in_range, Event.type == EventType.watch_progress)
         .group_by(Event.local_date, video_key)
+        .order_by(Event.local_date, video_key)
     ).all()
     # 3. app sessions: a duration needs end - start of two ISO strings, which has no portable SQL form
     session_rows = db.execute(
         select(Event.local_date, Event.payload).where(*in_range, Event.type == EventType.app_session)
+        .order_by(Event.id)
     ).all()
     # 4. playback errors per (video, code)
     code_key = Event.payload["code"].as_string()
@@ -74,6 +77,7 @@ def build_report(
         select(video_key.label("video_id"), code_key.label("code"), func.count())
         .where(*in_range, Event.type == EventType.playback_error)
         .group_by(video_key, code_key)
+        .order_by(video_key, code_key)
     ).all()
 
     # 5. the plan's items (item -> video) and 6. all-time views per item (completion is not range-bound)
@@ -88,6 +92,7 @@ def build_report(
         select(Event.plan_item_id, func.count())
         .where(Event.child_id == child.id, Event.type == EventType.view_complete, Event.local_date <= today)
         .group_by(Event.plan_item_id)
+        .order_by(Event.plan_item_id)
     ).all()
     views_total = {str(pid): n for pid, n in total_rows if pid is not None}
     video_of_item = {item.id: item.video_id for item, _ in item_rows}

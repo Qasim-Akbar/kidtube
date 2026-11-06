@@ -37,7 +37,7 @@ def build_snapshot(db: Session, family_id: uuid.UUID, server_time: datetime) -> 
     assert family is not None
     children = list(db.scalars(select(Child).where(Child.family_id == family_id).order_by(Child.created_at, Child.id)))
     videos = list(db.scalars(select(Video).where(Video.family_id == family_id).order_by(Video.added_at, Video.id)))
-    plans = list(db.scalars(select(Plan).where(Plan.child_id.in_([c.id for c in children])))) if children else []
+    plans = list(db.scalars(select(Plan).where(Plan.child_id.in_([c.id for c in children])).order_by(Plan.id))) if children else []
     plan_outs = load_plan_outs(db, plans)
     plan_by_child = {p.child_id: plan_outs[p.id] for p in plans}
 

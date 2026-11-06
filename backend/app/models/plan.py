@@ -35,7 +35,7 @@ class Plan(UUIDPk, Timestamps, Base):
         back_populates="plan",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        order_by="PlanItem.position",
+        order_by="(PlanItem.position, PlanItem.id)",
     )
 
 

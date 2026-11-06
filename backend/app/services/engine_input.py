@@ -98,7 +98,7 @@ def load_histories(
             Event.local_date >= lo, Event.local_date <= today,
         )
         .group_by(Event.child_id, Event.type, Event.local_date)
-        .order_by(Event.child_id, Event.local_date)
+        .order_by(Event.child_id, Event.type, Event.local_date)
     ).all()
     for child_id, event_type, d, total in seconds_rows:
         target = out[child_id].watch_seconds if event_type is EventType.watch_progress else out[child_id].time_extension_seconds
@@ -112,6 +112,7 @@ def load_histories(
             Event.child_id.in_(child_ids), Event.type == EventType.app_session,
             Event.local_date >= lo, Event.local_date <= today,
         )
+        .order_by(Event.id)
     ):  # validated and normalised at ingest: ISO-8601 start/end with end >= start
         start, end = datetime.fromisoformat(payload["start"]), datetime.fromisoformat(payload["end"])
         session_totals[(child_id, d)] = session_totals.get((child_id, d), 0) + max(0, int((end - start).total_seconds()))
