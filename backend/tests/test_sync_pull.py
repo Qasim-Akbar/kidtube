@@ -37,8 +37,10 @@ def test_snapshot_content(client, engine, clock) -> None:
     # same shapes as the existing endpoints
     assert plan == client.get(f"/children/{ali}/plan", headers=h).json()
     assert body["videos"] == client.get("/videos", headers=h).json()
+    empty = {"views": [], "watch_seconds": [], "app_seconds": [], "time_extension_seconds": []}
     assert body["children"] == [
-        {**c, "plan": plan if c["id"] == ali else None} for c in client.get("/children", headers=h).json()
+        {**c, "plan": plan if c["id"] == ali else None, "history": empty}  # no events yet
+        for c in client.get("/children", headers=h).json()
     ]
     assert r.headers["etag"] == f'"{body["snapshot_version"]}"'
 

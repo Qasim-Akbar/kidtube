@@ -58,6 +58,9 @@ sync (snapshot pull with ETag, combined push), per-child reports.
 Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS).
 Done (android): project skeleton only (build setup, Hilt/Room/Retrofit wiring, placeholder screens).
 Next: Android MVP (PIN, share target, outbox).
+sync (snapshot pull with ETag, combined push; per-child event history in the snapshot for offline engine use,
+built by the same loader as the feed), per-child reports.
+Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS). Next: Android.
 Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic migrations.
 
 ## Android (android/)

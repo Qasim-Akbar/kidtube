@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -14,8 +14,30 @@ from app.services.events import MAX_BATCH
 MAX_PUSH_VIDEOS = 50
 
 
+class HistoryViews(BaseModel):
+    plan_item_id: uuid.UUID
+    local_date: date
+    count: int = Field(ge=1)
+
+
+class HistorySeconds(BaseModel):
+    local_date: date
+    seconds: int
+
+
+class ChildHistory(BaseModel):
+    """What the plan engine needs to run offline, by the child's local date. Clients merge their own
+    not-yet-acknowledged events on top (see SPEC section 9)."""
+
+    views: list[HistoryViews] = Field(description="All-time view_complete counts per (item, day); only items still in the plan")
+    watch_seconds: list[HistorySeconds] = Field(description="Last 30 family-local days (today and the 29 before)")
+    app_seconds: list[HistorySeconds] = Field(description="Last 30 family-local days")
+    time_extension_seconds: list[HistorySeconds] = Field(description="Last 30 family-local days")
+
+
 class SnapshotChild(ChildOut):
     plan: PlanOut | None = Field(description="Plan config with ordered items; null when the child has no plan yet")
+    history: ChildHistory
 
 
 class SnapshotOut(BaseModel):

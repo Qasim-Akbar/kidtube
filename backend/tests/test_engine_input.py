@@ -104,7 +104,7 @@ def test_views_come_from_one_grouped_query_regardless_of_item_count(session: Ses
     statements = count_statements(engine, lambda: load_engine_input(session, child, plan, TODAY))
     grouped = [s for s in statements if "GROUP BY" in s and "plan_item_id" in s]
     assert len(grouped) == 1
-    assert len(statements) == 5  # items join, views, watch seconds, extension, app sessions: never one per item
+    assert len(statements) == 4  # items join + the 3 history queries (views, watch+extension seconds, app sessions)
 
 
 def test_statement_count_does_not_grow_with_items(session: Session, engine: Engine) -> None:
