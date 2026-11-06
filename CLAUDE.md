@@ -82,5 +82,5 @@ Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic
 - Run checks: `cd android && ./gradlew assembleDebug testDebugUnitTest lintDebug` (Git Bash; `gradlew.bat` on cmd/PowerShell).
   Needs the Android SDK (platform 37): `sdk.dir` in android/local.properties (git-ignored) or ANDROID_HOME. See android/README.md.
 - Release builds read the backend URL from Gradle property `KIDTUBE_API_BASE_URL` (never in source); they fail while it is
-  missing, CHANGE-ME or not https. Debug uses http://10.0.2.2:8000/ with cleartext allowed to 10.0.2.2 only.
+  missing, CHANGE-ME or not https. Debug uses http://10.0.2.2:8001/ with cleartext allowed to 10.0.2.2 only.
 - android:allowBackup=false and backup/extraction rules exclude databases, prefs and files (PIN blobs). No analytics/ad SDKs.
