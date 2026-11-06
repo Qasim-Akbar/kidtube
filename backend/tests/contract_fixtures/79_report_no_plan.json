@@ -1,0 +1,78 @@
+{
+  "body": {
+    "child_id": "00000000-0000-4000-8000-000000000007",
+    "date": "2026-01-05",
+    "days": [
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-05",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-06",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-07",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-08",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-09",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-10",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-11",
+        "views_completed": 0,
+        "watch_seconds": 0
+      }
+    ],
+    "end": "2026-01-11",
+    "per_video": [],
+    "plan_progress": null,
+    "planned_vs_watched": null,
+    "playback_errors": [],
+    "range": "week",
+    "start": "2026-01-05",
+    "top_videos": [],
+    "totals": {
+      "app_seconds": 0,
+      "browsing_seconds": 0,
+      "views_completed": 0,
+      "watch_seconds": 0
+    }
+  },
+  "headers": {},
+  "name": "report_no_plan",
+  "request": {
+    "method": "GET",
+    "path": "/reports/children/00000000-0000-4000-8000-000000000007?range=week&date=2026-01-05"
+  },
+  "status": 200
+}

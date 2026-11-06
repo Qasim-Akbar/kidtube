@@ -1,0 +1,19 @@
+{
+  "body": {
+    "avatar": "fox",
+    "daily_app_minutes": null,
+    "id": "00000000-0000-4000-8000-000000000003",
+    "name": "Ali"
+  },
+  "headers": {},
+  "name": "child_create",
+  "request": {
+    "body": {
+      "avatar": "fox",
+      "name": "Ali"
+    },
+    "method": "POST",
+    "path": "/children"
+  },
+  "status": 201
+}

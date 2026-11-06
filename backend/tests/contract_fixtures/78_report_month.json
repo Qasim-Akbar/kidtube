@@ -1,0 +1,296 @@
+{
+  "body": {
+    "child_id": "00000000-0000-4000-8000-000000000004",
+    "date": "2026-01-05",
+    "days": [
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-01",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-02",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-03",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-04",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 660,
+        "browsing_seconds": 450,
+        "date": "2026-01-05",
+        "views_completed": 2,
+        "watch_seconds": 210
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-06",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-07",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-08",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-09",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-10",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-11",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-12",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-13",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-14",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-15",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-16",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-17",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-18",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-19",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-20",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-21",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-22",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-23",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-24",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-25",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-26",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-27",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-28",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-29",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-30",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-31",
+        "views_completed": 0,
+        "watch_seconds": 0
+      }
+    ],
+    "end": "2026-01-31",
+    "per_video": [
+      {
+        "completed": false,
+        "item_id": "00000000-0000-4000-8000-000000000025",
+        "required": false,
+        "status": "active",
+        "title": "The alphabet song",
+        "video_id": "00000000-0000-4000-8000-000000000011",
+        "view_target": 3,
+        "views_in_range": 1,
+        "views_total": 1
+      },
+      {
+        "completed": false,
+        "item_id": "00000000-0000-4000-8000-000000000026",
+        "required": false,
+        "status": "active",
+        "title": "Colours with Pip",
+        "video_id": "00000000-0000-4000-8000-000000000012",
+        "view_target": null,
+        "views_in_range": 1,
+        "views_total": 1
+      }
+    ],
+    "plan_progress": {
+      "as_of": "2026-01-05",
+      "finish_date": "2026-01-06",
+      "remaining_finite_views": 2
+    },
+    "planned_vs_watched": {
+      "active_days": 1,
+      "actual": 2,
+      "expected": 2,
+      "pace_type": "videos_per_day",
+      "unit": "videos",
+      "window_end": "2026-01-05",
+      "window_start": "2026-01-05"
+    },
+    "playback_errors": [],
+    "range": "month",
+    "start": "2026-01-01",
+    "top_videos": [
+      {
+        "thumbnail_url": "https://i.ytimg.com/vi/vid00000002/hqdefault.jpg",
+        "title": "The alphabet song",
+        "video_id": "00000000-0000-4000-8000-000000000011",
+        "views": 1,
+        "watch_seconds": 120
+      },
+      {
+        "thumbnail_url": "https://i.ytimg.com/vi/vid00000003/hqdefault.jpg",
+        "title": "Colours with Pip",
+        "video_id": "00000000-0000-4000-8000-000000000012",
+        "views": 1,
+        "watch_seconds": 90
+      }
+    ],
+    "totals": {
+      "app_seconds": 660,
+      "browsing_seconds": 450,
+      "views_completed": 2,
+      "watch_seconds": 210
+    }
+  },
+  "headers": {},
+  "name": "report_month",
+  "request": {
+    "method": "GET",
+    "path": "/reports/children/00000000-0000-4000-8000-000000000004?range=month&date=2026-01-05"
+  },
+  "status": 200
+}

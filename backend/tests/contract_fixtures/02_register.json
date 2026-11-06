@@ -1,0 +1,20 @@
+{
+  "body": {
+    "email": "mum@example.com",
+    "family_id": "00000000-0000-4000-8000-000000000002",
+    "parent_id": "00000000-0000-4000-8000-000000000001"
+  },
+  "headers": {},
+  "name": "register",
+  "request": {
+    "body": {
+      "email": "mum@example.com",
+      "family_name": "The Khans",
+      "password": "correct-horse-battery",
+      "timezone": "Asia/Karachi"
+    },
+    "method": "POST",
+    "path": "/auth/register"
+  },
+  "status": 201
+}

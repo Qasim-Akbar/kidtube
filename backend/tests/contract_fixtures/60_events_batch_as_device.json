@@ -1,0 +1,50 @@
+{
+  "body": {
+    "results": [
+      {
+        "id": "00000000-0000-4000-8000-000000000037",
+        "index": 0,
+        "reason": null,
+        "status": "accepted"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000038",
+        "index": 1,
+        "reason": "time_extension events may only be submitted by a parent",
+        "status": "rejected"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "events_batch_as_device",
+  "request": {
+    "body": {
+      "events": [
+        {
+          "child_id": "00000000-0000-4000-8000-000000000004",
+          "id": "00000000-0000-4000-8000-000000000037",
+          "local_date": "2026-01-05",
+          "occurred_at": "2026-01-05T09:30:00Z",
+          "payload": {
+            "seconds": 120,
+            "video_id": "00000000-0000-4000-8000-000000000011"
+          },
+          "type": "watch_progress"
+        },
+        {
+          "child_id": "00000000-0000-4000-8000-000000000004",
+          "id": "00000000-0000-4000-8000-000000000038",
+          "local_date": "2026-01-05",
+          "occurred_at": "2026-01-05T09:30:00Z",
+          "payload": {
+            "seconds": 600
+          },
+          "type": "time_extension"
+        }
+      ]
+    },
+    "method": "POST",
+    "path": "/events"
+  },
+  "status": 200
+}

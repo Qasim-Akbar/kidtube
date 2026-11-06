@@ -1,0 +1,41 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "reason": "An email address must have an @-sign."
+        },
+        "input": "not-an-email",
+        "loc": [
+          "body",
+          "email"
+        ],
+        "msg": "value is not a valid email address: An email address must have an @-sign.",
+        "type": "value_error"
+      },
+      {
+        "ctx": {
+          "min_length": 8
+        },
+        "input": "short",
+        "loc": [
+          "body",
+          "password"
+        ],
+        "msg": "String should have at least 8 characters",
+        "type": "string_too_short"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "register_validation_error",
+  "request": {
+    "body": {
+      "email": "not-an-email",
+      "password": "short"
+    },
+    "method": "POST",
+    "path": "/auth/register"
+  },
+  "status": 422
+}

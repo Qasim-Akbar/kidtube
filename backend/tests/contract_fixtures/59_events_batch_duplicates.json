@@ -1,0 +1,51 @@
+{
+  "body": {
+    "results": [
+      {
+        "id": "00000000-0000-4000-8000-000000000027",
+        "index": 0,
+        "reason": null,
+        "status": "duplicate"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000028",
+        "index": 1,
+        "reason": null,
+        "status": "duplicate"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "events_batch_duplicates",
+  "request": {
+    "body": {
+      "events": [
+        {
+          "child_id": "00000000-0000-4000-8000-000000000003",
+          "id": "00000000-0000-4000-8000-000000000027",
+          "local_date": "2026-01-05",
+          "occurred_at": "2026-01-05T09:30:00Z",
+          "payload": {
+            "plan_item_id": "00000000-0000-4000-8000-000000000017",
+            "watched_pct": 0.95
+          },
+          "type": "view_complete"
+        },
+        {
+          "child_id": "00000000-0000-4000-8000-000000000003",
+          "id": "00000000-0000-4000-8000-000000000028",
+          "local_date": "2026-01-05",
+          "occurred_at": "2026-01-05T09:30:00Z",
+          "payload": {
+            "seconds": 95.5,
+            "video_id": "00000000-0000-4000-8000-000000000008"
+          },
+          "type": "watch_progress"
+        }
+      ]
+    },
+    "method": "POST",
+    "path": "/events"
+  },
+  "status": 200
+}

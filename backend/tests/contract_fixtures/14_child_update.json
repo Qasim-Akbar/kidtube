@@ -1,0 +1,18 @@
+{
+  "body": {
+    "avatar": "lion",
+    "daily_app_minutes": null,
+    "id": "00000000-0000-4000-8000-000000000003",
+    "name": "Ali"
+  },
+  "headers": {},
+  "name": "child_update",
+  "request": {
+    "body": {
+      "avatar": "lion"
+    },
+    "method": "PATCH",
+    "path": "/children/00000000-0000-4000-8000-000000000003"
+  },
+  "status": 200
+}

@@ -1,0 +1,41 @@
+{
+  "body": [
+    {
+      "avatar": "lion",
+      "daily_app_minutes": null,
+      "id": "00000000-0000-4000-8000-000000000003",
+      "name": "Ali"
+    },
+    {
+      "avatar": "owl",
+      "daily_app_minutes": null,
+      "id": "00000000-0000-4000-8000-000000000004",
+      "name": "Sara"
+    },
+    {
+      "avatar": null,
+      "daily_app_minutes": null,
+      "id": "00000000-0000-4000-8000-000000000005",
+      "name": "Omar"
+    },
+    {
+      "avatar": null,
+      "daily_app_minutes": null,
+      "id": "00000000-0000-4000-8000-000000000006",
+      "name": "Noor"
+    },
+    {
+      "avatar": null,
+      "daily_app_minutes": null,
+      "id": "00000000-0000-4000-8000-000000000007",
+      "name": "Pip"
+    }
+  ],
+  "headers": {},
+  "name": "device_reads_children",
+  "request": {
+    "method": "GET",
+    "path": "/children"
+  },
+  "status": 200
+}

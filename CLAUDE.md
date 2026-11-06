@@ -45,6 +45,12 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
   cd backend && TEST_DATABASE_URL=postgresql+psycopg://kidtube_test:test-only-pw@localhost:5432/kidtube_test .venv/bin/pytest
   Run both before committing.
 
+- API contract fixtures: `backend/tests/contract_fixtures/*.json` are GENERATED from the real API by
+  `backend/tests/test_contract_fixtures.py` (never hand-edit); the Android JSON-parsing tests read them.
+  Any change to an API response shape makes `test_contract_fixtures_match_committed` fail. Refresh, review the diff, commit:
+  `cd backend && UPDATE_FIXTURES=1 .venv/bin/pytest tests/test_contract_fixtures.py`
+  Never put Authorization values in fixtures. Ids, tokens and server timestamps are normalised to placeholders.
+
 - Time: never call datetime.now() directly in app code; use the injectable get_now clock (app/core/clock.py).
 - Everything is scoped by family_id. Another family's rows must return 404, not 403.
 - Run uvicorn with a single worker (in-memory rate limiter).

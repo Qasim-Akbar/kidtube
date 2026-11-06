@@ -1,0 +1,12 @@
+{
+  "body": {
+    "detail": "This child has no plan yet"
+  },
+  "headers": {},
+  "name": "feed_plan_not_found",
+  "request": {
+    "method": "GET",
+    "path": "/children/00000000-0000-4000-8000-000000000007/feed"
+  },
+  "status": 404
+}

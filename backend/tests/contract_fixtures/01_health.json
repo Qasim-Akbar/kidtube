@@ -1,0 +1,12 @@
+{
+  "body": {
+    "status": "ok"
+  },
+  "headers": {},
+  "name": "health",
+  "request": {
+    "method": "GET",
+    "path": "/health"
+  },
+  "status": 200
+}

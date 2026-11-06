@@ -1,0 +1,25 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "expected": "'day', 'week' or 'month'"
+        },
+        "input": "year",
+        "loc": [
+          "query",
+          "range"
+        ],
+        "msg": "Input should be 'day', 'week' or 'month'",
+        "type": "literal_error"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "report_validation_error",
+  "request": {
+    "method": "GET",
+    "path": "/reports/children/00000000-0000-4000-8000-000000000004?range=year"
+  },
+  "status": 422
+}

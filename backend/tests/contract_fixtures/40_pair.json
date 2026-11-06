@@ -1,0 +1,18 @@
+{
+  "body": {
+    "device_id": "00000000-0000-4000-8000-000000000022",
+    "device_token": "kidtube-device-token-placeholder-0000000001",
+    "family_id": "00000000-0000-4000-8000-000000000002"
+  },
+  "headers": {},
+  "name": "pair",
+  "request": {
+    "body": {
+      "code": "100001",
+      "device_name": "Kids tablet"
+    },
+    "method": "POST",
+    "path": "/devices/pair"
+  },
+  "status": 201
+}

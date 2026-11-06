@@ -1,0 +1,12 @@
+{
+  "body": {
+    "detail": "Child not found"
+  },
+  "headers": {},
+  "name": "report_other_family_child",
+  "request": {
+    "method": "GET",
+    "path": "/reports/children/00000000-0000-4000-8000-000000000024?range=day"
+  },
+  "status": 404
+}

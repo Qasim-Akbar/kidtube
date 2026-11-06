@@ -1,0 +1,14 @@
+{
+  "body": {
+    "detail": "Invalid or missing credentials"
+  },
+  "headers": {
+    "www-authenticate": "Bearer"
+  },
+  "name": "revoked_device_token_rejected",
+  "request": {
+    "method": "GET",
+    "path": "/children"
+  },
+  "status": 401
+}

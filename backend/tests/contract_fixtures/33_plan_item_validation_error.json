@@ -1,0 +1,29 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "ge": 1
+        },
+        "input": 0,
+        "loc": [
+          "body",
+          "view_target"
+        ],
+        "msg": "Input should be greater than or equal to 1",
+        "type": "greater_than_equal"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "plan_item_validation_error",
+  "request": {
+    "body": {
+      "video_id": "00000000-0000-4000-8000-000000000014",
+      "view_target": 0
+    },
+    "method": "POST",
+    "path": "/children/00000000-0000-4000-8000-000000000003/plan/items"
+  },
+  "status": 422
+}

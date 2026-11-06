@@ -1,0 +1,37 @@
+{
+  "body": {
+    "added_on": "2026-01-05",
+    "anchor_date": "2026-01-12",
+    "daily_cap": null,
+    "id": "00000000-0000-4000-8000-000000000019",
+    "on_miss": "drop",
+    "position": 3,
+    "required": false,
+    "status": "active",
+    "video": {
+      "duration_seconds": null,
+      "id": "00000000-0000-4000-8000-000000000013",
+      "platform": "youtube",
+      "platform_video_id": "vid00000004",
+      "status": "verified",
+      "thumbnail_url": "https://i.ytimg.com/vi/vid00000004/hqdefault.jpg",
+      "title": "Animal sounds"
+    },
+    "video_id": "00000000-0000-4000-8000-000000000013",
+    "view_target": null,
+    "watch_threshold": 0.8
+  },
+  "headers": {},
+  "name": "plan_item_create_anchored",
+  "request": {
+    "body": {
+      "anchor_date": "2026-01-12",
+      "on_miss": "drop",
+      "video_id": "00000000-0000-4000-8000-000000000013",
+      "watch_threshold": 0.8
+    },
+    "method": "POST",
+    "path": "/children/00000000-0000-4000-8000-000000000003/plan/items"
+  },
+  "status": 201
+}

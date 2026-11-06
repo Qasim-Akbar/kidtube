@@ -1,0 +1,18 @@
+{
+  "body": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJmYW1pbHlfaWQiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDIiLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY3NjA4MTA2fQ.gz0utM2iKrX-1gNVIzPDx58XXICXjfv6EvVZizJIQQ0",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJmYW1pbHlfaWQiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDIiLCJ0eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3MDE5OTIwNn0.wCVScdxGl202v7xjFmSoXpD9p-EI3j7WlSWpMhMXPFw",
+    "token_type": "bearer"
+  },
+  "headers": {},
+  "name": "login",
+  "request": {
+    "body": {
+      "email": "mum@example.com",
+      "password": "correct-horse-battery"
+    },
+    "method": "POST",
+    "path": "/auth/login"
+  },
+  "status": 200
+}

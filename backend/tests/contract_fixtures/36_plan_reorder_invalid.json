@@ -1,0 +1,18 @@
+{
+  "body": {
+    "detail": "item_ids must list every item of the plan exactly once"
+  },
+  "headers": {},
+  "name": "plan_reorder_invalid",
+  "request": {
+    "body": {
+      "item_ids": [
+        "00000000-0000-4000-8000-000000000017",
+        "00000000-0000-4000-8000-000000000020"
+      ]
+    },
+    "method": "POST",
+    "path": "/children/00000000-0000-4000-8000-000000000003/plan/reorder"
+  },
+  "status": 422
+}

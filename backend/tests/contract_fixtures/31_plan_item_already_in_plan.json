@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "This video is already in the plan"
+  },
+  "headers": {},
+  "name": "plan_item_already_in_plan",
+  "request": {
+    "body": {
+      "video_id": "00000000-0000-4000-8000-000000000008"
+    },
+    "method": "POST",
+    "path": "/children/00000000-0000-4000-8000-000000000003/plan/items"
+  },
+  "status": 409
+}

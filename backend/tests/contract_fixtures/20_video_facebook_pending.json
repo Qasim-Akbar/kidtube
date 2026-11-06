@@ -1,0 +1,24 @@
+{
+  "body": {
+    "added_at": "2030-01-01T00:00:02.000000Z",
+    "added_by": "00000000-0000-4000-8000-000000000001",
+    "duration_seconds": null,
+    "id": "00000000-0000-4000-8000-000000000010",
+    "platform": "facebook",
+    "platform_video_id": "1234567890123",
+    "status": "pending",
+    "thumbnail_url": null,
+    "title": "Facebook video",
+    "url": "https://www.facebook.com/watch/?v=1234567890123"
+  },
+  "headers": {},
+  "name": "video_facebook_pending",
+  "request": {
+    "body": {
+      "url": "https://www.facebook.com/watch/?v=1234567890123"
+    },
+    "method": "POST",
+    "path": "/videos"
+  },
+  "status": 201
+}

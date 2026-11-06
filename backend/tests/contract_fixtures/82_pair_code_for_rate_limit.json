@@ -1,0 +1,13 @@
+{
+  "body": {
+    "code": "100003",
+    "expires_at": "2030-01-01T00:00:15.000000Z"
+  },
+  "headers": {},
+  "name": "pair_code_for_rate_limit",
+  "request": {
+    "method": "POST",
+    "path": "/devices/pair-code"
+  },
+  "status": 201
+}

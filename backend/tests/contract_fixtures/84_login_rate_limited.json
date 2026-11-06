@@ -1,0 +1,18 @@
+{
+  "body": {
+    "detail": "Too many failed login attempts"
+  },
+  "headers": {
+    "retry-after": "489"
+  },
+  "name": "login_rate_limited",
+  "request": {
+    "body": {
+      "email": "mum@example.com",
+      "password": "correct-horse-battery"
+    },
+    "method": "POST",
+    "path": "/auth/login"
+  },
+  "status": 429
+}

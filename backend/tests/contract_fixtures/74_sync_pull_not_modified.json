@@ -1,0 +1,16 @@
+{
+  "body": null,
+  "headers": {
+    "cache-control": "private, no-cache",
+    "etag": "\"00000000000000000000000000000001\""
+  },
+  "name": "sync_pull_not_modified",
+  "request": {
+    "headers": {
+      "If-None-Match": "\"00000000000000000000000000000001\""
+    },
+    "method": "GET",
+    "path": "/sync/pull"
+  },
+  "status": 304
+}

@@ -1,0 +1,338 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "actual_length": 51,
+          "field_type": "List",
+          "max_length": 50
+        },
+        "input": [
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=vid00000001"
+          }
+        ],
+        "loc": [
+          "body",
+          "videos"
+        ],
+        "msg": "List should have at most 50 items after validation, not 51",
+        "type": "too_long"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "sync_push_too_many_items",
+  "request": {
+    "body": {
+      "videos": [
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        }
+      ]
+    },
+    "method": "POST",
+    "path": "/sync/push"
+  },
+  "status": 422
+}

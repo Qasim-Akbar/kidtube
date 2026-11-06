@@ -1,0 +1,29 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "pattern": "^\\d{6}$"
+        },
+        "input": "12",
+        "loc": [
+          "body",
+          "code"
+        ],
+        "msg": "String should match pattern '^\\d{6}$'",
+        "type": "string_pattern_mismatch"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "pair_validation_error",
+  "request": {
+    "body": {
+      "code": "12",
+      "device_name": "Tablet"
+    },
+    "method": "POST",
+    "path": "/devices/pair"
+  },
+  "status": 422
+}

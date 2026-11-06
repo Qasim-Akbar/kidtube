@@ -1,0 +1,46 @@
+{
+  "body": {
+    "backlog": 0,
+    "date": "2026-01-05",
+    "dropped_item_ids": [],
+    "items": [
+      {
+        "duration_seconds": null,
+        "item_id": "00000000-0000-4000-8000-000000000025",
+        "locked": false,
+        "platform": "youtube",
+        "platform_video_id": "vid00000002",
+        "required": false,
+        "thumbnail_url": "https://i.ytimg.com/vi/vid00000002/hqdefault.jpg",
+        "title": "The alphabet song",
+        "video_id": "00000000-0000-4000-8000-000000000011"
+      },
+      {
+        "duration_seconds": null,
+        "item_id": "00000000-0000-4000-8000-000000000026",
+        "locked": false,
+        "platform": "youtube",
+        "platform_video_id": "vid00000003",
+        "required": false,
+        "thumbnail_url": "https://i.ytimg.com/vi/vid00000003/hqdefault.jpg",
+        "title": "Colours with Pip",
+        "video_id": "00000000-0000-4000-8000-000000000012"
+      }
+    ],
+    "pace_type": "videos_per_day",
+    "quota_today": 2,
+    "remaining_seconds": null,
+    "remaining_videos": 2,
+    "skipped_item_ids": [],
+    "status": "ok",
+    "unavailable_item_ids": [],
+    "views_today": 0
+  },
+  "headers": {},
+  "name": "feed_ok",
+  "request": {
+    "method": "GET",
+    "path": "/children/00000000-0000-4000-8000-000000000004/feed"
+  },
+  "status": 200
+}

@@ -1,0 +1,28 @@
+{
+  "body": {
+    "active_weekdays": 31,
+    "child_id": "00000000-0000-4000-8000-000000000003",
+    "end_date": null,
+    "id": "00000000-0000-4000-8000-000000000016",
+    "items": [],
+    "max_extra_per_day": 2,
+    "pace_type": "videos_per_day",
+    "pace_value": 2,
+    "start_date": "2026-01-05",
+    "version": 2
+  },
+  "headers": {},
+  "name": "plan_update",
+  "request": {
+    "body": {
+      "active_weekdays": 31,
+      "max_extra_per_day": 2,
+      "pace_type": "videos_per_day",
+      "pace_value": 2,
+      "start_date": "2026-01-05"
+    },
+    "method": "PUT",
+    "path": "/children/00000000-0000-4000-8000-000000000003/plan"
+  },
+  "status": 200
+}

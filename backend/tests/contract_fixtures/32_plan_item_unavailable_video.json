@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "This video is unavailable"
+  },
+  "headers": {},
+  "name": "plan_item_unavailable_video",
+  "request": {
+    "body": {
+      "video_id": "00000000-0000-4000-8000-000000000009"
+    },
+    "method": "POST",
+    "path": "/children/00000000-0000-4000-8000-000000000003/plan/items"
+  },
+  "status": 422
+}

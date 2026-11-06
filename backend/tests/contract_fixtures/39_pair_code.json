@@ -1,0 +1,13 @@
+{
+  "body": {
+    "code": "100001",
+    "expires_at": "2030-01-01T00:00:08.000000Z"
+  },
+  "headers": {},
+  "name": "pair_code",
+  "request": {
+    "method": "POST",
+    "path": "/devices/pair-code"
+  },
+  "status": 201
+}

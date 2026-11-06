@@ -1,0 +1,18 @@
+{
+  "body": {
+    "detail": "Email already registered"
+  },
+  "headers": {},
+  "name": "register_email_taken",
+  "request": {
+    "body": {
+      "email": "mum@example.com",
+      "family_name": "The Khans",
+      "password": "correct-horse-battery",
+      "timezone": "Asia/Karachi"
+    },
+    "method": "POST",
+    "path": "/auth/register"
+  },
+  "status": 409
+}

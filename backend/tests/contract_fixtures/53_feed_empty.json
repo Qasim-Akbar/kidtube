@@ -1,0 +1,23 @@
+{
+  "body": {
+    "backlog": 0,
+    "date": "2026-01-05",
+    "dropped_item_ids": [],
+    "items": [],
+    "pace_type": "videos_per_day",
+    "quota_today": 2,
+    "remaining_seconds": null,
+    "remaining_videos": 2,
+    "skipped_item_ids": [],
+    "status": "empty",
+    "unavailable_item_ids": [],
+    "views_today": 0
+  },
+  "headers": {},
+  "name": "feed_empty",
+  "request": {
+    "method": "GET",
+    "path": "/children/00000000-0000-4000-8000-000000000006/feed"
+  },
+  "status": 200
+}

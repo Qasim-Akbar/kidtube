@@ -1,0 +1,24 @@
+{
+  "body": {
+    "added_at": "2030-01-01T00:00:01.000000Z",
+    "added_by": "00000000-0000-4000-8000-000000000001",
+    "duration_seconds": null,
+    "id": "00000000-0000-4000-8000-000000000009",
+    "platform": "youtube",
+    "platform_video_id": "vidgone0001",
+    "status": "unavailable",
+    "thumbnail_url": null,
+    "title": null,
+    "url": "https://www.youtube.com/watch?v=vidgone0001"
+  },
+  "headers": {},
+  "name": "video_unavailable",
+  "request": {
+    "body": {
+      "url": "https://www.youtube.com/watch?v=vidgone0001"
+    },
+    "method": "POST",
+    "path": "/videos"
+  },
+  "status": 201
+}

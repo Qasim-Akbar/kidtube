@@ -1,0 +1,16 @@
+{
+  "body": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJmYW1pbHlfaWQiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDIiLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY3NjA4MTA3fQ.pCFnXDac5ElkIN_N8AebOMpKIRAPke0UosnqJsUpGkE",
+    "token_type": "bearer"
+  },
+  "headers": {},
+  "name": "refresh",
+  "request": {
+    "body": {
+      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJmYW1pbHlfaWQiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDIiLCJ0eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3MDE5OTIwNn0.wCVScdxGl202v7xjFmSoXpD9p-EI3j7WlSWpMhMXPFw"
+    },
+    "method": "POST",
+    "path": "/auth/refresh"
+  },
+  "status": 200
+}

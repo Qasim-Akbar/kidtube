@@ -1,0 +1,21 @@
+{
+  "body": {
+    "added_at": "2030-01-01T00:00:12.000000Z",
+    "added_by": "00000000-0000-4000-8000-000000000001",
+    "duration_seconds": null,
+    "id": "00000000-0000-4000-8000-000000000042",
+    "platform": "youtube",
+    "platform_video_id": "vidslow0001",
+    "status": "verified",
+    "thumbnail_url": "https://i.ytimg.com/vi/vidslow0001/hqdefault.jpg",
+    "title": "Slow to verify",
+    "url": "https://www.youtube.com/watch?v=vidslow0001"
+  },
+  "headers": {},
+  "name": "video_reverify",
+  "request": {
+    "method": "POST",
+    "path": "/videos/00000000-0000-4000-8000-000000000042/reverify"
+  },
+  "status": 200
+}

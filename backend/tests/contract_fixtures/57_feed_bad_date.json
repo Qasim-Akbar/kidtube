@@ -1,0 +1,25 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "error": "input is too short"
+        },
+        "input": "yesterday",
+        "loc": [
+          "query",
+          "date"
+        ],
+        "msg": "Input should be a valid date or datetime, input is too short",
+        "type": "date_from_datetime_parsing"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "feed_bad_date",
+  "request": {
+    "method": "GET",
+    "path": "/children/00000000-0000-4000-8000-000000000004/feed?date=yesterday"
+  },
+  "status": 422
+}

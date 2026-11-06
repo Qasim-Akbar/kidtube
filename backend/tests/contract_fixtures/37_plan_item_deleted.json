@@ -1,0 +1,10 @@
+{
+  "body": null,
+  "headers": {},
+  "name": "plan_item_deleted",
+  "request": {
+    "method": "DELETE",
+    "path": "/plan-items/00000000-0000-4000-8000-000000000021"
+  },
+  "status": 204
+}

@@ -1,0 +1,35 @@
+{
+  "body": {
+    "added_on": "2026-01-05",
+    "anchor_date": null,
+    "daily_cap": 1,
+    "id": "00000000-0000-4000-8000-000000000018",
+    "on_miss": "shift",
+    "position": 1,
+    "required": false,
+    "status": "active",
+    "video": {
+      "duration_seconds": null,
+      "id": "00000000-0000-4000-8000-000000000011",
+      "platform": "youtube",
+      "platform_video_id": "vid00000002",
+      "status": "verified",
+      "thumbnail_url": "https://i.ytimg.com/vi/vid00000002/hqdefault.jpg",
+      "title": "The alphabet song"
+    },
+    "video_id": "00000000-0000-4000-8000-000000000011",
+    "view_target": 3,
+    "watch_threshold": 0.85
+  },
+  "headers": {},
+  "name": "plan_item_patch",
+  "request": {
+    "body": {
+      "view_target": 3,
+      "watch_threshold": 0.85
+    },
+    "method": "PATCH",
+    "path": "/plan-items/00000000-0000-4000-8000-000000000018"
+  },
+  "status": 200
+}

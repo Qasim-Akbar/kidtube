@@ -1,0 +1,31 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "ge": 1
+        },
+        "input": 0,
+        "loc": [
+          "body",
+          "pace_value"
+        ],
+        "msg": "Input should be greater than or equal to 1",
+        "type": "greater_than_equal"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "plan_validation_error",
+  "request": {
+    "body": {
+      "active_weekdays": 31,
+      "pace_type": "videos_per_day",
+      "pace_value": 0,
+      "start_date": "2026-01-05"
+    },
+    "method": "PUT",
+    "path": "/children/00000000-0000-4000-8000-000000000003/plan"
+  },
+  "status": 422
+}

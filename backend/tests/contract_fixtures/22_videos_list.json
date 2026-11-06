@@ -1,0 +1,107 @@
+{
+  "body": [
+    {
+      "added_at": "2030-01-01T00:00:00.000000Z",
+      "added_by": "00000000-0000-4000-8000-000000000001",
+      "duration_seconds": null,
+      "id": "00000000-0000-4000-8000-000000000008",
+      "platform": "youtube",
+      "platform_video_id": "vid00000001",
+      "status": "verified",
+      "thumbnail_url": "https://i.ytimg.com/vi/vid00000001/hqdefault.jpg",
+      "title": "Counting to ten",
+      "url": "https://www.youtube.com/watch?v=vid00000001"
+    },
+    {
+      "added_at": "2030-01-01T00:00:03.000000Z",
+      "added_by": "00000000-0000-4000-8000-000000000001",
+      "duration_seconds": null,
+      "id": "00000000-0000-4000-8000-000000000011",
+      "platform": "youtube",
+      "platform_video_id": "vid00000002",
+      "status": "verified",
+      "thumbnail_url": "https://i.ytimg.com/vi/vid00000002/hqdefault.jpg",
+      "title": "The alphabet song",
+      "url": "https://www.youtube.com/watch?v=vid00000002"
+    },
+    {
+      "added_at": "2030-01-01T00:00:04.000000Z",
+      "added_by": "00000000-0000-4000-8000-000000000001",
+      "duration_seconds": null,
+      "id": "00000000-0000-4000-8000-000000000012",
+      "platform": "youtube",
+      "platform_video_id": "vid00000003",
+      "status": "verified",
+      "thumbnail_url": "https://i.ytimg.com/vi/vid00000003/hqdefault.jpg",
+      "title": "Colours with Pip",
+      "url": "https://www.youtube.com/watch?v=vid00000003"
+    },
+    {
+      "added_at": "2030-01-01T00:00:05.000000Z",
+      "added_by": "00000000-0000-4000-8000-000000000001",
+      "duration_seconds": null,
+      "id": "00000000-0000-4000-8000-000000000013",
+      "platform": "youtube",
+      "platform_video_id": "vid00000004",
+      "status": "verified",
+      "thumbnail_url": "https://i.ytimg.com/vi/vid00000004/hqdefault.jpg",
+      "title": "Animal sounds",
+      "url": "https://www.youtube.com/watch?v=vid00000004"
+    },
+    {
+      "added_at": "2030-01-01T00:00:06.000000Z",
+      "added_by": "00000000-0000-4000-8000-000000000001",
+      "duration_seconds": null,
+      "id": "00000000-0000-4000-8000-000000000014",
+      "platform": "youtube",
+      "platform_video_id": "vid00000005",
+      "status": "verified",
+      "thumbnail_url": "https://i.ytimg.com/vi/vid00000005/hqdefault.jpg",
+      "title": "Bedtime story",
+      "url": "https://www.youtube.com/watch?v=vid00000005"
+    },
+    {
+      "added_at": "2030-01-01T00:00:07.000000Z",
+      "added_by": "00000000-0000-4000-8000-000000000001",
+      "duration_seconds": null,
+      "id": "00000000-0000-4000-8000-000000000015",
+      "platform": "youtube",
+      "platform_video_id": "vid00000006",
+      "status": "verified",
+      "thumbnail_url": "https://i.ytimg.com/vi/vid00000006/hqdefault.jpg",
+      "title": "Spare video",
+      "url": "https://www.youtube.com/watch?v=vid00000006"
+    },
+    {
+      "added_at": "2030-01-01T00:00:01.000000Z",
+      "added_by": "00000000-0000-4000-8000-000000000001",
+      "duration_seconds": null,
+      "id": "00000000-0000-4000-8000-000000000009",
+      "platform": "youtube",
+      "platform_video_id": "vidgone0001",
+      "status": "unavailable",
+      "thumbnail_url": null,
+      "title": null,
+      "url": "https://www.youtube.com/watch?v=vidgone0001"
+    },
+    {
+      "added_at": "2030-01-01T00:00:02.000000Z",
+      "added_by": "00000000-0000-4000-8000-000000000001",
+      "duration_seconds": null,
+      "id": "00000000-0000-4000-8000-000000000010",
+      "platform": "facebook",
+      "platform_video_id": "1234567890123",
+      "status": "pending",
+      "thumbnail_url": null,
+      "title": "Facebook video",
+      "url": "https://www.facebook.com/watch/?v=1234567890123"
+    }
+  ],
+  "headers": {},
+  "name": "videos_list",
+  "request": {
+    "method": "GET",
+    "path": "/videos"
+  },
+  "status": 200
+}

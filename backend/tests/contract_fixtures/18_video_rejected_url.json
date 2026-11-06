@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "Only YouTube and Facebook links are supported"
+  },
+  "headers": {},
+  "name": "video_rejected_url",
+  "request": {
+    "body": {
+      "url": "https://example.com/watch?v=vid00000001"
+    },
+    "method": "POST",
+    "path": "/videos"
+  },
+  "status": 422
+}

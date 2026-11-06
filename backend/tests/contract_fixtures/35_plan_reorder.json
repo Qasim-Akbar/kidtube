@@ -1,0 +1,118 @@
+{
+  "body": {
+    "active_weekdays": 31,
+    "child_id": "00000000-0000-4000-8000-000000000003",
+    "end_date": null,
+    "id": "00000000-0000-4000-8000-000000000016",
+    "items": [
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "id": "00000000-0000-4000-8000-000000000017",
+        "on_miss": "shift",
+        "position": 0,
+        "required": true,
+        "status": "active",
+        "video": {
+          "duration_seconds": null,
+          "id": "00000000-0000-4000-8000-000000000008",
+          "platform": "youtube",
+          "platform_video_id": "vid00000001",
+          "status": "verified",
+          "thumbnail_url": "https://i.ytimg.com/vi/vid00000001/hqdefault.jpg",
+          "title": "Counting to ten"
+        },
+        "video_id": "00000000-0000-4000-8000-000000000008",
+        "view_target": 1,
+        "watch_threshold": 0.9
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": null,
+        "id": "00000000-0000-4000-8000-000000000020",
+        "on_miss": "shift",
+        "position": 1,
+        "required": false,
+        "status": "active",
+        "video": {
+          "duration_seconds": null,
+          "id": "00000000-0000-4000-8000-000000000012",
+          "platform": "youtube",
+          "platform_video_id": "vid00000003",
+          "status": "verified",
+          "thumbnail_url": "https://i.ytimg.com/vi/vid00000003/hqdefault.jpg",
+          "title": "Colours with Pip"
+        },
+        "video_id": "00000000-0000-4000-8000-000000000012",
+        "view_target": null,
+        "watch_threshold": 0.9
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": null,
+        "daily_cap": 1,
+        "id": "00000000-0000-4000-8000-000000000018",
+        "on_miss": "shift",
+        "position": 2,
+        "required": false,
+        "status": "active",
+        "video": {
+          "duration_seconds": null,
+          "id": "00000000-0000-4000-8000-000000000011",
+          "platform": "youtube",
+          "platform_video_id": "vid00000002",
+          "status": "verified",
+          "thumbnail_url": "https://i.ytimg.com/vi/vid00000002/hqdefault.jpg",
+          "title": "The alphabet song"
+        },
+        "video_id": "00000000-0000-4000-8000-000000000011",
+        "view_target": 3,
+        "watch_threshold": 0.85
+      },
+      {
+        "added_on": "2026-01-05",
+        "anchor_date": "2026-01-12",
+        "daily_cap": null,
+        "id": "00000000-0000-4000-8000-000000000019",
+        "on_miss": "drop",
+        "position": 3,
+        "required": false,
+        "status": "active",
+        "video": {
+          "duration_seconds": null,
+          "id": "00000000-0000-4000-8000-000000000013",
+          "platform": "youtube",
+          "platform_video_id": "vid00000004",
+          "status": "verified",
+          "thumbnail_url": "https://i.ytimg.com/vi/vid00000004/hqdefault.jpg",
+          "title": "Animal sounds"
+        },
+        "video_id": "00000000-0000-4000-8000-000000000013",
+        "view_target": null,
+        "watch_threshold": 0.8
+      }
+    ],
+    "max_extra_per_day": 2,
+    "pace_type": "videos_per_day",
+    "pace_value": 2,
+    "start_date": "2026-01-05",
+    "version": 8
+  },
+  "headers": {},
+  "name": "plan_reorder",
+  "request": {
+    "body": {
+      "item_ids": [
+        "00000000-0000-4000-8000-000000000017",
+        "00000000-0000-4000-8000-000000000020",
+        "00000000-0000-4000-8000-000000000018",
+        "00000000-0000-4000-8000-000000000019"
+      ]
+    },
+    "method": "POST",
+    "path": "/children/00000000-0000-4000-8000-000000000003/plan/reorder"
+  },
+  "status": 200
+}

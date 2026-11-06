@@ -1,0 +1,12 @@
+{
+  "body": {
+    "detail": "Child not found"
+  },
+  "headers": {},
+  "name": "plan_other_family_child",
+  "request": {
+    "method": "GET",
+    "path": "/children/00000000-0000-4000-8000-000000000024/plan"
+  },
+  "status": 404
+}

@@ -1,0 +1,14 @@
+{
+  "body": {
+    "detail": "Invalid or missing credentials"
+  },
+  "headers": {
+    "www-authenticate": "Bearer"
+  },
+  "name": "children_invalid_token",
+  "request": {
+    "method": "GET",
+    "path": "/children"
+  },
+  "status": 401
+}

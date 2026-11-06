@@ -1,0 +1,119 @@
+{
+  "body": {
+    "events": [
+      {
+        "id": "00000000-0000-4000-8000-000000000039",
+        "index": 0,
+        "reason": null,
+        "retryable": false,
+        "status": "accepted"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000040",
+        "index": 1,
+        "reason": "payload.seconds out of range",
+        "retryable": false,
+        "status": "rejected"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000028",
+        "index": 2,
+        "reason": null,
+        "retryable": false,
+        "status": "duplicate"
+      }
+    ],
+    "videos": [
+      {
+        "index": 0,
+        "reason": null,
+        "retryable": false,
+        "status": "created",
+        "video_id": "00000000-0000-4000-8000-000000000041",
+        "video_status": "verified"
+      },
+      {
+        "index": 1,
+        "reason": null,
+        "retryable": true,
+        "status": "created",
+        "video_id": "00000000-0000-4000-8000-000000000042",
+        "video_status": "pending"
+      },
+      {
+        "index": 2,
+        "reason": "Only YouTube and Facebook links are supported",
+        "retryable": false,
+        "status": "rejected",
+        "video_id": null,
+        "video_status": null
+      },
+      {
+        "index": 3,
+        "reason": null,
+        "retryable": false,
+        "status": "existing",
+        "video_id": "00000000-0000-4000-8000-000000000008",
+        "video_status": "verified"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "sync_push_mixed",
+  "request": {
+    "body": {
+      "events": [
+        {
+          "child_id": "00000000-0000-4000-8000-000000000004",
+          "id": "00000000-0000-4000-8000-000000000039",
+          "local_date": "2026-01-05",
+          "occurred_at": "2026-01-05T09:30:00Z",
+          "payload": {
+            "seconds": 60,
+            "video_id": "00000000-0000-4000-8000-000000000012"
+          },
+          "type": "watch_progress"
+        },
+        {
+          "child_id": "00000000-0000-4000-8000-000000000004",
+          "id": "00000000-0000-4000-8000-000000000040",
+          "local_date": "2026-01-05",
+          "occurred_at": "2026-01-05T09:30:00Z",
+          "payload": {
+            "seconds": -1,
+            "video_id": "00000000-0000-4000-8000-000000000012"
+          },
+          "type": "watch_progress"
+        },
+        {
+          "child_id": "00000000-0000-4000-8000-000000000003",
+          "id": "00000000-0000-4000-8000-000000000028",
+          "local_date": "2026-01-05",
+          "occurred_at": "2026-01-05T09:30:00Z",
+          "payload": {
+            "seconds": 95.5,
+            "video_id": "00000000-0000-4000-8000-000000000008"
+          },
+          "type": "watch_progress"
+        }
+      ],
+      "videos": [
+        {
+          "url": "https://www.youtube.com/watch?v=vidnew00001"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vidslow0001"
+        },
+        {
+          "url": "https://example.com/nope"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=vid00000001"
+        }
+      ]
+    },
+    "method": "POST",
+    "path": "/sync/push"
+  },
+  "status": 200
+}

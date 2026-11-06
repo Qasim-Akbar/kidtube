@@ -1,0 +1,17 @@
+{
+  "body": {
+    "detail": "Invalid refresh token"
+  },
+  "headers": {
+    "www-authenticate": "Bearer"
+  },
+  "name": "refresh_invalid_token",
+  "request": {
+    "body": {
+      "refresh_token": "not-a-token"
+    },
+    "method": "POST",
+    "path": "/auth/refresh"
+  },
+  "status": 401
+}

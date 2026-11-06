@@ -1,0 +1,150 @@
+{
+  "body": {
+    "child_id": "00000000-0000-4000-8000-000000000003",
+    "date": "2026-01-05",
+    "days": [
+      {
+        "app_seconds": 1200,
+        "browsing_seconds": 1104,
+        "date": "2026-01-05",
+        "views_completed": 1,
+        "watch_seconds": 96
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-06",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-07",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-08",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-09",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-10",
+        "views_completed": 0,
+        "watch_seconds": 0
+      },
+      {
+        "app_seconds": 0,
+        "browsing_seconds": 0,
+        "date": "2026-01-11",
+        "views_completed": 0,
+        "watch_seconds": 0
+      }
+    ],
+    "end": "2026-01-11",
+    "per_video": [
+      {
+        "completed": true,
+        "item_id": "00000000-0000-4000-8000-000000000017",
+        "required": true,
+        "status": "active",
+        "title": "Counting to ten",
+        "video_id": "00000000-0000-4000-8000-000000000008",
+        "view_target": 1,
+        "views_in_range": 1,
+        "views_total": 1
+      },
+      {
+        "completed": false,
+        "item_id": "00000000-0000-4000-8000-000000000020",
+        "required": false,
+        "status": "active",
+        "title": "Colours with Pip",
+        "video_id": "00000000-0000-4000-8000-000000000012",
+        "view_target": null,
+        "views_in_range": 0,
+        "views_total": 0
+      },
+      {
+        "completed": false,
+        "item_id": "00000000-0000-4000-8000-000000000018",
+        "required": false,
+        "status": "active",
+        "title": "The alphabet song",
+        "video_id": "00000000-0000-4000-8000-000000000011",
+        "view_target": 3,
+        "views_in_range": 0,
+        "views_total": 0
+      },
+      {
+        "completed": false,
+        "item_id": "00000000-0000-4000-8000-000000000019",
+        "required": false,
+        "status": "active",
+        "title": "Animal sounds",
+        "video_id": "00000000-0000-4000-8000-000000000013",
+        "view_target": null,
+        "views_in_range": 0,
+        "views_total": 0
+      }
+    ],
+    "plan_progress": {
+      "as_of": "2026-01-05",
+      "finish_date": "2026-01-07",
+      "remaining_finite_views": 3
+    },
+    "planned_vs_watched": {
+      "active_days": 1,
+      "actual": 1,
+      "expected": 2,
+      "pace_type": "videos_per_day",
+      "unit": "videos",
+      "window_end": "2026-01-05",
+      "window_start": "2026-01-05"
+    },
+    "playback_errors": [
+      {
+        "code": "150",
+        "count": 1,
+        "title": "The alphabet song",
+        "video_id": "00000000-0000-4000-8000-000000000011"
+      }
+    ],
+    "range": "week",
+    "start": "2026-01-05",
+    "top_videos": [
+      {
+        "thumbnail_url": "https://i.ytimg.com/vi/vid00000001/hqdefault.jpg",
+        "title": "Counting to ten",
+        "video_id": "00000000-0000-4000-8000-000000000008",
+        "views": 1,
+        "watch_seconds": 96
+      }
+    ],
+    "totals": {
+      "app_seconds": 1200,
+      "browsing_seconds": 1104,
+      "views_completed": 1,
+      "watch_seconds": 96
+    }
+  },
+  "headers": {},
+  "name": "report_week",
+  "request": {
+    "method": "GET",
+    "path": "/reports/children/00000000-0000-4000-8000-000000000003?range=week&date=2026-01-05"
+  },
+  "status": 200
+}

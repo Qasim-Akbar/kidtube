@@ -1,0 +1,50 @@
+{
+  "body": {
+    "events": [
+      {
+        "id": "00000000-0000-4000-8000-000000000043",
+        "index": 0,
+        "reason": null,
+        "retryable": false,
+        "status": "accepted"
+      }
+    ],
+    "videos": [
+      {
+        "index": 0,
+        "reason": "forbidden",
+        "retryable": false,
+        "status": "rejected",
+        "video_id": null,
+        "video_status": null
+      }
+    ]
+  },
+  "headers": {},
+  "name": "sync_push_as_kid_device",
+  "request": {
+    "body": {
+      "events": [
+        {
+          "child_id": "00000000-0000-4000-8000-000000000004",
+          "id": "00000000-0000-4000-8000-000000000043",
+          "local_date": "2026-01-05",
+          "occurred_at": "2026-01-05T09:30:00Z",
+          "payload": {
+            "seconds": 30,
+            "video_id": "00000000-0000-4000-8000-000000000012"
+          },
+          "type": "watch_progress"
+        }
+      ],
+      "videos": [
+        {
+          "url": "https://www.youtube.com/watch?v=vidkid00001"
+        }
+      ]
+    },
+    "method": "POST",
+    "path": "/sync/push"
+  },
+  "status": 200
+}

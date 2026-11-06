@@ -1,0 +1,35 @@
+{
+  "body": {
+    "backlog": 0,
+    "date": "2026-01-05",
+    "dropped_item_ids": [],
+    "items": [
+      {
+        "duration_seconds": null,
+        "item_id": "00000000-0000-4000-8000-000000000017",
+        "locked": true,
+        "platform": "youtube",
+        "platform_video_id": "vid00000001",
+        "required": true,
+        "thumbnail_url": "https://i.ytimg.com/vi/vid00000001/hqdefault.jpg",
+        "title": "Counting to ten",
+        "video_id": "00000000-0000-4000-8000-000000000008"
+      }
+    ],
+    "pace_type": "videos_per_day",
+    "quota_today": 2,
+    "remaining_seconds": null,
+    "remaining_videos": 2,
+    "skipped_item_ids": [],
+    "status": "ok",
+    "unavailable_item_ids": [],
+    "views_today": 0
+  },
+  "headers": {},
+  "name": "feed_ok_locked_required",
+  "request": {
+    "method": "GET",
+    "path": "/children/00000000-0000-4000-8000-000000000003/feed"
+  },
+  "status": 200
+}

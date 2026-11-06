@@ -1,0 +1,25 @@
+{
+  "body": [
+    {
+      "id": "00000000-0000-4000-8000-000000000022",
+      "name": "Kids tablet",
+      "paired_at": "2030-01-01T00:00:09.000000Z",
+      "revoked_at": null,
+      "role": "kid"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000023",
+      "name": "Lost phone",
+      "paired_at": "2030-01-01T00:00:10.000000Z",
+      "revoked_at": null,
+      "role": "kid"
+    }
+  ],
+  "headers": {},
+  "name": "devices_list",
+  "request": {
+    "method": "GET",
+    "path": "/devices"
+  },
+  "status": 200
+}

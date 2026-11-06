@@ -1,0 +1,17 @@
+{
+  "body": {
+    "detail": "Invalid or missing credentials"
+  },
+  "headers": {
+    "www-authenticate": "Bearer"
+  },
+  "name": "device_token_on_parent_endpoint",
+  "request": {
+    "body": {
+      "name": "Sneaky"
+    },
+    "method": "POST",
+    "path": "/children"
+  },
+  "status": 401
+}

@@ -1,0 +1,19 @@
+{
+  "body": {
+    "avatar": "owl",
+    "daily_app_minutes": null,
+    "id": "00000000-0000-4000-8000-000000000004",
+    "name": "Sara"
+  },
+  "headers": {},
+  "name": "child_create_with_limit",
+  "request": {
+    "body": {
+      "avatar": "owl",
+      "name": "Sara"
+    },
+    "method": "POST",
+    "path": "/children"
+  },
+  "status": 201
+}

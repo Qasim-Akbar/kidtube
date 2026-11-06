@@ -1,0 +1,18 @@
+{
+  "body": {
+    "detail": "Too many failed attempts"
+  },
+  "headers": {
+    "retry-after": "553"
+  },
+  "name": "pair_rate_limited",
+  "request": {
+    "body": {
+      "code": "100003",
+      "device_name": "Tablet"
+    },
+    "method": "POST",
+    "path": "/devices/pair"
+  },
+  "status": 429
+}

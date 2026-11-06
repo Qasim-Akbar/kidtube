@@ -1,0 +1,25 @@
+{
+  "body": {
+    "detail": [
+      {
+        "input": "nope",
+        "loc": [
+          "body",
+          "events"
+        ],
+        "msg": "Input should be a valid list",
+        "type": "list_type"
+      }
+    ]
+  },
+  "headers": {},
+  "name": "events_validation_error",
+  "request": {
+    "body": {
+      "events": "nope"
+    },
+    "method": "POST",
+    "path": "/events"
+  },
+  "status": 422
+}

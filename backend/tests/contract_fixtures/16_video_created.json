@@ -1,0 +1,24 @@
+{
+  "body": {
+    "added_at": "2030-01-01T00:00:00.000000Z",
+    "added_by": "00000000-0000-4000-8000-000000000001",
+    "duration_seconds": null,
+    "id": "00000000-0000-4000-8000-000000000008",
+    "platform": "youtube",
+    "platform_video_id": "vid00000001",
+    "status": "verified",
+    "thumbnail_url": "https://i.ytimg.com/vi/vid00000001/hqdefault.jpg",
+    "title": "Counting to ten",
+    "url": "https://www.youtube.com/watch?v=vid00000001"
+  },
+  "headers": {},
+  "name": "video_created",
+  "request": {
+    "body": {
+      "url": "https://www.youtube.com/watch?v=vid00000001"
+    },
+    "method": "POST",
+    "path": "/videos"
+  },
+  "status": 201
+}
