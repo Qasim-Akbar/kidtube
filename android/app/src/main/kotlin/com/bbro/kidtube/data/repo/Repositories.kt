@@ -33,6 +33,7 @@ import com.bbro.kidtube.data.remote.RegisterResponse
 import com.bbro.kidtube.data.remote.map
 import com.bbro.kidtube.data.remote.toWireString
 import com.bbro.kidtube.data.toData
+import com.bbro.kidtube.sync.SyncTrigger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -110,6 +111,7 @@ class EventRepository @Inject constructor(
     private val dao: LocalEventDao,
     private val clock: Clock,
     private val session: SessionStore,
+    private val syncTrigger: SyncTrigger = SyncTrigger.None,
 ) {
     /**
      * Writes a new event as `pending`: id = fresh UUID, occurred_at = now (UTC, millisecond precision),
@@ -130,6 +132,7 @@ class EventRepository @Inject constructor(
             createdAt = now,
         )
         dao.insert(event)
+        syncTrigger.syncSoon() // batched: a viewing session syncs about every 30 s, not once per event
         return event
     }
 
@@ -173,7 +176,7 @@ class EventRepository @Inject constructor(
 
 // ---- outbox (offline link sharing) ---------------------------------------------------------------------
 
-/** Where a shared video should go once it exists on the server. [childId] null = library only. */
+/** Where a shared video should go once it exists on the server. [childId] null = EVERY child in the stored snapshot. */
 data class PlacementSpec(
     val childId: String?,
     val required: Boolean = false,
@@ -184,7 +187,11 @@ data class PlacementSpec(
 )
 
 @Singleton
-class OutboxRepository @Inject constructor(private val dao: OutboxDao, private val clock: Clock) {
+class OutboxRepository @Inject constructor(
+    private val dao: OutboxDao,
+    private val clock: Clock,
+    private val syncTrigger: SyncTrigger = SyncTrigger.None,
+) {
     /** Saves a shared link (and what to do with it) locally, in one transaction. Returns the outbox video id. */
     suspend fun enqueue(rawUrl: String, placements: List<PlacementSpec>): String {
         val videoId = UUID.randomUUID().toString()
@@ -200,6 +207,7 @@ class OutboxRepository @Inject constructor(private val dao: OutboxDao, private v
             )
         }
         dao.enqueue(video, rows)
+        syncTrigger.syncNow()
         return videoId
     }
 

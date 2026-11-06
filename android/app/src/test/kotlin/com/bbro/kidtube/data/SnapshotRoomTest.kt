@@ -29,31 +29,33 @@ class SnapshotRoomTest : RoomTestBase() {
         store(loadSnapshot(), "\"v1\"")
 
         val children = db.childDao().getAll()
-        assertEquals(listOf("Amna", "Bilal"), children.map { it.name })
-        assertEquals(45, children[0].dailyAppMinutes)
-        assertNull(children[1].avatar)
+        assertEquals(listOf("Ali", "Sara", "Omar", "Noor", "Pip"), children.map { it.name })
+        assertEquals(10, children[1].dailyAppMinutes)
+        assertNull(children[4].avatar)
 
         val videos = db.videoDao().getAll()
-        assertEquals(listOf(Platform.YOUTUBE, Platform.FACEBOOK), videos.map { it.platform })
-        assertEquals(VideoStatus.PENDING, videos[1].status)
-        assertEquals(Instant.parse("2026-11-02T09:15:00Z"), videos[1].addedAt)
+        assertEquals(9, videos.size)
+        val facebook = videos.single { it.platform == Platform.FACEBOOK }
+        assertEquals(VideoStatus.PENDING, facebook.status)
+        assertEquals(Instant.parse("2030-01-01T00:00:02Z"), facebook.addedAt)
 
         val plan = db.planDao().getForChild(CHILD_A)!!
-        assertEquals(4, plan.plan.version)
-        assertEquals(LocalDate.of(2026, 12, 31), plan.plan.endDate)
-        assertEquals(setOf(ITEM_1, ITEM_2), plan.items.map { it.id }.toSet())
-        val skipItem = plan.items.single { it.id == ITEM_2 }
-        assertEquals(OnMiss.SKIP, skipItem.onMiss)
-        assertEquals(LocalDate.of(2026, 11, 9), skipItem.anchorDate)
-        assertEquals(0.75, skipItem.watchThreshold, 0.0)
+        assertEquals(10, plan.plan.version)
+        assertNull(plan.plan.endDate)
+        assertEquals(4, plan.items.size)
+        assertTrue(plan.items.map { it.id }.containsAll(listOf(ITEM_1, ITEM_2)))
+        val anchored = plan.items.single { it.anchorDate != null }
+        assertEquals(OnMiss.DROP, anchored.onMiss)
+        assertEquals(LocalDate.of(2026, 1, 12), anchored.anchorDate)
+        assertEquals(0.8, anchored.watchThreshold, 0.0)
         assertNull(db.planDao().getForChild(CHILD_B))
 
         val views = db.historyDao().views(CHILD_A)
-        assertEquals(listOf(LocalDate.of(2026, 11, 3) to 1, LocalDate.of(2026, 11, 4) to 2), views.map { it.localDate to it.count })
+        assertEquals(listOf(LocalDate.of(2026, 1, 5) to 1), views.map { it.localDate to it.count })
         val seconds = db.historyDao().seconds(CHILD_A).groupBy { it.kind }
-        assertEquals(listOf(640, 212), seconds.getValue(HistoryKind.WATCH).map { it.seconds })
-        assertEquals(listOf(900), seconds.getValue(HistoryKind.APP).map { it.seconds })
-        assertEquals(listOf(600), seconds.getValue(HistoryKind.EXTENSION).map { it.seconds })
+        assertEquals(listOf(96), seconds.getValue(HistoryKind.WATCH).map { it.seconds })
+        assertEquals(listOf(1200), seconds.getValue(HistoryKind.APP).map { it.seconds })
+        assertEquals(listOf(900), seconds.getValue(HistoryKind.EXTENSION).map { it.seconds })
         assertTrue(db.historyDao().views(CHILD_B).isEmpty())
 
         val meta = dao.meta()!!
@@ -66,7 +68,7 @@ class SnapshotRoomTest : RoomTestBase() {
     fun replaceDropsRowsTheNewSnapshotNoLongerHas() = runBlocking {
         store(loadSnapshot(), "\"v1\"")
 
-        // Next snapshot: Bilal gone, the facebook video gone, plan item 2 gone, and all history gone.
+        // Next snapshot: everyone but Ali gone, only the first video, only plan item 1, and all history gone.
         val shrunk = loadSnapshot().let { s ->
             val amna = s.children[0]
             s.copy(
@@ -81,7 +83,7 @@ class SnapshotRoomTest : RoomTestBase() {
         }
         store(shrunk, "\"v2\"")
 
-        assertEquals(listOf("Amna"), db.childDao().getAll().map { it.name })
+        assertEquals(listOf("Ali"), db.childDao().getAll().map { it.name })
         assertEquals(1, db.videoDao().getAll().size)
         assertEquals(listOf(ITEM_1), db.planDao().getForChild(CHILD_A)!!.items.map { it.id })
         assertTrue(db.historyDao().views(CHILD_A).isEmpty())
@@ -137,19 +139,25 @@ class SnapshotRoomTest : RoomTestBase() {
         repo.observeChildren().test {
             assertTrue(awaitItem().isEmpty())
             store(loadSnapshot(), "\"v1\"")
-            assertEquals(listOf("Amna", "Bilal"), awaitItem().map { it.name })
+            assertEquals(listOf("Ali", "Sara", "Omar", "Noor", "Pip"), awaitItem().map { it.name })
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
     fun planRepositoryReturnsItemsInQueueOrder() = runBlocking {
-        store(loadSnapshot(), "\"v1\"") // the fixture lists position 1 before position 0 on purpose
+        // Reverse the items so the stored order is not the queue order.
+        val snapshot = loadSnapshot().let { s ->
+            val ali = s.children[0]
+            s.copy(children = listOf(ali.copy(plan = ali.plan!!.copy(items = ali.plan!!.items.reversed()))) + s.children.drop(1))
+        }
+        store(snapshot, "\"v1\"")
         val repo = PlanRepository(db.planDao())
 
-        assertEquals(listOf(ITEM_1, ITEM_2), repo.plan(CHILD_A)!!.items.map { it.id })
+        assertEquals(listOf(0, 1, 2, 3), repo.plan(CHILD_A)!!.items.map { it.position })
+        assertEquals(listOf(ITEM_1, ITEM_2), repo.plan(CHILD_A)!!.items.take(2).map { it.id })
         repo.observePlan(CHILD_A).test {
-            assertEquals(listOf(0, 1), awaitItem()!!.items.map { it.position })
+            assertEquals(listOf(0, 1, 2, 3), awaitItem()!!.items.map { it.position })
             cancelAndIgnoreRemainingEvents()
         }
         assertNull(repo.plan(CHILD_B))

@@ -3,6 +3,7 @@ package com.bbro.kidtube.data.dao
 import androidx.room.Dao
 import androidx.room.Embedded
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.Transaction
@@ -14,6 +15,7 @@ import com.bbro.kidtube.data.entity.OutboxPlacementEntity
 import com.bbro.kidtube.data.entity.OutboxVideoEntity
 import com.bbro.kidtube.data.entity.PlanEntity
 import com.bbro.kidtube.data.entity.PlanItemEntity
+import com.bbro.kidtube.data.entity.ReverifyAttemptEntity
 import com.bbro.kidtube.data.entity.SyncMetaEntity
 import com.bbro.kidtube.data.entity.VideoEntity
 import kotlinx.coroutines.flow.Flow
@@ -118,6 +120,12 @@ interface LocalEventDao {
 
     @Query("UPDATE local_event SET state = 'rejected', rejectReason = :reason WHERE id = :id AND state = 'pending'")
     suspend fun markRejected(id: String, reason: String?): Int
+
+    @Query("SELECT COUNT(*) FROM local_event WHERE state = 'pending'")
+    fun observePendingCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM local_event WHERE state = 'rejected'")
+    fun observeRejectedCount(): Flow<Int>
 }
 
 @Dao
@@ -142,6 +150,69 @@ abstract class OutboxDao {
 
     @Query("SELECT * FROM outbox_placement WHERE outboxVideoId = :outboxVideoId ORDER BY id")
     abstract suspend fun placementsFor(outboxVideoId: String): List<OutboxPlacementEntity>
+
+    // ---- state transitions used by the sync engine ----
+
+    @Query("UPDATE outbox_video SET state = 'synced', serverVideoId = :serverVideoId, rejectReason = NULL WHERE id = :id AND state = 'pending'")
+    abstract suspend fun markVideoSynced(id: String, serverVideoId: String): Int
+
+    @Query("UPDATE outbox_video SET state = 'rejected', rejectReason = :reason WHERE id = :id AND state = 'pending'")
+    abstract suspend fun markVideoRejected(id: String, reason: String?): Int
+
+    @Query("UPDATE outbox_video SET attempts = attempts + 1 WHERE id = :id")
+    abstract suspend fun bumpAttempts(id: String)
+
+    /** A rejected video can never reach a plan: its still-pending placements fail for good. */
+    @Query("UPDATE outbox_placement SET state = 'failed', reason = :reason WHERE outboxVideoId = :outboxVideoId AND state = 'pending'")
+    abstract suspend fun failPendingPlacements(outboxVideoId: String, reason: String): Int
+
+    @Query(
+        """
+        SELECT * FROM outbox_video
+        WHERE state = 'synced'
+          AND EXISTS (SELECT 1 FROM outbox_placement p WHERE p.outboxVideoId = outbox_video.id AND p.state = 'pending')
+        ORDER BY createdAt, id
+        """,
+    )
+    abstract suspend fun syncedVideosWithPendingPlacements(): List<OutboxVideoEntity>
+
+    @Query("SELECT * FROM outbox_placement WHERE outboxVideoId = :outboxVideoId AND state = 'pending' ORDER BY id")
+    abstract suspend fun pendingPlacements(outboxVideoId: String): List<OutboxPlacementEntity>
+
+    @Query("UPDATE outbox_placement SET state = 'done', reason = NULL WHERE id = :id")
+    abstract suspend fun markPlacementDone(id: String): Int
+
+    @Query("UPDATE outbox_placement SET state = 'failed', reason = :reason WHERE id = :id")
+    abstract suspend fun markPlacementFailed(id: String, reason: String): Int
+
+    /** Keeps the placement pending but records why it is waiting (e.g. "no_plan"). */
+    @Query("UPDATE outbox_placement SET reason = :reason WHERE id = :id AND state = 'pending'")
+    abstract suspend fun setPlacementReason(id: String, reason: String?): Int
+
+    /**
+     * "Every child" becomes one concrete placement per child, so each child succeeds or fails on its own. The original
+     * row is finished in the same transaction: a crash leaves either the original or the copies, never both.
+     */
+    @Transaction
+    open suspend fun expandPlacement(original: OutboxPlacementEntity, copies: List<OutboxPlacementEntity>) {
+        insertPlacements(copies)
+        markPlacementDone(original.id)
+    }
+
+    // ---- counts for SyncStatus ----
+
+    @Query("SELECT COUNT(*) FROM outbox_video WHERE state = 'pending'")
+    abstract fun observePendingVideoCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM outbox_video WHERE state = 'rejected'")
+    abstract fun observeRejectedVideoCount(): Flow<Int>
+
+    /** Placements waiting for a plan to exist (reason no_plan), as opposed to failed ones. */
+    @Query("SELECT COUNT(*) FROM outbox_placement WHERE state = 'pending' AND reason = 'no_plan'")
+    abstract fun observeWaitingForPlanCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM outbox_placement WHERE state = 'failed'")
+    abstract fun observeFailedPlacementCount(): Flow<Int>
 }
 
 /** Everything one pull replaces. */
@@ -239,4 +310,16 @@ abstract class SnapshotDao {
     @Insert protected abstract suspend fun insertItems(rows: List<PlanItemEntity>)
     @Insert protected abstract suspend fun insertHistoryViews(rows: List<HistoryViewEntity>)
     @Insert protected abstract suspend fun insertHistorySeconds(rows: List<HistorySecondsEntity>)
+}
+
+@Dao
+interface ReverifyDao {
+    @Query("SELECT * FROM reverify_attempt")
+    suspend fun all(): List<ReverifyAttemptEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(row: ReverifyAttemptEntity)
+
+    @Query("DELETE FROM reverify_attempt WHERE videoId NOT IN (SELECT id FROM video)")
+    suspend fun pruneForgottenVideos(): Int
 }

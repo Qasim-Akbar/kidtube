@@ -6,7 +6,7 @@ import com.bbro.kidtube.core.SessionState
 import com.bbro.kidtube.data.repo.AuthRepository
 import com.bbro.kidtube.testing.SessionHarness
 import com.bbro.kidtube.testing.fakeJwt
-import com.bbro.kidtube.testing.resourceText
+import com.bbro.kidtube.testing.ContractFixtures
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -342,7 +342,7 @@ class AuthPlumbingTest {
     @Test
     fun pullSendsIfNoneMatchAndMaps304() = runBlocking {
         parentLoggedIn("access-1")
-        val snapshot = resourceText("/fixtures/snapshot.json")
+        val snapshot = ContractFixtures.load(73).bodyText
         val ifNoneMatch = java.util.Collections.synchronizedList(mutableListOf<String?>())
         serve { request ->
             ifNoneMatch += request.headers["If-None-Match"]
@@ -357,7 +357,7 @@ class AuthPlumbingTest {
         assertTrue("pull failed: $firstResult", firstResult is ApiResult.Success)
         val first = (firstResult as ApiResult.Success).value as PullOutcome.Updated
         assertEquals("\"abc123\"", first.etag)
-        assertEquals(2, first.snapshot.children.size)
+        assertEquals(5, first.snapshot.children.size)
 
         val second = remote.pull(first.etag)
         assertEquals(ApiResult.Success(PullOutcome.NotModified), second)

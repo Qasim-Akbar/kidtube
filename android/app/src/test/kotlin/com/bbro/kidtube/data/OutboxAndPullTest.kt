@@ -14,7 +14,7 @@ import com.bbro.kidtube.data.repo.PlacementSpec
 import com.bbro.kidtube.data.repo.PullResult
 import com.bbro.kidtube.data.repo.SnapshotRepository
 import com.bbro.kidtube.data.remote.EventType
-import com.bbro.kidtube.testing.resourceText
+import com.bbro.kidtube.testing.ContractFixtures
 import kotlinx.coroutines.runBlocking
 import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
@@ -90,16 +90,16 @@ class OutboxAndPullTest : RoomTestBase() {
 
     private fun startServer(): ConcurrentLinkedQueue<Pair<String?, String?>> {
         val requests = ConcurrentLinkedQueue<Pair<String?, String?>>() // (If-None-Match, Authorization)
-        val snapshot = resourceText("/fixtures/snapshot.json")
+        val snapshot = ContractFixtures.load(73).bodyText
         server = MockWebServer().apply {
             dispatcher = object : Dispatcher() {
                 override fun dispatch(request: RecordedRequest): MockResponse {
                     requests += request.headers["If-None-Match"] to request.headers["Authorization"]
-                    return if (request.headers["If-None-Match"] == "\"snap-1\"") {
-                        MockResponse.Builder().code(304).addHeader("ETag", "\"snap-1\"").build()
+                    return if (request.headers["If-None-Match"] == ETAG) {
+                        MockResponse.Builder().code(304).addHeader("ETag", ETAG).build()
                     } else {
                         MockResponse.Builder().code(200).addHeader("Content-Type", "application/json")
-                            .addHeader("ETag", "\"snap-1\"").body(snapshot).build()
+                            .addHeader("ETag", ETAG).body(snapshot).build()
                     }
                 }
             }
@@ -119,10 +119,10 @@ class OutboxAndPullTest : RoomTestBase() {
 
         assertEquals(ApiResult.Success(PullResult.UPDATED), repo.pull())
 
-        assertEquals(listOf("Amna", "Bilal"), db.childDao().getAll().map { it.name })
+        assertEquals(listOf("Ali", "Sara", "Omar", "Noor", "Pip"), db.childDao().getAll().map { it.name })
         assertEquals("Asia/Karachi", session.store.currentInfo().familyTimezone) // timezone comes from the snapshot
         var meta = db.snapshotDao().meta()!!
-        assertEquals("\"snap-1\"", meta.etag)
+        assertEquals(ETAG, meta.etag)
         assertEquals(1, meta.historyCycle)
         assertEquals(Instant.parse("2026-11-05T10:00:00Z"), meta.lastPullStartedAt)
 
@@ -137,7 +137,7 @@ class OutboxAndPullTest : RoomTestBase() {
         assertEquals(2, meta.historyCycle) // 304 advanced it
         assertEquals(2, meta.currentCycle)
         assertTrue("the 304 pull started after the ack, so the ETag already covers the event", events.overlayEvents(CHILD_A).isEmpty())
-        assertEquals(listOf(null, "\"snap-1\""), requests.map { it.first })
+        assertEquals(listOf(null, ETAG), requests.map { it.first })
         assertTrue(requests.all { it.second == "Bearer access-1" }) // parent tokens, even in kid mode
     }
 
@@ -157,5 +157,10 @@ class OutboxAndPullTest : RoomTestBase() {
         assertNull(meta.etag)
         assertEquals(0, meta.historyCycle)
         assertTrue(requests.isEmpty())
+    }
+
+    private companion object {
+        /** The ETag the backend generated for the pull fixture (73/74). */
+        val ETAG: String = ContractFixtures.load(73).headers.getValue("etag")
     }
 }

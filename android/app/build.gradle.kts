@@ -55,6 +55,15 @@ android {
     testOptions {
         // Robolectric (in-memory Room tests) needs merged resources/manifest on the unit-test classpath.
         unitTests.isIncludeAndroidResources = true
+        // Contract tests read the backend-generated fixtures at test time (never copied into the app).
+        unitTests.all {
+            val fixtures = rootProject.file("../backend/tests/contract_fixtures")
+            it.systemProperty("contract.fixtures.dir", fixtures.absolutePath)
+            it.inputs.dir(fixtures).withPropertyName("contractFixtures")
+            // Committed Room schema JSON (1.json, 2.json) for the migration test.
+            it.systemProperty("room.schemas.dir", "$projectDir/schemas")
+            it.inputs.dir("$projectDir/schemas").withPropertyName("roomSchemas")
+        }
     }
 }
 
@@ -75,6 +84,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
 
@@ -111,6 +121,7 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.robolectric)
     testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.androidx.work.testing)
 }
 
 // ---- Fail release builds early when the base URL is not configured ---------------------------

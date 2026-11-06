@@ -2,10 +2,9 @@ package com.bbro.kidtube.data
 
 import androidx.room.Room
 import com.bbro.kidtube.core.FakeClock
-import com.bbro.kidtube.data.remote.KidTubeJson
 import com.bbro.kidtube.data.remote.SnapshotDto
 import com.bbro.kidtube.testing.SessionHarness
-import com.bbro.kidtube.testing.resourceText
+import com.bbro.kidtube.testing.ContractFixtures
 import org.junit.After
 import org.junit.Before
 import org.junit.runner.RunWith
@@ -34,13 +33,20 @@ abstract class RoomTestBase {
         session.close()
     }
 
-    protected fun loadSnapshot(name: String = "snapshot"): SnapshotDto =
-        KidTubeJson.instance.decodeFromString(resourceText("/fixtures/$name.json"))
+    /** The backend-generated pull response (contract fixture 73): five children, Ali has a 4-item plan, Pip has none. */
+    protected fun loadSnapshot(): SnapshotDto = ContractFixtures.load(73).decodeBody()
 
     companion object {
-        const val CHILD_A = "33333333-3333-4333-8333-333333333333"
-        const val CHILD_B = "33333333-3333-4333-8333-333333333334"
-        const val ITEM_1 = "77777777-7777-4777-8777-777777777771"
-        const val ITEM_2 = "77777777-7777-4777-8777-777777777772"
+        /** Ali: plan with 4 items, 1 server view of ITEM_1. */
+        const val CHILD_A = "00000000-0000-4000-8000-000000000003"
+
+        /** Pip: no plan, no history. */
+        const val CHILD_B = "00000000-0000-4000-8000-000000000007"
+
+        /** Ali's required item (position 0). */
+        const val ITEM_1 = "00000000-0000-4000-8000-000000000017"
+
+        /** Ali's optional item (position 1). */
+        const val ITEM_2 = "00000000-0000-4000-8000-000000000020"
     }
 }

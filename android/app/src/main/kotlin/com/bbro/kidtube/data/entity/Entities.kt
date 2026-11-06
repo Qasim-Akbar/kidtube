@@ -180,7 +180,7 @@ data class OutboxVideoEntity(
 data class OutboxPlacementEntity(
     @PrimaryKey val id: String,
     val outboxVideoId: String,
-    /** Null = "decide later" (video saved to the library without a plan). */
+    /** Null = every child in the stored snapshot (the sync engine expands it into one placement per child). */
     val childId: String?,
     val required: Boolean,
     val viewTarget: Int?,
@@ -189,4 +189,17 @@ data class OutboxPlacementEntity(
     val onMiss: OnMiss,
     val state: PlacementState,
     val reason: String?,
+)
+
+// ---- sync bookkeeping (schema v2) -------------------------------------------------------------------
+
+/**
+ * When the sync engine last asked the server to re-verify a still-`pending` YouTube video (at most once per hour per
+ * video). No foreign key on purpose: the snapshot replace deletes and re-inserts `video` rows on every pull, and this
+ * history must survive that. Rows for videos that left the snapshot are pruned by the engine.
+ */
+@Entity(tableName = "reverify_attempt")
+data class ReverifyAttemptEntity(
+    @PrimaryKey val videoId: String,
+    val lastAttemptAt: Instant,
 )

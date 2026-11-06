@@ -1,5 +1,0 @@
-{"results": [
-  {"index": 0, "id": "88888888-8888-4888-8888-888888888881", "status": "accepted", "reason": null},
-  {"index": 1, "id": "88888888-8888-4888-8888-888888888882", "status": "duplicate", "reason": null},
-  {"index": 2, "id": null, "status": "rejected", "reason": "invalid id"}
-]}

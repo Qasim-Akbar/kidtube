@@ -8,6 +8,7 @@ import com.bbro.kidtube.data.dao.HistoryDao
 import com.bbro.kidtube.data.dao.LocalEventDao
 import com.bbro.kidtube.data.dao.OutboxDao
 import com.bbro.kidtube.data.dao.PlanDao
+import com.bbro.kidtube.data.dao.ReverifyDao
 import com.bbro.kidtube.data.dao.SnapshotDao
 import com.bbro.kidtube.data.dao.VideoDao
 import dagger.Module
@@ -24,7 +25,9 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun database(@ApplicationContext context: Context): KidTubeDatabase =
-        Room.databaseBuilder(context, KidTubeDatabase::class.java, KidTubeDatabase.NAME).build()
+        Room.databaseBuilder(context, KidTubeDatabase::class.java, KidTubeDatabase.NAME)
+            .addMigrations(*KidTubeDatabase.ALL_MIGRATIONS)
+            .build()
 
     @Provides fun childDao(db: KidTubeDatabase): ChildDao = db.childDao()
     @Provides fun videoDao(db: KidTubeDatabase): VideoDao = db.videoDao()
@@ -33,4 +36,5 @@ object DatabaseModule {
     @Provides fun localEventDao(db: KidTubeDatabase): LocalEventDao = db.localEventDao()
     @Provides fun outboxDao(db: KidTubeDatabase): OutboxDao = db.outboxDao()
     @Provides fun snapshotDao(db: KidTubeDatabase): SnapshotDao = db.snapshotDao()
+    @Provides fun reverifyDao(db: KidTubeDatabase): ReverifyDao = db.reverifyDao()
 }

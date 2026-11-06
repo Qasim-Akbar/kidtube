@@ -162,7 +162,7 @@ class EventOverlayTest : RoomTestBase() {
         return fromServer + fromLocal
     }
 
-    /** The fixture snapshot (3 server views of ITEM_1), with [extraViews] more views dated today. */
+    /** The fixture snapshot (1 server view of ITEM_1), with [extraViews] more views dated today. */
     private fun snapshotWithServerViews(extraViews: Int) = loadSnapshot().let { s ->
         val amna = s.children[0]
         val today = com.bbro.kidtube.data.remote.HistoryViewsDto(ITEM_1, LocalDate.of(2026, 11, 5), extraViews)
@@ -178,17 +178,17 @@ class EventOverlayTest : RoomTestBase() {
     @Test
     fun ackBeforeThePullStartsIsCountedOnceByTheSnapshotAndThenDropped() = runBlocking {
         pullStores(snapshotWithServerViews(0)) // cycle 1
-        assertEquals(3, mergedViews(CHILD_A, ITEM_1))
+        assertEquals(1, mergedViews(CHILD_A, ITEM_1))
 
         val event = events.record(EventType.VIEW_COMPLETE, CHILD_A, EventPayloads.viewComplete(ITEM_1, 0.95))
-        assertEquals(4, mergedViews(CHILD_A, ITEM_1)) // pending, overlaid
+        assertEquals(2, mergedViews(CHILD_A, ITEM_1)) // pending, overlaid
 
         events.markAcked(listOf(event.id)) // push answered while no pull is running: ackedCycle = 1 + 1
         assertEquals(2L, db.localEventDao().get(event.id)!!.ackedCycle)
-        assertEquals(4, mergedViews(CHILD_A, ITEM_1)) // acked after the stored snapshot: still overlaid, no gap
+        assertEquals(2, mergedViews(CHILD_A, ITEM_1)) // acked after the stored snapshot: still overlaid, no gap
 
         pullStores(snapshotWithServerViews(1)) // cycle 2 started after the ack, so its history includes the event
-        assertEquals(4, mergedViews(CHILD_A, ITEM_1)) // history 4 + no overlay: not double counted
+        assertEquals(2, mergedViews(CHILD_A, ITEM_1)) // history 4 + no overlay: not double counted
         assertNull(db.localEventDao().get(event.id)) // and the row is gone
     }
 
@@ -203,11 +203,11 @@ class EventOverlayTest : RoomTestBase() {
         // pull 2's response was computed before the event was counted: it does not include it
         snapshots.replaceSnapshot(snapshotWithServerViews(0).toData(), "\"e2\"", inFlight)
 
-        assertEquals("not missing: the event must still be counted", 4, mergedViews(CHILD_A, ITEM_1))
+        assertEquals("not missing: the event must still be counted", 2, mergedViews(CHILD_A, ITEM_1))
         assertEquals(1, events.overlayEvents(CHILD_A).size)
 
         pullStores(snapshotWithServerViews(1)) // pull 3 includes it
-        assertEquals("not double counted", 4, mergedViews(CHILD_A, ITEM_1))
+        assertEquals("not double counted", 2, mergedViews(CHILD_A, ITEM_1))
         assertTrue(events.overlayEvents(CHILD_A).isEmpty())
     }
 
@@ -233,18 +233,18 @@ class EventOverlayTest : RoomTestBase() {
         snapshots.markUnchanged(cycle) // 304 for pull 2
 
         assertEquals(1, events.overlayEvents(CHILD_A).size)
-        assertEquals(4, mergedViews(CHILD_A, ITEM_1))
+        assertEquals(2, mergedViews(CHILD_A, ITEM_1))
     }
 
     @Test
     fun rejectedEventsStopCountingImmediately() = runBlocking {
         pullStores(snapshotWithServerViews(0))
         val event = events.record(EventType.VIEW_COMPLETE, CHILD_A, EventPayloads.viewComplete(ITEM_1, 1.0))
-        assertEquals(4, mergedViews(CHILD_A, ITEM_1))
+        assertEquals(2, mergedViews(CHILD_A, ITEM_1))
 
         events.markRejected(event.id, "unknown child")
 
-        assertEquals(3, mergedViews(CHILD_A, ITEM_1))
+        assertEquals(1, mergedViews(CHILD_A, ITEM_1))
         assertEquals("unknown child", db.localEventDao().get(event.id)!!.rejectReason)
     }
 

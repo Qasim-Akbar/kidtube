@@ -66,8 +66,9 @@ loader as the feed; combined push), per-child reports.
 Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS).
 Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic migrations.
 Done (android): project skeleton; data layer, networking and auth (Retrofit API + DTOs, SessionStore, token refresh,
-Room schema v1, repositories). Not yet: UI, sync worker (push/pull scheduling), Kotlin engine port.
-Next: Android MVP (PIN, share target, outbox flush / sync worker).
+Room, repositories); sync engine + WorkManager (SyncEngine push -> placements -> pull -> reverify, SyncWorker, SyncScheduler,
+SyncStatus, Room v2); contract tests read the backend-generated fixtures. Not yet: real UI, PIN, share target, Kotlin engine port.
+Next: Android MVP (PIN, share target UI on top of OutboxRepository.enqueue).
 
 ## Android (android/)
 - Stack: Kotlin 2.4, Jetpack Compose + Material 3, single module `app`, Gradle Kotlin DSL + version catalog
@@ -92,13 +93,36 @@ Next: Android MVP (PIN, share target, outbox flush / sync worker).
   kid devices send the device token and ignore setActiveMode. Refresh is single-flight (Mutex), proactive within 60 s of the
   JWT exp (Clock), a 401 is retried once; refresh rejected -> NeedsLogin (data kept); kid-token 401 -> DeviceRevoked.
   Logout clears secrets only.
-- Room: schema version 1 is committed in app/schemas; EVERY later schema change needs a version bump + Migration (no
+- Room: schema versions 1 and 2 are committed in app/schemas (v2 adds `reverify_attempt`, `MIGRATION_1_2` in KidTubeDatabase, registered via `ALL_MIGRATIONS`); EVERY later schema change needs a version bump + Migration (no
   destructive fallback). `SnapshotDao.replaceSnapshot` swaps children/videos/plans/items/history and sets history_cycle in one
   transaction. Overlay rule (SPEC section 9, the source of truth): currentCycle is bumped when a pull starts; a pushed event that
   is acked gets ackedCycle = currentCycle + 1; historyCycle = the pull that produced the stored snapshot (also advanced
   on a 304); an event is laid over the history iff it is pending, or acked with ackedCycle > historyCycle; rejected
   never. See `EventRepository.overlayEvents(childId)`. local_date = Clock in the FAMILY timezone from the snapshot
   (fallback Asia/Karachi).
+- Sync (package `sync`): `SyncEngine.runCycle()` is single-flight (concurrent callers share one cycle) and always PUSH THEN PULL:
+  (1) `POST /sync/push` loop (<=50 videos + <=200 events per request; parent devices send videos, kid devices only events; guard: max 20
+  passes, an item already tried this cycle is not resent, a pass with no state change stops the loop); (2) placements
+  (`POST /children/{id}/plan/items`, parent only); (3) `SnapshotRepository.pull()` (200 replace / 304 advance history_cycle), then the
+  placements again if the pull changed anything; (4) reverify (parent only, YouTube + pending only, <=5 per cycle, once per hour per video,
+  attempts in `reverify_attempt`, pruned with the snapshot). Per-item results: video created/existing -> synced + server_video_id (a
+  `created` video that is still `pending` with retryable=true is NOT an error and is never resent), rejected -> permanent; events
+  accepted/duplicate -> acked (ackedCycle = next pull), rejected -> permanent. Placement states: 201 or 409 -> done; `childId == null` is
+  expanded into one row per snapshot child; a child whose stored plan is null, or a 404 with the exact text in
+  `PlacementErrors.NO_PLAN_DETAIL` ("This child has no plan yet", pinned by ContractTest), stays pending with reason `no_plan` (never
+  invent a plan); no children yet -> `no_children`; other 4xx -> failed + reason. `SyncOutcome` = Success | RetryLater | RateLimited(retryAfter) |
+  NeedsLogin | DeviceRevoked | PartialFailure(counts). Local writes only happen after the server answer and every call is idempotent, so a
+  kill at any point just resends. `SyncStatusProvider.status` is a Flow (phase, lastSuccessAt, lastError, pending/rejected counts,
+  `placementsWaitingForPlan` separate from `failedPlacements`).
+- WorkManager: `SyncScheduler` (a `SyncTrigger` the repos call) owns unique work: periodic 15 min (CONNECTED), `kidtube-sync-now` (KEEP,
+  expedited only on API 31+), `kidtube-sync-debounced` (30 s delay, KEEP so a viewing session still syncs, never expedited), and
+  `kidtube-sync-delayed` after a 429 (the worker then returns success, never also retry). Triggers: outbox enqueue, event record (debounced),
+  process foreground (ProcessLifecycleOwner in KidTubeApp), network regained (`NetworkMonitor`; the initial registration callback is ignored).
+  Everything is cancelled while the session is NeedsLogin / DeviceRevoked / Unauthenticated and restarted when it changes.
+  A debug-only (BuildConfig.DEBUG) panel on ParentHomeScreen shows a Sync now button and the SyncStatus fields.
+- Contract tests: `ContractFixtures` (test) reads `../backend/tests/contract_fixtures` at test time (system property `contract.fixtures.dir`,
+  also a Gradle test input); nothing is copied. The only hand-written JSON is test/resources/forward_compat (a NEWER server probe).
+  The migration test builds the v1 database from the committed schema JSON (`room.schemas.dir`) and opens it with the production Room builder.
 - Tests: Room tests run on Robolectric (in-memory), network tests on MockWebServer, and the session store uses an in-memory
   DataStore in tests (the real file-backed DataStore cannot replace its file on a Windows JVM; it works on Android).
 - Gradle needs a JDK 21. If JAVA_HOME points at a missing Android Studio JBR, set it for the shell, e.g. to the Temurin 21
