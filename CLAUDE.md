@@ -51,6 +51,9 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
   New top-level API routes must also be added to the path list in deploy/nginx/kidtube.conf.
 
 
+- A phone is either a Parent device (can also switch to Kid mode; active mode is persisted; leaving kid mode needs the PIN)
+  or a Kid-only device (paired by code). Several kids share one device through the profile picker.
+
 ## Status
 Done (backend): scaffold, models + migrations, auth, children, devices/pairing, login rate limit,
 videos + oEmbed, pure plan engine (+ JSON vectors), plan/events/feed/projection endpoints,
@@ -62,6 +65,7 @@ sync (snapshot pull with ETag, combined push; per-child event history in the sna
 built by the same loader as the feed), per-child reports.
 Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS). Next: Android.
 Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic migrations.
+
 
 ## Android (android/)
 - Stack: Kotlin 2.4, Jetpack Compose + Material 3, single module `app`, Gradle Kotlin DSL + version catalog
