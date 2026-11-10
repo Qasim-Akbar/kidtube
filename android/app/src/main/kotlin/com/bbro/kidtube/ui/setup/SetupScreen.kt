@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.bbro.kidtube.R
@@ -79,6 +80,12 @@ internal fun SetupContent(
                 color = colors.ink,
                 modifier = Modifier.semantics { heading() },
             )
+            Spacer(Modifier.height(KidTubeDimens.gap8))
+            Text(
+                text = stringResource(R.string.setup_subtitle),
+                style = MaterialTheme.typography.bodyLarge,
+                color = colors.muted,
+            )
             Spacer(Modifier.height(KidTubeDimens.gap24))
             Column(verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap16)) {
                 BigChoiceCard(
@@ -96,6 +103,14 @@ internal fun SetupContent(
                     onClick = { onRoleSelected(DeviceRole.KID) },
                 )
             }
+            Spacer(Modifier.height(KidTubeDimens.gap24))
+            Text(
+                text = stringResource(R.string.setup_footer),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.muted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

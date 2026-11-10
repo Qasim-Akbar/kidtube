@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bbro.kidtube.R
 import com.bbro.kidtube.ui.theme.KidTubeDimens
@@ -45,6 +46,7 @@ fun BigChoiceCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     selected: Boolean = false,
+    minHeight: Dp = BigChoiceCardMinHeight,
 ) {
     val colors = KidTubeTheme.colors
     Surface(
@@ -58,12 +60,13 @@ fun BigChoiceCard(
         },
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = minHeight)
             .clip(KidTubeShapes.card)
             .clickable(role = Role.Button, onClick = onClick),
     ) {
         Row(
             modifier = Modifier
-                .heightIn(min = 128.dp)
+                .fillMaxWidth()
                 .padding(KidTubeDimens.gap20),
             horizontalArrangement = Arrangement.spacedBy(KidTubeDimens.gap16),
             verticalAlignment = Alignment.CenterVertically,
@@ -77,7 +80,7 @@ fun BigChoiceCard(
             ) {
                 Icon(imageVector = icon, contentDescription = null, tint = colors.ink, modifier = Modifier.size(40.dp))
             }
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(text = title, style = MaterialTheme.typography.titleLarge)
                 Text(text = description, style = MaterialTheme.typography.bodyMedium, color = colors.muted)
             }
@@ -108,3 +111,6 @@ private fun BigChoiceCardPreview() {
         }
     }
 }
+
+/** Every BigChoiceCard is at least this tall, so cards in a list match whatever their text length. */
+val BigChoiceCardMinHeight: Dp = 120.dp

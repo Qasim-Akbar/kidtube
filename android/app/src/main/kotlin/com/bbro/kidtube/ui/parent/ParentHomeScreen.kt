@@ -11,16 +11,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.bbro.kidtube.BuildConfig
 import com.bbro.kidtube.R
 import com.bbro.kidtube.sync.SyncStatus
+import com.bbro.kidtube.ui.components.PrimaryButton
+import com.bbro.kidtube.ui.pin.PinGate
 
 @Composable
-fun ParentHomeScreen() {
+fun ParentHomeScreen(onChangePin: () -> Unit = {}) {
+    var askingPin by remember { mutableStateOf(false) }
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier
@@ -31,9 +37,23 @@ fun ParentHomeScreen() {
         ) {
             Text(stringResource(R.string.parent_home_title), style = MaterialTheme.typography.headlineMedium)
             Text(stringResource(R.string.parent_home_placeholder), style = MaterialTheme.typography.bodyLarge)
+
+            // Settings placeholder: only "Change PIN" for now. The current PIN is asked for first.
+            Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleSmall)
+            PrimaryButton(text = stringResource(R.string.settings_change_pin), onClick = { askingPin = true })
+
             // Developer aid only: shown in debug builds (BuildConfig.DEBUG), never in release.
             if (BuildConfig.DEBUG) DebugSyncPanel()
         }
+    }
+    if (askingPin) {
+        PinGate(
+            onVerified = {
+                askingPin = false
+                onChangePin()
+            },
+            onDismiss = { askingPin = false },
+        )
     }
 }
 

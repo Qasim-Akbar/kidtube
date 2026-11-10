@@ -10,6 +10,8 @@
     <!-- Setup -->
     <string name="logo_description">KidTube logo</string>
     <string name="setup_title">Whose phone is this?</string>
+    <string name="setup_subtitle">Pick one. You can change it later in settings.</string>
+    <string name="setup_footer">A private family app. Videos are saved on your own server.</string>
     <string name="setup_parent_title">Parent phone</string>
     <string name="setup_parent_desc">Add videos, make plans and see reports</string>
     <string name="setup_kid_title">Kid\'s phone</string>
@@ -35,4 +37,64 @@
     <string name="parent_home_placeholder">Library, children, plans and reports will appear here.</string>
     <string name="kid_picker_title">Who\'s watching?</string>
     <string name="kid_picker_placeholder">Child profiles will appear here.</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_create_account">Create account</string>
+    <string name="action_connect">Connect</string>
+
+    <!-- Server address (under "Advanced") -->
+    <string name="advanced">Advanced</string>
+    <string name="server_address_label">Server address</string>
+    <string name="server_address_placeholder" translatable="false">https://kidtube.example.com</string>
+    <string name="server_error_empty">Enter the server address.</string>
+    <string name="server_error_scheme_https">The address must start with https://</string>
+    <string name="server_error_scheme_any">The address must start with https:// or http://</string>
+    <string name="server_error_invalid">That does not look like a server address.</string>
+
+    <!-- Parent sign in / create account -->
+    <string name="signin_title">Parent sign in</string>
+    <string name="signin_subtitle">Use your KidTube account.</string>
+    <string name="create_account_title">Create account</string>
+    <string name="create_account_subtitle">One account for the whole family.</string>
+    <string name="field_email">Email</string>
+    <string name="field_password">Password</string>
+    <string name="field_family_name">Family name (optional)</string>
+    <string name="link_create_account">Create account</string>
+    <string name="link_have_account">I already have an account</string>
+    <string name="error_fields_required">Enter your email and password.</string>
+    <string name="error_wrong_password">Wrong email or password.</string>
+    <string name="error_rate_limited">Too many tries. Try again in %1$d seconds.</string>
+    <string name="error_rate_limited_unknown">Too many tries. Wait a little and try again.</string>
+    <string name="error_no_connection">No internet connection. Check your Wi-Fi or mobile data.</string>
+    <string name="error_server_unreachable">Cannot reach the server. Check the server address under Advanced.</string>
+    <string name="error_email_taken">An account with this email already exists. Try signing in.</string>
+    <string name="error_invalid_input">Check the email, and use a password of at least 8 characters.</string>
+    <string name="error_registration_closed">New accounts are turned off on this server. Sign in with an existing account, or ask the person who runs the server.</string>
+    <string name="error_unknown">Something went wrong (code %1$d). Please try again.</string>
+
+    <!-- Parent PIN -->
+    <string name="pin_create_title">Create a 4-digit PIN</string>
+    <string name="pin_change_title">Choose a new PIN</string>
+    <string name="pin_create_subtitle">You will need it to share videos and to leave kid mode.</string>
+    <string name="pin_confirm_label">Confirm PIN</string>
+    <string name="pin_save">Save PIN</string>
+    <string name="pin_error_length">The PIN must be 4 digits.</string>
+    <string name="pin_error_mismatch">The two PINs do not match.</string>
+    <string name="pin_gate_title">Enter parent PIN</string>
+    <string name="pin_gate_wrong">Wrong PIN. %1$d tries left.</string>
+    <string name="pin_gate_locked">Too many wrong tries. Try again in %1$d seconds.</string>
+
+    <!-- Parent home settings placeholder -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_change_pin">Change PIN</string>
+
+    <!-- Kid phone pairing -->
+    <string name="pairing_title">Connect this phone</string>
+    <string name="pairing_subtitle">Ask a parent for the 6-digit code shown on their phone.</string>
+    <string name="pairing_code_label">6-digit code</string>
+    <string name="pairing_code_description">Pairing code, %1$d digits</string>
+    <string name="pairing_error_wrong_code">That code is wrong or has expired. Ask a parent for a new one.</string>
 </resources>

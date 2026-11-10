@@ -6,6 +6,10 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Debug server address default: Gradle property KIDTUBE_DEBUG_API_BASE_URL (e.g. your PC from a real phone), else the emulator host.
+val debugApiBaseUrlRaw: String = (providers.gradleProperty("KIDTUBE_DEBUG_API_BASE_URL").orNull ?: "").trim().ifEmpty { "http://10.0.2.2:8001/" }
+val debugApiBaseUrl: String = if (debugApiBaseUrlRaw.endsWith("/")) debugApiBaseUrlRaw else "$debugApiBaseUrlRaw/"
+
 // ---- Release API base URL -------------------------------------------------------------------
 // Never hard-coded in source: taken from the Gradle property KIDTUBE_API_BASE_URL.
 // Release tasks fail (see verifyReleaseApiBaseUrl) while it is missing, CHANGE-ME or not https.
@@ -32,13 +36,15 @@ android {
     buildTypes {
         debug {
             // Emulator -> host machine. Cleartext to this host only, see src/debug/res/xml.
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8001/\"")
+            buildConfigField("String", "API_BASE_URL", "\"$debugApiBaseUrl\"")
+            buildConfigField("boolean", "ALLOW_CLEARTEXT_API", "true") // http:// addresses are accepted in debug only
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "API_BASE_URL", "\"$releaseApiBaseUrl\"")
+            buildConfigField("boolean", "ALLOW_CLEARTEXT_API", "false")
         }
     }
 

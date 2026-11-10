@@ -26,11 +26,15 @@ object ApiWiring {
         json: Json,
         store: SessionStore,
         clock: Clock,
+        baseUrlSource: BaseUrlSource? = null,
         customize: (OkHttpClient.Builder) -> OkHttpClient.Builder = { it },
     ): ApiStack {
+        // With a [baseUrlSource], [baseUrl] is only the placeholder Retrofit is built with; every request (including the
+        // token refresh) is redirected to the source's CURRENT address.
         fun base() = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
+            .apply { if (baseUrlSource != null) addInterceptor(BaseUrlInterceptor(baseUrl, baseUrlSource)) }
 
         val converter = json.asConverterFactory("application/json".toMediaType())
 

@@ -5,9 +5,13 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.bbro.kidtube.core.AndroidConnectivityChecker
 import com.bbro.kidtube.core.AppCompatLocaleApplier
+import com.bbro.kidtube.core.BuildDeviceNameSource
 import com.bbro.kidtube.core.Clock
+import com.bbro.kidtube.core.ConnectivityChecker
 import com.bbro.kidtube.core.DeviceClock
+import com.bbro.kidtube.core.DeviceNameSource
 import com.bbro.kidtube.core.KeystoreCipher
 import com.bbro.kidtube.core.LocaleApplier
 import com.bbro.kidtube.core.SecretCipher
@@ -32,6 +36,12 @@ abstract class CoreModule {
     @Binds
     @Singleton
     abstract fun bindLocaleApplier(impl: AppCompatLocaleApplier): LocaleApplier
+
+    @Binds
+    abstract fun bindConnectivityChecker(impl: AndroidConnectivityChecker): ConnectivityChecker
+
+    @Binds
+    abstract fun bindDeviceNameSource(impl: BuildDeviceNameSource): DeviceNameSource
 }
 
 @Module

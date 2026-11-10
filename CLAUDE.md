@@ -70,8 +70,36 @@ Room, repositories); sync engine + WorkManager (SyncEngine push -> placements ->
 SyncStatus, Room v2); contract tests read the backend-generated fixtures.
 Done (android UI, U1): design foundation (KidTubeTheme, light only, tokens/typography/shapes from docs/DESIGN.md, bundled
 Nunito + Noto Naskh Arabic), English + Urdu (RTL) with per-app language, reusable components, the Setup screen.
-Not yet: parent login / kid pairing screens (Setup cards still go to placeholders), PIN, share target, Kotlin engine port.
-Next: Android MVP (PIN, share target UI on top of OutboxRepository.enqueue); design docs/DESIGN.md "Still to design" screens first.
+Done (android UI, U2): Setup polish (subtitle, footer, equal 120dp cards), configurable server address, parent sign-in / create account,
+parent PIN (create, PinGate, change), kid-phone pairing, start destination from stored state.
+Not yet: share target, Kotlin engine port, real Parent Home / Kid picker, kid-mode switch + leaving it with the PIN.
+Next: Android MVP (share target UI on top of OutboxRepository.enqueue); design docs/DESIGN.md "Still to design" screens first.
+
+## Android auth, PIN and navigation (U2)
+- Server address: `core/ServerAddressStore` (same DataStore, key server_address; default = BuildConfig.API_BASE_URL; debug default from Gradle property
+  KIDTUBE_DEBUG_API_BASE_URL, else http://10.0.2.2:8001/). `ServerAddressPolicy`: https:// always, http:// only when BuildConfig.ALLOW_CLEARTEXT_API (debug);
+  a stored value that fails the policy falls back to the default. The API client reads the CURRENT value: Retrofit is built with a placeholder and
+  `BaseUrlInterceptor` (both OkHttp clients, so token refresh too) rewrites scheme/host/port/path prefix per request from a `BaseUrlSource`
+  (`StoreBaseUrlSource` in Hilt). `ApiWiring.create(..., baseUrlSource = null)` keeps the old fixed-URL behaviour for tests. Debug builds still only
+  permit cleartext to 10.0.2.2 (network_security_config), so another http:// host needs that file changed.
+- The field lives under "Advanced" on the sign-in and pairing screens; the address is validated and saved on Sign in / Connect (an invalid one is not sent and opens Advanced).
+- Sign-in (`ui/auth/SignIn.kt`): `AuthRepository.login` saves the session and sets role = Parent. "Create account" is offered by default; there is no capability
+  endpoint, so a register answer of 403/404 hides it for the rest of the screen's life and shows a plain message. Errors map through `data/repo/AuthFailures`
+  (WrongCredentials 401, RateLimited(Retry-After), NoConnection vs ServerUnreachable decided by `ConnectivityChecker`, EmailTaken 409, InvalidInput 422,
+  RegistrationClosed 403/404, WrongCode 400/422 for pairing; 0/404/502-504 = ServerUnreachable).
+- Pairing (`ui/auth/Pairing.kt`): 6-digit `CodeField`, `AuthRepository.pairDevice` (device name from `DeviceNameSource`, Build.MODEL) saves the token and sets role = Kid.
+  Kid-only devices never see the parent area or a PIN prompt.
+- PIN (`core/PinStore`): PBKDF2-HMAC-SHA256 (100k iterations, 16-byte salt, `PinHasher`), the record is encrypted with the Keystore `SecretCipher` (AAD kidtube.pin.v1)
+  in the session DataStore; the PIN is never stored. 4 digits (`PinStore.PIN_LENGTH`). 5 wrong tries lock for 30 s (`MAX_ATTEMPTS`, `LOCK_MS`); count and lock
+  are persisted; the lock runs on the monotonic clock (injected `Clock.elapsedRealtimeMillis`), wall clock only as the capped fallback after a reboot.
+  `ui/pin/PinGate` (dialog + `PinGateViewModel`) is THE prompt for every later PIN need: `PinGate(onVerified, onDismiss)`. `CreatePinScreen(isChange)`.
+  Parent Home has a settings placeholder with "Change PIN" (PinGate, then the change screen).
+- Navigation: `ui/nav/StartDestination.resolve(state, info, hasPin)` (pure, tested): no role -> Setup; Parent without PIN -> Create PIN; Parent -> Parent Home, or the
+  Kid picker when the persisted ActiveMode is KID; Kid device -> Kid picker; NeedsLogin -> Sign in; DeviceRevoked / kid role without token -> Pairing.
+  `AppStartViewModel` computes it once; MainActivity shows a blank ground frame until then. The role is stored only when sign-in / pairing succeeds,
+  so back from either returns to Setup. Routes live in ui/nav/StartDestination.kt.
+- Tests: `testing/AuthRig` wires the production stack (ApiWiring + dynamic base URL + stores on one in-memory DataStore) to a MockWebServer; error shapes come from
+  the contract fixtures (the 403/404 registration-closed answers are the only synthetic ones).
 
 ## Android UI foundation (U1)
 - Design source of truth: docs/DESIGN.md. Theme in `ui.theme`: `KidTubeTheme` (light only, no dynamic colour; `KidTubeTheme.colors` =

@@ -6,6 +6,8 @@
     <!-- Setup -->
     <string name="logo_description">کِڈ ٹیوب کا لوگو</string>
     <string name="setup_title">یہ فون کس کا ہے؟</string>
+    <string name="setup_subtitle">ایک چنیں۔ آپ اسے بعد میں سیٹنگز میں بدل سکتے ہیں۔</string>
+    <string name="setup_footer">ایک نجی خاندانی ایپ۔ ویڈیوز آپ کے اپنے سرور پر محفوظ ہوتی ہیں۔</string>
     <string name="setup_parent_title">والدین کا فون</string>
     <string name="setup_parent_desc">ویڈیوز شامل کریں، پلان بنائیں اور رپورٹ دیکھیں</string>
     <string name="setup_kid_title">بچے کا فون</string>
@@ -31,4 +33,63 @@
     <string name="parent_home_placeholder">لائبریری، بچے، پلان اور رپورٹیں یہاں نظر آئیں گی۔</string>
     <string name="kid_picker_title">کون دیکھ رہا ہے؟</string>
     <string name="kid_picker_placeholder">بچوں کے پروفائل یہاں نظر آئیں گے۔</string>
+
+    <!-- Common actions -->
+    <string name="action_back">واپس</string>
+    <string name="action_cancel">منسوخ کریں</string>
+    <string name="action_sign_in">سائن اِن</string>
+    <string name="action_create_account">اکاؤنٹ بنائیں</string>
+    <string name="action_connect">جوڑیں</string>
+
+    <!-- Server address (under "Advanced") -->
+    <string name="advanced">مزید اختیارات</string>
+    <string name="server_address_label">سرور کا پتہ</string>
+    <string name="server_error_empty">سرور کا پتہ درج کریں۔</string>
+    <string name="server_error_scheme_https">پتہ https:// سے شروع ہونا چاہیے۔</string>
+    <string name="server_error_scheme_any">پتہ https:// یا http:// سے شروع ہونا چاہیے۔</string>
+    <string name="server_error_invalid">یہ سرور کا درست پتہ نہیں لگتا۔</string>
+
+    <!-- Parent sign in / create account -->
+    <string name="signin_title">والدین کا سائن اِن</string>
+    <string name="signin_subtitle">اپنا کِڈ ٹیوب اکاؤنٹ استعمال کریں۔</string>
+    <string name="create_account_title">اکاؤنٹ بنائیں</string>
+    <string name="create_account_subtitle">پورے خاندان کے لیے ایک اکاؤنٹ۔</string>
+    <string name="field_email">ای میل</string>
+    <string name="field_password">پاس ورڈ</string>
+    <string name="field_family_name">خاندان کا نام (اختیاری)</string>
+    <string name="link_create_account">اکاؤنٹ بنائیں</string>
+    <string name="link_have_account">میرا اکاؤنٹ پہلے سے موجود ہے</string>
+    <string name="error_fields_required">اپنی ای میل اور پاس ورڈ درج کریں۔</string>
+    <string name="error_wrong_password">ای میل یا پاس ورڈ غلط ہے۔</string>
+    <string name="error_rate_limited">بہت زیادہ کوششیں۔ %1$d سیکنڈ بعد دوبارہ کوشش کریں۔</string>
+    <string name="error_rate_limited_unknown">بہت زیادہ کوششیں۔ کچھ دیر انتظار کریں اور دوبارہ کوشش کریں۔</string>
+    <string name="error_no_connection">انٹرنیٹ کنکشن نہیں ہے۔ اپنا وائی فائی یا موبائل ڈیٹا چیک کریں۔</string>
+    <string name="error_server_unreachable">سرور تک رسائی نہیں ہو رہی۔ \"مزید اختیارات\" میں سرور کا پتہ چیک کریں۔</string>
+    <string name="error_email_taken">اس ای میل کا اکاؤنٹ پہلے سے موجود ہے۔ سائن اِن کر کے دیکھیں۔</string>
+    <string name="error_invalid_input">ای میل چیک کریں، اور کم از کم 8 حروف کا پاس ورڈ استعمال کریں۔</string>
+    <string name="error_registration_closed">اس سرور پر نئے اکاؤنٹ بند ہیں۔ موجودہ اکاؤنٹ سے سائن اِن کریں، یا سرور چلانے والے سے پوچھیں۔</string>
+    <string name="error_unknown">کچھ غلط ہو گیا (کوڈ %1$d)۔ دوبارہ کوشش کریں۔</string>
+
+    <!-- Parent PIN -->
+    <string name="pin_create_title">4 ہندسوں کا پن بنائیں</string>
+    <string name="pin_change_title">نیا پن چنیں</string>
+    <string name="pin_create_subtitle">ویڈیوز شیئر کرنے اور بچوں کے موڈ سے نکلنے کے لیے آپ کو یہ درکار ہوگا۔</string>
+    <string name="pin_confirm_label">پن کی تصدیق کریں</string>
+    <string name="pin_save">پن محفوظ کریں</string>
+    <string name="pin_error_length">پن 4 ہندسوں کا ہونا چاہیے۔</string>
+    <string name="pin_error_mismatch">دونوں پن ایک جیسے نہیں ہیں۔</string>
+    <string name="pin_gate_title">والدین کا پن درج کریں</string>
+    <string name="pin_gate_wrong">پن غلط ہے۔ %1$d کوششیں باقی ہیں۔</string>
+    <string name="pin_gate_locked">بہت زیادہ غلط کوششیں۔ %1$d سیکنڈ بعد دوبارہ کوشش کریں۔</string>
+
+    <!-- Parent home settings placeholder -->
+    <string name="settings_title">سیٹنگز</string>
+    <string name="settings_change_pin">پن تبدیل کریں</string>
+
+    <!-- Kid phone pairing -->
+    <string name="pairing_title">اس فون کو جوڑیں</string>
+    <string name="pairing_subtitle">والدین سے ان کے فون پر نظر آنے والا 6 ہندسوں کا کوڈ پوچھیں۔</string>
+    <string name="pairing_code_label">6 ہندسوں کا کوڈ</string>
+    <string name="pairing_code_description">جوڑنے کا کوڈ، %1$d ہندسے</string>
+    <string name="pairing_error_wrong_code">یہ کوڈ غلط ہے یا اس کی میعاد ختم ہو چکی ہے۔ والدین سے نیا کوڈ مانگیں۔</string>
 </resources>

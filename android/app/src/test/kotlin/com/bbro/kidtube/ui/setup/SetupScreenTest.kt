@@ -53,6 +53,8 @@ class SetupScreenTest {
         compose.onNodeWithText("Whose phone is this?").assertIsDisplayed()
         compose.onNodeWithText("Parent phone").assertIsDisplayed()
         compose.onNodeWithText("Kid's phone").assertIsDisplayed()
+        compose.onNodeWithText("Pick one. You can change it later in settings.").assertIsDisplayed()
+        compose.onNodeWithText("A private family app. Videos are saved on your own server.").assertIsDisplayed()
         compose.onNodeWithText("English").assertIsDisplayed()
         compose.onNodeWithText("اردو").assertIsDisplayed()
     }
@@ -67,6 +69,8 @@ class SetupScreenTest {
         compose.onNodeWithText("یہ فون کس کا ہے؟").assertIsDisplayed()
         compose.onNodeWithText("والدین کا فون").assertIsDisplayed()
         compose.onNodeWithText("بچے کا فون").assertIsDisplayed()
+        compose.onNodeWithText("ایک چنیں۔ آپ اسے بعد میں سیٹنگز میں بدل سکتے ہیں۔").assertIsDisplayed()
+        compose.onNodeWithText("ایک نجی خاندانی ایپ۔ ویڈیوز آپ کے اپنے سرور پر محفوظ ہوتی ہیں۔").assertIsDisplayed()
         compose.onNodeWithContentDescription("کِڈ ٹیوب کا لوگو").assertIsDisplayed()
     }
 
