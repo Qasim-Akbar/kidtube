@@ -1,25 +1,29 @@
 package com.bbro.kidtube.ui.setup
 
 import androidx.lifecycle.ViewModel
-import com.bbro.kidtube.core.DeviceRole
+import androidx.lifecycle.viewModelScope
+import com.bbro.kidtube.core.AppLanguage
+import com.bbro.kidtube.core.LanguageStore
+import com.bbro.kidtube.core.LocaleApplier
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class SetupUiState(val selectedRole: DeviceRole? = null) {
-    val canContinue: Boolean get() = selectedRole != null
-}
-
-/** Placeholder: holds the chosen role in memory. Persisting it and pairing/login come later. */
+/**
+ * Setup screen logic. Only the language is handled here; the role cards navigate straight to the (still placeholder)
+ * parent-login / kid-pairing screens, which will persist the role once they exist.
+ */
 @HiltViewModel
-class SetupViewModel @Inject constructor() : ViewModel() {
-    private val _uiState = MutableStateFlow(SetupUiState())
-    val uiState: StateFlow<SetupUiState> = _uiState.asStateFlow()
+class SetupViewModel @Inject constructor(
+    private val languageStore: LanguageStore,
+    private val localeApplier: LocaleApplier,
+) : ViewModel() {
 
-    fun onRoleSelected(role: DeviceRole) {
-        _uiState.update { it.copy(selectedRole = role) }
+    /** Saves the choice first, then switches the running app (which recreates the activity). */
+    fun onLanguageSelected(language: AppLanguage) {
+        viewModelScope.launch {
+            languageStore.setLanguage(language)
+            localeApplier.apply(language)
+        }
     }
 }

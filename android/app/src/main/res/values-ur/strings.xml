@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- First-draft Urdu copy: keep it here so a native reader can fix it. -->
+    <string name="language_toggle_description">زبان</string>
+
+    <!-- Setup -->
+    <string name="logo_description">کِڈ ٹیوب کا لوگو</string>
+    <string name="setup_title">یہ فون کس کا ہے؟</string>
+    <string name="setup_parent_title">والدین کا فون</string>
+    <string name="setup_parent_desc">ویڈیوز شامل کریں، پلان بنائیں اور رپورٹ دیکھیں</string>
+    <string name="setup_kid_title">بچے کا فون</string>
+    <string name="setup_kid_desc">والدین کی منتخب کردہ محفوظ ویڈیوز</string>
+
+    <!-- Status badges -->
+    <string name="badge_verified">تصدیق شدہ</string>
+    <string name="badge_pending">زیرِ انتظار</string>
+    <string name="badge_unavailable">دستیاب نہیں</string>
+
+    <!-- Parent PIN -->
+    <string name="pin_label">والدین کا پن</string>
+    <string name="pin_field_description">والدین کا پن، %1$d ہندسے</string>
+
+    <!-- Share presets -->
+    <string name="preset_once_a_day">دن میں ایک بار</string>
+    <string name="preset_three_times">کل تین بار</string>
+    <string name="preset_must_watch_first">پہلے دیکھنا ضروری</string>
+    <string name="preset_library_only">صرف لائبریری</string>
+
+    <!-- Placeholders for screens designed later -->
+    <string name="parent_home_title">والدین کا ہوم</string>
+    <string name="parent_home_placeholder">لائبریری، بچے، پلان اور رپورٹیں یہاں نظر آئیں گی۔</string>
+    <string name="kid_picker_title">کون دیکھ رہا ہے؟</string>
+    <string name="kid_picker_placeholder">بچوں کے پروفائل یہاں نظر آئیں گے۔</string>
+</resources>

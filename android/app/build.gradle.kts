@@ -82,6 +82,8 @@ dependencies {
     coreLibraryDesugaring(libs.android.desugar.jdk.libs)
 
     implementation(libs.androidx.core.ktx)
+    // AppCompatDelegate.setApplicationLocales (per-app language; below API 33 it needs an AppCompatActivity).
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.process)
@@ -116,6 +118,9 @@ dependencies {
     // HTTP body logging exists in debug builds only; src/release has a no-op stand-in.
     debugImplementation(libs.okhttp.logging.interceptor)
 
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)

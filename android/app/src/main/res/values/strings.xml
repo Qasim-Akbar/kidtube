@@ -1,13 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">KidTube</string>
-    <string name="setup_title">Set up this device</string>
-    <string name="setup_prompt">Who will use this device?</string>
-    <string name="setup_role_parent">Parent</string>
-    <string name="setup_role_parent_desc">Manage videos, plans and reports</string>
-    <string name="setup_role_kid">Kid device</string>
-    <string name="setup_role_kid_desc">Watch what the plan allows</string>
-    <string name="setup_continue">Continue</string>
+    <string name="app_name" translatable="false">KidTube</string>
+
+    <!-- Language toggle: each language always shows its own name. -->
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_urdu" translatable="false">اردو</string>
+    <string name="language_toggle_description">Language</string>
+
+    <!-- Setup -->
+    <string name="logo_description">KidTube logo</string>
+    <string name="setup_title">Whose phone is this?</string>
+    <string name="setup_parent_title">Parent phone</string>
+    <string name="setup_parent_desc">Add videos, make plans and see reports</string>
+    <string name="setup_kid_title">Kid\'s phone</string>
+    <string name="setup_kid_desc">Safe videos chosen by parents</string>
+
+    <!-- Status badges -->
+    <string name="badge_verified">Verified</string>
+    <string name="badge_pending">Pending</string>
+    <string name="badge_unavailable">Unavailable</string>
+
+    <!-- Parent PIN -->
+    <string name="pin_label">Parent PIN</string>
+    <string name="pin_field_description">Parent PIN, %1$d digits</string>
+
+    <!-- Share presets (used by Chip previews now, by the share sheet later) -->
+    <string name="preset_once_a_day">Once a day</string>
+    <string name="preset_three_times">3 times total</string>
+    <string name="preset_must_watch_first">Must watch first</string>
+    <string name="preset_library_only">Library only</string>
+
+    <!-- Placeholders for screens designed later -->
     <string name="parent_home_title">Parent home</string>
     <string name="parent_home_placeholder">Library, children, plans and reports will appear here.</string>
     <string name="kid_picker_title">Who\'s watching?</string>

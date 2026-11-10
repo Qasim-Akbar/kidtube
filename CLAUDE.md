@@ -67,8 +67,28 @@ Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS).
 Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic migrations.
 Done (android): project skeleton; data layer, networking and auth (Retrofit API + DTOs, SessionStore, token refresh,
 Room, repositories); sync engine + WorkManager (SyncEngine push -> placements -> pull -> reverify, SyncWorker, SyncScheduler,
-SyncStatus, Room v2); contract tests read the backend-generated fixtures. Not yet: real UI, PIN, share target, Kotlin engine port.
-Next: Android MVP (PIN, share target UI on top of OutboxRepository.enqueue).
+SyncStatus, Room v2); contract tests read the backend-generated fixtures.
+Done (android UI, U1): design foundation (KidTubeTheme, light only, tokens/typography/shapes from docs/DESIGN.md, bundled
+Nunito + Noto Naskh Arabic), English + Urdu (RTL) with per-app language, reusable components, the Setup screen.
+Not yet: parent login / kid pairing screens (Setup cards still go to placeholders), PIN, share target, Kotlin engine port.
+Next: Android MVP (PIN, share target UI on top of OutboxRepository.enqueue); design docs/DESIGN.md "Still to design" screens first.
+
+## Android UI foundation (U1)
+- Design source of truth: docs/DESIGN.md. Theme in `ui.theme`: `KidTubeTheme` (light only, no dynamic colour; `KidTubeTheme.colors` =
+  `KidTubeColors` tokens), `KidTubeFonts`, `kidTubeTypography(isUrdu)`, `KidTubeShapes`/`KidTubeDimens`. White text only on primary/ink.
+- Fonts: res/font/nunito.ttf and noto_naskh_arabic.ttf are Google Fonts VARIABLE fonts (weights pinned with FontVariation, API 26+);
+  licences (OFL) in app/fonts-licenses/. The font family, sizes and line height switch with the locale (`isUrduLocale()`).
+- Localization: ALL text in `values/strings.xml` and `values-ur/strings.xml` (lint fails on a missing translation, so add both).
+  Urdu copy is a first draft for a native reader to fix. `res/xml/locales_config.xml` (en, ur) + `android:localeConfig`; supportsRtl;
+  Compose uses start/end only. Keep Latin things LTR inside Urdu (wordmark, PIN digits, language toggle).
+- Per-app language: `core/LanguageStore` (DataStore, same file as the session, key app_language) is the persisted choice;
+  `core/LocaleApplier` (`AppCompatLocaleApplier`) calls AppCompatDelegate.setApplicationLocales (recreates the activity). MainActivity is an
+  AppCompatActivity and Theme.KidTube has an AppCompat parent (needed below API 33); the AppLocalesMetadataHolderService entry makes AppCompat
+  restore the locale itself, KidTubeApp also re-applies the DataStore value at start.
+- Components (`ui.components`, each with an English + Urdu RTL @Preview via `@EnglishAndUrduPreviews`): LanguageToggle, BigChoiceCard,
+  PrimaryButton, Chip, StatusBadge (+ BadgeStatus), PinField (digits only, default length 4 = DEFAULT_PIN_LENGTH, not yet a spec decision), KidTubeLogo.
+  Still to build: VideoRow, KidAvatar, KidTile, LeftTodayDots, TimeLeftBar.
+- UI tests: Compose tests run under Robolectric with `@Config(qualifiers = "ur-ldrtl")` (plain "ur" does NOT give RTL in Robolectric).
 
 ## Android (android/)
 - Stack: Kotlin 2.4, Jetpack Compose + Material 3, single module `app`, Gradle Kotlin DSL + version catalog

@@ -1,44 +1,52 @@
 package com.bbro.kidtube.ui.setup
 
-import app.cash.turbine.test
-import com.bbro.kidtube.core.DeviceRole
+import com.bbro.kidtube.core.AppLanguage
+import com.bbro.kidtube.core.LanguageStore
+import com.bbro.kidtube.core.LocaleApplier
+import com.bbro.kidtube.testing.InMemoryPreferencesDataStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 /** Plain JVM test: the ViewModel is built directly, no Hilt, no Android runtime. */
+@OptIn(ExperimentalCoroutinesApi::class)
 class SetupViewModelTest {
 
-    @Test
-    fun startsWithNoRoleAndCannotContinue() = runTest {
-        val viewModel = SetupViewModel()
-
-        viewModel.uiState.test {
-            val initial = awaitItem()
-            assertEquals(null, initial.selectedRole)
-            assertFalse(initial.canContinue)
-            cancelAndIgnoreRemainingEvents()
+    private class RecordingApplier : LocaleApplier {
+        val applied = mutableListOf<AppLanguage>()
+        override fun current(): AppLanguage? = applied.lastOrNull()
+        override fun apply(language: AppLanguage) {
+            applied += language
         }
     }
 
+    @Before
+    fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+
+    @After
+    fun tearDown() = Dispatchers.resetMain()
+
     @Test
-    fun selectingARole_emitsNewStateAndEnablesContinue() = runTest {
-        val viewModel = SetupViewModel()
+    fun choosingALanguage_isSavedAndApplied() = runTest {
+        val store = LanguageStore(InMemoryPreferencesDataStore())
+        val applier = RecordingApplier()
+        val viewModel = SetupViewModel(store, applier)
 
-        viewModel.uiState.test {
-            awaitItem() // initial
+        viewModel.onLanguageSelected(AppLanguage.URDU)
 
-            viewModel.onRoleSelected(DeviceRole.KID)
-            val afterKid = awaitItem()
-            assertEquals(DeviceRole.KID, afterKid.selectedRole)
-            assertTrue(afterKid.canContinue)
+        assertEquals(AppLanguage.URDU, store.current())
+        assertEquals(listOf(AppLanguage.URDU), applier.applied)
 
-            viewModel.onRoleSelected(DeviceRole.PARENT)
-            assertEquals(DeviceRole.PARENT, awaitItem().selectedRole)
+        viewModel.onLanguageSelected(AppLanguage.ENGLISH)
 
-            cancelAndIgnoreRemainingEvents()
-        }
+        assertEquals(AppLanguage.ENGLISH, store.current())
+        assertEquals(listOf(AppLanguage.URDU, AppLanguage.ENGLISH), applier.applied)
     }
 }

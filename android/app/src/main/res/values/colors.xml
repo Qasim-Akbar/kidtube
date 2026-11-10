@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Same value as KidTubeColors.ground; only used for the window before the first Compose frame. -->
+    <color name="window_ground">#FFF8EE</color>
+</resources>

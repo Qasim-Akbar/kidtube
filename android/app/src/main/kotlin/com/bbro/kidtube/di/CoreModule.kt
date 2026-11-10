@@ -5,9 +5,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.bbro.kidtube.core.AppCompatLocaleApplier
 import com.bbro.kidtube.core.Clock
 import com.bbro.kidtube.core.DeviceClock
 import com.bbro.kidtube.core.KeystoreCipher
+import com.bbro.kidtube.core.LocaleApplier
 import com.bbro.kidtube.core.SecretCipher
 import dagger.Binds
 import dagger.Module
@@ -26,6 +28,10 @@ abstract class CoreModule {
     @Binds
     @Singleton
     abstract fun bindClock(impl: DeviceClock): Clock
+
+    @Binds
+    @Singleton
+    abstract fun bindLocaleApplier(impl: AppCompatLocaleApplier): LocaleApplier
 }
 
 @Module
