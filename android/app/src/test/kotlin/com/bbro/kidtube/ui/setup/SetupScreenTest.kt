@@ -44,7 +44,7 @@ class SetupScreenTest {
     }
 
     @Test
-    @Config(qualifiers = "en")
+    @Config(qualifiers = "en-w411dp-h2000dp")
     fun english_rendersLeftToRight() {
         show(AppLanguage.ENGLISH)
 
@@ -60,7 +60,7 @@ class SetupScreenTest {
     }
 
     @Test
-    @Config(qualifiers = "ur-ldrtl")
+    @Config(qualifiers = "ur-ldrtl-w411dp-h2000dp")
     fun urdu_rendersRightToLeft() {
         show(AppLanguage.URDU)
 
@@ -75,7 +75,7 @@ class SetupScreenTest {
     }
 
     @Test
-    @Config(qualifiers = "en")
+    @Config(qualifiers = "en-w411dp-h2000dp")
     fun tappingTheCardsChoosesTheRole() {
         show(AppLanguage.ENGLISH)
 
@@ -86,7 +86,7 @@ class SetupScreenTest {
     }
 
     @Test
-    @Config(qualifiers = "en")
+    @Config(qualifiers = "en-w411dp-h2000dp")
     fun tappingTheOtherLanguageReportsIt() {
         show(AppLanguage.ENGLISH)
 
