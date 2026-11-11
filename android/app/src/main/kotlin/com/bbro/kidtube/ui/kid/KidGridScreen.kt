@@ -25,6 +25,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.bbro.kidtube.ui.components.OutlinedPillButton
+import com.bbro.kidtube.ui.theme.isUrduLocale
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -151,7 +154,7 @@ private fun GridBody(state: KidScreenState.Grid, onOpenVideo: (String) -> Unit) 
     }
 }
 
-private val TILE_HEIGHT = KidTubeDimens.kidTileMinHeight + 10.dp // never below the 150dp minimum
+private val TILE_HEIGHT = KidTubeDimens.kidTileMinHeight // 150dp, the minimum and the design value
 private val FIRST_TILE_HEIGHT = 220.dp
 
 @Composable
@@ -188,15 +191,15 @@ private fun StatusBody(state: KidScreenState.Status, onSwitchKid: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 when (state.kind) {
-                    StatusKind.DONE, StatusKind.DAY_OFF -> FaceCircle(colors.sun, size = 160.dp)
-                    StatusKind.TIME_UP -> ClockIcon(size = 160.dp)
+                    StatusKind.DONE, StatusKind.DAY_OFF -> FaceCircle(colors.sun, size = 200.dp)
+                    StatusKind.TIME_UP -> ClockIcon(size = 200.dp)
                     StatusKind.NOTHING -> KidAvatar(state.child.avatar, size = 140.dp)
                 }
-                LatinAwareText(title, style = MaterialTheme.typography.displayLarge, color = colors.ink, textAlign = TextAlign.Center)
+                LatinAwareText(title, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (isUrduLocale()) 44.sp else 42.sp), color = colors.ink, textAlign = TextAlign.Center)
                 LatinAwareText(subtitle, style = MaterialTheme.typography.titleLarge, color = colors.ink, textAlign = TextAlign.Center)
             }
             Spacer(Modifier.height(KidTubeDimens.gap16))
-            PrimaryButton(text = stringResource(R.string.kid_switch), onClick = onSwitchKid, modifier = Modifier.fillMaxWidth())
+            OutlinedPillButton(text = stringResource(R.string.kid_switch), onClick = onSwitchKid, modifier = Modifier.fillMaxWidth())
         }
     }
 }

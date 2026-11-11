@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -114,7 +115,7 @@ fun KidTile(
     val watched = stringResource(R.string.kid_watched_today)
     Box(
         modifier = modifier
-            .clip(KidTubeShapes.kidTile)
+            .clip(RoundedCornerShape(28.dp)) // docs: tiles 28dp radius
             .background(kidTileColor(seed, colors.thumbnailPastels, colors.kidGround))
             .clickable(onClick = onClick)
             .semantics(mergeDescendants = true) {
@@ -133,13 +134,13 @@ fun KidTile(
                     .align(Alignment.TopStart)
                     .padding(KidTubeDimens.gap12)
                     .clip(CircleShape)
-                    .background(colors.sun)
+                    .background(colors.ink) // dark tag
                     .padding(horizontal = KidTubeDimens.gap12, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                StarShape(colors.ink)
-                Text(stringResource(R.string.kid_first_tag), style = MaterialTheme.typography.labelLarge, color = colors.ink)
+                StarShape(colors.sun)
+                Text(stringResource(R.string.kid_first_tag), style = MaterialTheme.typography.labelLarge, color = Color.White)
             }
         }
         if (viewedToday) {
@@ -228,7 +229,7 @@ fun LeftTodayDots(total: Int, left: Int, modifier: Modifier = Modifier) {
     }
 }
 
-/** Minutes left of the daily app-time limit: a bar (fraction left) and a short label. */
+/** Minutes left of the daily app-time limit: a white rounded pill with "N minutes left today" and a thin bar of the time that is left. */
 @Composable
 fun TimeLeftBar(secondsLeft: Int, limitSeconds: Int, modifier: Modifier = Modifier) {
     val colors = KidTubeTheme.colors
@@ -236,13 +237,71 @@ fun TimeLeftBar(secondsLeft: Int, limitSeconds: Int, modifier: Modifier = Modifi
     val label = pluralStringResource(R.plurals.kid_time_left, minutes, minutes)
     val fraction = if (limitSeconds <= 0) 0f else (secondsLeft.toFloat() / limitSeconds).coerceIn(0f, 1f)
     Column(
-        modifier = modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = label },
-        verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap8),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(colors.card)
+            .padding(horizontal = KidTubeDimens.gap20, vertical = KidTubeDimens.gap16)
+            .semantics(mergeDescendants = true) { contentDescription = label },
+        verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap10),
     ) {
-        LatinAwareText(label, style = MaterialTheme.typography.labelLarge, color = colors.ink)
-        Box(Modifier.fillMaxWidth().height(14.dp).clip(CircleShape).background(colors.card)) {
+        LatinAwareText(label, style = MaterialTheme.typography.titleMedium, color = colors.ink)
+        Box(Modifier.fillMaxWidth().height(8.dp).clip(CircleShape).background(colors.line)) {
             Box(Modifier.fillMaxHeight().fillMaxWidth(fraction).clip(CircleShape).background(colors.primary))
         }
+    }
+}
+
+/** An outlined, fully rounded pill button (ink outline, ink text): "Switch kid", "Parents". */
+@Composable
+fun OutlinedPillButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    height: Dp = 60.dp,
+    leading: (@Composable () -> Unit)? = null,
+) {
+    val colors = KidTubeTheme.colors
+    Row(
+        modifier = modifier
+            .height(height)
+            .clip(CircleShape)
+            .border(KidTubeDimens.borderWidth, colors.ink, CircleShape)
+            .clickable(onClick = onClick, role = Role.Button)
+            .padding(horizontal = KidTubeDimens.gap24),
+        horizontalArrangement = Arrangement.spacedBy(KidTubeDimens.gap8, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        leading?.invoke()
+        LatinAwareText(text, style = MaterialTheme.typography.titleMedium, color = colors.ink)
+    }
+}
+
+/** The player's one big white button (76dp tall) with a back arrow that points back in the reading direction. */
+@Composable
+fun BigWhiteButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = KidTubeTheme.colors
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    Row(
+        modifier = modifier
+            .height(76.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(colors.card)
+            .border(KidTubeDimens.borderWidth, colors.line, RoundedCornerShape(24.dp))
+            .clickable(onClick = onClick, role = Role.Button),
+        horizontalArrangement = Arrangement.spacedBy(KidTubeDimens.gap12, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Canvas(Modifier.size(24.dp).clearAndSetSemantics { }) {
+            val w = size.width
+            val path = Path().apply {
+                // an arrow pointing to the start side: left in English, right in Urdu
+                if (rtl) { moveTo(w * 0.1f, w / 2); lineTo(w * 0.9f, w / 2); moveTo(w * 0.55f, w * 0.15f); lineTo(w * 0.9f, w / 2); lineTo(w * 0.55f, w * 0.85f) }
+                else { moveTo(w * 0.9f, w / 2); lineTo(w * 0.1f, w / 2); moveTo(w * 0.45f, w * 0.15f); lineTo(w * 0.1f, w / 2); lineTo(w * 0.45f, w * 0.85f) }
+            }
+            drawPath(path, colors.ink, style = Stroke(width = w * 0.12f, cap = StrokeCap.Round))
+        }
+        LatinAwareText(text, style = MaterialTheme.typography.labelLarge, color = colors.ink)
     }
 }
 

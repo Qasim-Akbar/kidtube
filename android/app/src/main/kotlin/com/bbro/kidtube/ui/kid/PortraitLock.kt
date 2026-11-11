@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 
-private fun Context.findActivity(): Activity? {
+internal fun Context.findActivity(): Activity? {
     var c: Context? = this
     while (c is ContextWrapper) {
         if (c is Activity) return c

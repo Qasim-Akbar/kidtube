@@ -10,6 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.sp
+import com.bbro.kidtube.ui.components.OutlinedPillButton
+import com.bbro.kidtube.ui.theme.isUrduLocale
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -136,7 +141,7 @@ fun KidPickerContent(state: KidPickerUiState, onPick: (String) -> Unit, onParent
                 .padding(KidTubeDimens.screenPadding),
             verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap20),
         ) {
-            Text(stringResource(R.string.kid_picker_title), style = MaterialTheme.typography.displayLarge, color = colors.ink)
+            Text(stringResource(R.string.kid_picker_title), style = MaterialTheme.typography.displayLarge, color = colors.ink, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             if (state.children.isEmpty()) {
                 Column(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -160,11 +165,13 @@ fun KidPickerContent(state: KidPickerUiState, onPick: (String) -> Unit, onParent
                 }
             }
             if (state.canLeaveKidMode) {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = onParents) {
-                        Icon(Icons.Filled.Lock, contentDescription = null, tint = colors.ink)
-                        Text(stringResource(R.string.kid_picker_parents), style = MaterialTheme.typography.titleMedium, color = colors.ink, modifier = Modifier.padding(start = KidTubeDimens.gap8))
-                    }
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    OutlinedPillButton(
+                        text = stringResource(R.string.kid_picker_parents),
+                        onClick = onParents,
+                        height = 52.dp,
+                        leading = { Icon(Icons.Filled.Lock, contentDescription = null, tint = colors.ink, modifier = Modifier.size(20.dp)) },
+                    )
                 }
             }
         }
@@ -175,12 +182,12 @@ fun KidPickerContent(state: KidPickerUiState, onPick: (String) -> Unit, onParent
 private fun ChildTile(child: KidChild, highlighted: Boolean, onClick: () -> Unit) {
     val colors = KidTubeTheme.colors
     Surface(
-        shape = KidTubeShapes.kidTile,
+        shape = RoundedCornerShape(40.dp), // docs: picker tiles 40dp radius
         color = colors.card,
         border = if (highlighted) BorderStroke(KidTubeDimens.selectedBorderWidth, colors.primary) else BorderStroke(KidTubeDimens.borderWidth, colors.line),
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 190.dp)
+            .heightIn(min = 200.dp)
             .clickable(onClick = onClick)
             .semantics { role = Role.Button },
     ) {
@@ -189,8 +196,8 @@ private fun ChildTile(child: KidChild, highlighted: Boolean, onClick: () -> Unit
             verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap12, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            KidAvatar(child.avatar, size = 110.dp)
-            LatinAwareText(child.name, style = MaterialTheme.typography.titleLarge, color = colors.ink, textAlign = TextAlign.Center)
+            KidAvatar(child.avatar, size = 112.dp)
+            LatinAwareText(child.name, style = MaterialTheme.typography.titleLarge.copy(fontSize = if (isUrduLocale()) 34.sp else 32.sp, lineHeight = if (isUrduLocale()) 58.sp else 42.sp), color = colors.ink, textAlign = TextAlign.Center)
         }
     }
 }

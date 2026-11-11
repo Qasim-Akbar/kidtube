@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -49,7 +51,7 @@ import com.bbro.kidtube.R
 import com.bbro.kidtube.player.KidSessionManager
 import com.bbro.kidtube.ui.components.FaceCircle
 import com.bbro.kidtube.ui.components.LatinAwareText
-import com.bbro.kidtube.ui.components.PrimaryButton
+import com.bbro.kidtube.ui.components.BigWhiteButton
 import com.bbro.kidtube.ui.theme.KidTubeDimens
 import com.bbro.kidtube.ui.theme.KidTubeShapes
 import com.bbro.kidtube.ui.theme.KidTubeTheme
@@ -77,6 +79,7 @@ fun KidPlayerScreen(onAllVideos: () -> Unit, viewModel: KidPlayerViewModel = hil
     LockPortrait()
     KidForegroundEffect(viewModel.childId)
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val view = LocalView.current
 
     LaunchedEffect(viewModel) { viewModel.exits.collect { onAllVideos() } }
     LaunchedEffect(state) { if (state is PlayerUiState.Gone) onAllVideos() }
@@ -84,8 +87,15 @@ fun KidPlayerScreen(onAllVideos: () -> Unit, viewModel: KidPlayerViewModel = hil
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onForeground() }
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { viewModel.onBackground() }
 
+    // The video strip is dark (behind the status bar too): light status-bar icons while this screen is shown.
+    val window = view.context.findActivity()?.window
+    DisposableEffect(window) {
+        val controller = window?.let { androidx.core.view.WindowCompat.getInsetsController(it, view) }
+        val previous = controller?.isAppearanceLightStatusBars
+        controller?.isAppearanceLightStatusBars = false
+        onDispose { if (previous != null) controller.isAppearanceLightStatusBars = previous }
+    }
     // The screen stays on while a video plays.
-    val view = LocalView.current
     val playing = (state as? PlayerUiState.Ready)?.isPlaying == true
     DisposableEffect(playing) {
         view.keepScreenOn = playing
@@ -138,36 +148,38 @@ private fun PlayerLayout(
     video: @Composable () -> Unit,
 ) {
     val colors = KidTubeTheme.colors
-    Scaffold(containerColor = colors.kidGround) { innerPadding ->
+    Column(modifier = Modifier.fillMaxSize().background(colors.kidGround)) {
+        // A dark strip (it also sits behind the status bar) with the full-width 16:9 video area in it.
+        Box(Modifier.fillMaxWidth().background(colors.ink).statusBarsPadding()) {
+            Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
+                video()
+                if (control != null) Box(Modifier.align(Alignment.Center)) { control() }
+                if (progress != null) ProgressLine(progress, Modifier.align(Alignment.BottomCenter))
+            }
+        }
         Column(
-            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(KidTubeDimens.screenPadding),
+            modifier = Modifier.weight(1f).fillMaxWidth().navigationBarsPadding().padding(KidTubeDimens.screenPadding),
             verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap16),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(
-                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(KidTubeShapes.kidTile).background(colors.ink),
-            ) { video() }
-            if (progress != null) ProgressLine(progress)
-            if (control != null) control()
             if (title != null) {
-                LatinAwareText(title, style = MaterialTheme.typography.headlineMedium, color = colors.ink, maxLines = 3, modifier = Modifier.fillMaxWidth())
+                LatinAwareText(title, style = MaterialTheme.typography.displaySmall, color = colors.ink, maxLines = 3, modifier = Modifier.fillMaxWidth())
             }
             Box(Modifier.weight(1f))
-            PrimaryButton(text = stringResource(R.string.kid_player_all_videos), onClick = onAllVideos, modifier = Modifier.fillMaxWidth())
+            BigWhiteButton(text = stringResource(R.string.kid_player_all_videos), onClick = onAllVideos, modifier = Modifier.fillMaxWidth())
         }
     }
 }
 
-/** A thin, non-interactive progress bar (no seeking). */
+/** A thin yellow progress line along the bottom edge of the video area (not interactive: no seeking). */
 @Composable
-private fun ProgressLine(progress: Float) {
+private fun ProgressLine(progress: Float, modifier: Modifier = Modifier) {
     val colors = KidTubeTheme.colors
-    Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(colors.card)) {
-        Box(Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)).clip(CircleShape).background(colors.primary))
+    Box(modifier.fillMaxWidth().height(5.dp).background(Color.White.copy(alpha = 0.3f))) {
+        Box(Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)).background(colors.sun))
     }
 }
 
-/** The big round Play/Pause button: the icon shows what pressing does. */
+/** The big round white Play/Pause button over the video area: the icon shows what pressing does. */
 @Composable
 private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit) {
     val colors = KidTubeTheme.colors
@@ -175,9 +187,9 @@ private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit) {
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     Box(
         modifier = Modifier
-            .size(88.dp)
+            .size(72.dp)
             .clip(CircleShape)
-            .background(colors.ink)
+            .background(Color.White)
             .clickable(onClick = onClick)
             .semantics {
                 contentDescription = label
@@ -185,12 +197,12 @@ private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit) {
             },
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.size(36.dp)) {
+        Canvas(Modifier.size(28.dp)) {
             val w = size.width
             if (isPlaying) {
                 val bar = Size(w * 0.28f, w)
-                drawRoundRect(Color.White, Offset(w * 0.06f, 0f), bar, CornerRadius(w * 0.08f))
-                drawRoundRect(Color.White, Offset(w * 0.66f, 0f), bar, CornerRadius(w * 0.08f))
+                drawRoundRect(colors.ink, Offset(w * 0.06f, 0f), bar, CornerRadius(w * 0.08f))
+                drawRoundRect(colors.ink, Offset(w * 0.66f, 0f), bar, CornerRadius(w * 0.08f))
             } else {
                 // The play triangle points the reading direction (mirrored in the Urdu layouts, as in the mockups).
                 val path = Path().apply {
@@ -201,7 +213,7 @@ private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit) {
                     }
                     close()
                 }
-                drawPath(path, Color.White)
+                drawPath(path, colors.ink)
             }
         }
     }

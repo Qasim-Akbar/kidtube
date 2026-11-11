@@ -185,8 +185,8 @@
         <item quantity="other">آج %d ویڈیوز باقی</item>
     </plurals>
     <plurals name="kid_time_left">
-        <item quantity="one">%d منٹ باقی</item>
-        <item quantity="other">%d منٹ باقی</item>
+        <item quantity="one">آج %d منٹ باقی</item>
+        <item quantity="other">آج %d منٹ باقی</item>
     </plurals>
     <string name="kid_switch">بچہ بدلیں</string>
     <string name="kid_done_title">آج کے لیے بس!</string>

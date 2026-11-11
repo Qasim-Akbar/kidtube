@@ -192,8 +192,8 @@
         <item quantity="other">%d videos left today</item>
     </plurals>
     <plurals name="kid_time_left">
-        <item quantity="one">%d minute left</item>
-        <item quantity="other">%d minutes left</item>
+        <item quantity="one">%d minute left today</item>
+        <item quantity="other">%d minutes left today</item>
     </plurals>
     <string name="kid_switch">Switch kid</string>
     <string name="kid_done_title">All done for today!</string>
