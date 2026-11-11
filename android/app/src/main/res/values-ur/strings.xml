@@ -197,6 +197,8 @@
     <string name="kid_day_off_subtitle">آپ کا دن اچھا گزرے، %1$s</string>
     <string name="kid_empty_title">ابھی یہاں کچھ نہیں</string>
     <string name="kid_empty_subtitle">والدین سے ویڈیوز شامل کرنے کو کہیں</string>
-    <string name="kid_player_placeholder">پلیئر</string>
+    <string name="kid_player_play">چلائیں</string>
+    <string name="kid_player_pause">روکیں</string>
+    <string name="kid_player_cannot_play">یہ ویڈیو نہیں چل سکتی</string>
     <string name="kid_player_all_videos">تمام ویڈیوز</string>
 </resources>

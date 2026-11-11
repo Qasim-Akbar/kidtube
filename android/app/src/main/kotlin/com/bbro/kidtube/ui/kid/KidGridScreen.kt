@@ -95,6 +95,7 @@ fun KidGridScreen(
     viewModel: KidGridViewModel = hiltViewModel(),
 ) {
     LockPortrait()
+    KidForegroundEffect(viewModel.childId)
     val state by viewModel.state.collectAsStateWithLifecycle()
     // The child was removed by a pull: nothing to show for them, back to "Who is watching?".
     LaunchedEffect(state) { if (state is KidScreenState.Gone) onSwitchKid() }

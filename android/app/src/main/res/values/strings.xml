@@ -204,6 +204,8 @@
     <string name="kid_day_off_subtitle">Enjoy your day, %1$s</string>
     <string name="kid_empty_title">Nothing here yet</string>
     <string name="kid_empty_subtitle">Ask a parent to add videos</string>
-    <string name="kid_player_placeholder">Player</string>
+    <string name="kid_player_play">Play</string>
+    <string name="kid_player_pause">Pause</string>
+    <string name="kid_player_cannot_play">This video cannot play</string>
     <string name="kid_player_all_videos">All videos</string>
 </resources>

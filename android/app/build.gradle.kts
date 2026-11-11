@@ -126,6 +126,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     // Thumbnails (public image URLs only); the coloured placeholder is drawn underneath, so a failed load is harmless.
+    // Official IFrame player in a WebView (SPEC section 12); never downloads or re-streams video.
+    implementation(libs.youtube.player.core)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     // HTTP body logging exists in debug builds only; src/release has a no-op stand-in.

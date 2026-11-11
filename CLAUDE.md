@@ -78,9 +78,11 @@ Settings, Kid mode switch + leaving it with the PIN.
 Done (android UI, U3b): fixes from the first emulator QA run (see "U3b fixes" below).
 Done (android, K1): Kotlin plan engine port (package `engine`, passes all 112 backend vectors) + `FeedRepository` (offline feed + projection
 per child from Room + the unacked-event overlay); no UI yet (see "Android engine and feed (K1)" below).
-Done (android UI, K2): kid mode screens on `FeedRepository`: picker, grid, status screens, placeholder player route (see "Android kid mode (K2)" below).
-Not yet: the real player (K3: IFrame, watch/app-time tracking, view events), Plans and Reports screens, plan editor, lock-task.
-Next: K3 player replacing `KidPlayerPlaceholder` (same route kid_player/{childId}/{itemId}); design the remaining "Still to design" screens in docs/DESIGN.md.
+Done (android UI, K2): kid mode screens on `FeedRepository`: picker, grid, status screens (see "Android kid mode (K2)" below).
+Done (android, K3): real kid player (YouTube IFrame via android-youtube-player, Facebook plugin WebView) and offline event tracking (watch_progress, view_complete,
+playback_error, app_session) with live limits (see "Android player and tracking (K3)" below). Not run on a device with a network yet.
+Not yet: Plans and Reports screens, plan editor, lock-task / screen pinning, a live app-time check on the grid (only the player enforces the limit live).
+Next: run K3 against real YouTube/Facebook on a device; design the remaining "Still to design" screens in docs/DESIGN.md.
 
 ## Android engine and feed (K1)
 - `engine/` (Types.kt, Feed.kt, Projection.kt) is a line-by-line port of backend/app/engine, PURE (no Android/Room/Clock; time = arguments). Same names
@@ -184,7 +186,7 @@ Next: K3 player replacing `KidPlayerPlaceholder` (same route kid_player/{childId
   (`android/gradle/libs.versions.toml`), AGP 9.5 on Gradle 9.8.2, KSP (not kapt), Hilt, Room, WorkManager,
   Retrofit + kotlinx.serialization + OkHttp, DataStore. minSdk 26, compile/target 37. java.time via core library desugaring.
   `androidx.security:security-crypto` is deprecated: the PIN uses the Keystore AES-GCM wrapper in `core/KeystoreCipher`.
-  android-youtube-player is added later (player task), not yet.
+  android-youtube-player 13.1.0 is used by the kid player (K3).
 - Packages under `com.bbro.kidtube`: core, data (+ data.entity, data.dao, data.repo), data.remote (+ data.remote.auth),
   sync, engine, player, ui.setup, ui.parent, ui.kid, ui.nav, ui.theme, di. Single Activity + NavHost.
 - Backend shapes: DTOs in data.remote/Dtos.kt mirror backend/app/schemas field for field (UUIDs are Strings). Read the
@@ -289,6 +291,35 @@ Next: K3 player replacing `KidPlayerPlaceholder` (same route kid_player/{childId
   Test gotcha: set `Dispatchers.setMain(Dispatchers.Unconfined)`, NOT a test dispatcher (its delay() is virtual time and the clock poll never fires).
 - Components (`ui/components/KidComponents.kt`): FaceCircle, KidAvatar, ClockIcon, KidTile (cd = video title; stateDescription "Watched today"), LeftTodayDots (test tags
   `left_today_dot_filled/empty`), TimeLeftBar. Kid tiles never use the yellow pastel (it equals kidGround). `LockPortrait()` (ref-counted) is applied on every kid screen.
-- Withheld (unavailable) videos never reach the grid (engine input); pending ones are ordinary tiles. Placeholder player = text + "All videos" (K3 replaces `KidPlayerPlaceholder`).
+- Withheld (unavailable) videos never reach the grid (engine input); pending ones are ordinary tiles.
 - Screenshots: `KIDTUBE_SCREENSHOTS=<dir> ./gradlew testDebugUnitTest --tests 'com.bbro.kidtube.ui.kid.KidScreenshots*'` renders every kid screen (en + ur) to PNG via Robolectric
   native graphics (skipped when the variable is unset).
+
+## Android player and tracking (K3)
+- Route `kid_player/{childId}/{itemId}` = `ui/kid/KidPlayerScreen` (+ `KidPlayerViewModel`, `PlayerContent` pure layout). Layout: 16:9 video area, our own round Play/Pause button (YouTube only), thin
+  non-interactive progress line, large title, one "All videos" button. System back and "All videos" both call `vm.leave()`: pause, write pending events, wait until they are in Room
+  (`KidEventWriter.awaitIdle`, `KidSessionManager.flushNow`), THEN the exit is emitted and the nav graph pops to the grid (which therefore evaluates a feed that includes everything).
+  Screen stays on while playing (`keepScreenOn`); ON_PAUSE pauses and flushes; coming back leaves YouTube paused (Facebook resumes counting). Portrait locked.
+- YouTube (`PlayerSurfaces.kt`): android-youtube-player 13.1.0, options controls=0 rel=0 fs=0 iv_load_policy=3 cc=0 modestbranding=1, `loadVideo` on ready (autoplay on open). The YouTubePlayerView
+  sits in a `TouchBlockingFrame` that intercepts every touch, so taps can never reach YouTube. Embed errors (library enum mapped to 2/5/100/101/153; the library folds 101 and 150 into one case,
+  reported as 101) -> "This video cannot play" tile + `playback_error`, no view. A YouTube video with no sign of life after `PlayerTiming.loadTimeoutSeconds` (30) also ends in the tile, WITHOUT
+  an event (probably no network). `pending` videos play normally; `unavailable` ones show the tile and write nothing.
+- Facebook: WebView on `https://www.facebook.com/plugins/video.php?href=<encoded>&show_text=false&autoplay=true&allowfullscreen=false`. `FacebookPlayback.isAllowedNavigation` = exact https +
+  www.facebook.com + path /plugins/video.php (any query); `LockedFacebookClient` cancels every other main-frame navigation (also blanks a blocked main-frame request), no popups/new windows, no
+  file chooser, no permission prompts, file/content access off, no downloads, no JS interfaces; JavaScript + DOM storage are on (the plugin needs them), autoplay without gesture. Touches stay on
+  (the plugin's own play button is the only control). No Play/Pause button of ours for Facebook.
+- **`FACEBOOK_VIEW_SECONDS = 180`** (player/Tracking.kt): a Facebook view counts after this much time on screen while visible and resumed (no player API). It WILL BECOME A PARENT SETTING later. The
+  plan item's `watch_threshold` is used for YouTube only. Facebook time also writes watch_progress.
+- Tracking (pure, `player/Tracking.kt`, driven by the injected Clock; monotonic for durations, wall clock for timestamps and local dates):
+  - `PlaybackTracker` (one per visit): watch_progress from PLAYING time only (seek, pause, buffering add nothing), whole seconds with the sub-second remainder carried (the last flush on leave
+    rounds), flushed after 30 s of playing and on pause/end/background/leave; the child's local day change forces a flush under the OLD date (checked on every 1 s tick, so at most one tick off).
+    `video_id` in watch_progress/playback_error is the SERVER video UUID (the backend validates a UUID). view_complete once per visit at position >= item threshold x duration, or when the video
+    ends (SPEC section 7) if any time was played; never after an error. playback_error once per visit.
+  - `AppSessionTracker` + `KidSessionManager` (singleton): app_session chunks of at most 60 s on whole-second boundaries (each chunk starts where the last ended: no gaps/overlaps, the server
+    truncates every event to whole seconds), split at the child's local midnight into one event per date (SPEC has no explicit rule; the backend groups by the event's `local_date`). Counts while a kid
+    screen of a child is shown AND the app is resumed (`KidForegroundEffect` in the grid and player; the picker has no child so no session). A kill loses at most 60 s.
+  - Events are written by `KidEventWriter` (app-scoped, ordered, `EventRepository.record(..., localDate, occurredAt)` which asks for the debounced sync); payload keys are asserted against backend
+    fixture 58 (`PlayerEventPayloadsTest`).
+- Live limits (`KidPlayerViewModel`): every second, recorded app time from the feed + the running session's unwritten seconds >= `appTimeLimitSeconds` -> pause, flush, leave (grid shows Time's up).
+  YouTube ends -> leave (a view counted at 90% never cuts the last 10% short). Facebook: once the counted view makes the item not offered any more (cap/quota/target) -> leave.
+- Gotchas: test with `Dispatchers.setMain(Dispatchers.Unconfined)` (real-time delay); `vm.exits` is a single-consumer channel flow.

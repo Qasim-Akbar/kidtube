@@ -1,6 +1,8 @@
 package com.bbro.kidtube.ui.kid
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -60,6 +62,20 @@ abstract class KidScreenshotsBase(private val tag: String) {
     @Test fun timeUp() = shot("time-up") { KidGridContent(KidScreenState.Status(ali, StatusKind.TIME_UP), {}, {}) }
 
     @Test fun dayOff() = shot("day-off") { KidGridContent(KidScreenState.Status(ali, StatusKind.DAY_OFF), {}, {}) }
+
+    private val fakeVideo: @androidx.compose.runtime.Composable (PlayerSurface, androidx.compose.ui.Modifier) -> Unit = { _, m ->
+        androidx.compose.foundation.layout.Box(m.fillMaxSize().background(androidx.compose.ui.graphics.Color(0xFF3A5A63)))
+    }
+
+    @Test fun playerPlaying() = shot("player") {
+        PlayerContent(PlayerUiState.Ready("Counting to ten with Pip", PlayerSurface.YouTube("x"), true, 0.4f), {}, {}, fakeVideo)
+    }
+
+    @Test fun playerPaused() = shot("player-paused") {
+        PlayerContent(PlayerUiState.Ready("Counting to ten with Pip", PlayerSurface.YouTube("x"), false, 0.4f), {}, {}, fakeVideo)
+    }
+
+    @Test fun playerError() = shot("player-error") { PlayerContent(PlayerUiState.Error("Counting to ten with Pip"), {}, {}, fakeVideo) }
 
     @Test fun nothing() = shot("nothing") { KidGridContent(KidScreenState.Status(sara, StatusKind.NOTHING), {}, {}) }
 }

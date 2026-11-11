@@ -7,7 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.bbro.kidtube.ui.kid.KidGridScreen
-import com.bbro.kidtube.ui.kid.KidPlayerPlaceholder
+import com.bbro.kidtube.ui.kid.KidPlayerScreen
 import com.bbro.kidtube.ui.kid.KidProfilePickerScreen
 
 /** The three kid screens. The real ones are the default; tests swap in fakes to check the navigation alone. */
@@ -19,7 +19,7 @@ class KidScreens(
         KidGridScreen(onOpenVideo = open, onSwitchKid = switch)
     },
     val player: @Composable (childId: String, itemId: String, onAllVideos: () -> Unit) -> Unit = { _, _, back ->
-        KidPlayerPlaceholder(onAllVideos = back)
+        KidPlayerScreen(onAllVideos = back)
     },
 )
 

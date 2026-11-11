@@ -120,14 +120,22 @@ class EventRepository @Inject constructor(
      * Writes a new event as `pending`: id = fresh UUID, occurred_at = now (UTC, millisecond precision),
      * local_date = now in the FAMILY timezone from the last snapshot (Asia/Karachi until one has been pulled).
      */
-    suspend fun record(type: EventType, childId: String, payload: JsonObject): LocalEventEntity {
+    suspend fun record(
+        type: EventType,
+        childId: String,
+        payload: JsonObject,
+        /** Explicit child-local date; null = today in the family timezone (used when an event belongs to an earlier day, e.g. a session split at midnight). */
+        localDate: LocalDate? = null,
+        /** Explicit `occurred_at`; null = now. */
+        occurredAt: Instant? = null,
+    ): LocalEventEntity {
         val now = clock.now().truncatedTo(ChronoUnit.MILLIS)
         val event = LocalEventEntity(
             id = UUID.randomUUID().toString(),
             childId = childId,
             type = type,
-            occurredAt = now,
-            localDate = clock.today(familyZone()),
+            occurredAt = occurredAt?.truncatedTo(ChronoUnit.MILLIS) ?: now,
+            localDate = localDate ?: clock.today(familyZone()),
             payload = KidTubeJson.instance.encodeToString(JsonObject.serializer(), payload),
             state = LocalEventState.PENDING,
             ackedCycle = null,
