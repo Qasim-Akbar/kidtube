@@ -83,7 +83,8 @@ Done (android, K3): real kid player (YouTube IFrame via android-youtube-player, 
 playback_error, app_session) with live limits (see "Android player and tracking (K3)" below). Not run on a device with a network yet.
 Done (android, K4): Facebook off for kids (`KIDS_FACEBOOK_ENABLED = false`, see "Kids and Facebook" below), app-time session continuous across kid screens (process lifecycle + handover grace),
 YouTube cover until the first PLAYING, thumbnails cropped from a fixed 16:9 box.
-Not yet: Plans and Reports screens, plan editor, lock-task / screen pinning, a live app-time check on the grid (only the player enforces the limit live).
+Done (android UI, P1): the Plans tab (child chips, plan summary + edit form, item list with edit/move/remove/add, 7-day "What happens next", extra time); see "Plans tab (P1)" below.
+Not yet: Reports screen, lock-task / screen pinning, a live app-time check on the grid (only the player enforces the limit live).
 Next: run K3 against real YouTube/Facebook on a device; design the remaining "Still to design" screens in docs/DESIGN.md.
 
 ## Android engine and feed (K1)
@@ -341,3 +342,15 @@ Next: run K3 against real YouTube/Facebook on a device; design the remaining "St
 - Thumbnails: `CroppedThumbnail` draws the image in a 16:9 box (ContentScale.Crop) centred in and covering its parent, so the letterbox bars of `hqdefault` are cut off; used by `VideoThumbnail` (now 96x54 by
   default; library rows, share sheet) and `KidTile` (grid, First tile). The pastel placeholder stays underneath.
 - playback_error keeps the code the library reports (101 for missing/unembeddable videos); not changed.
+
+## Plans tab (P1)
+- Code: `ui/plans/` (`PlansModel` pure mapper, `PlansViewModel`, `PlansScreen`, `PlanDialogs`), `data/repo/PlanEdit.kt` (`PlanEditRepository`, `PlanOrder`), `ui/components/Stepper`. `ParentHomeScreen` shows `PlansTab` (Reports still "Coming soon"). No PIN: it is the already-unlocked parent area.
+- Everything is ONLINE-ONLY except extra time. `PlanEditRepository` calls the existing endpoints (add/PATCH/DELETE item, reorder, PUT plan, PATCH child) and pulls the snapshot after a success so Room updates the list. Errors -> `PlanFailureKind`
+  (409 ALREADY_IN_PLAN, 404 NOT_FOUND, 422 INVALID with the server's message (string detail, or the first `msg` of a validation list), NO_CONNECTION vs SERVER_UNREACHABLE via ConnectivityChecker, RATE_LIMITED).
+- API facts that shaped it: `on_miss` is per ITEM (anchored items only; shown read-only), the plan-level "missed days" knob is `max_extra_per_day` (catch-up cap; videos, or MINUTES in minutes mode) and EVERY PUT sends it (omitting it resets it on the server);
+  `daily_app_minutes` lives on the CHILD, so "Edit plan" saves PUT plan then PATCH child, each only if it differs from what is stored; the second is not tried if the first fails; the form stays open and says exactly which part saved (`SettingsOutcome`/`SettingsMessage`).
+  Reorder must list EVERY item of the plan (also completed/dropped, which the list hides): `PlanOrder.moved` swaps only the two active neighbours.
+- Add video adds an OPTIONAL item with view_target 1 (watch once); the parent edits it afterwards. Item edit sends required + view_target + daily_cap (null clears).
+- "What happens next" = `FeedRepository.observe(childId, projectionDays = 7)` projection (unfiltered, so Facebook items are listed), titles/stars from the plan items; unlimited items are named in a footnote.
+- Extra time (+10/+15/+30) records a `time_extension` event (`PlansViewModel.giveExtraTime`, works offline) for the child's local day; the overlay applies it at once. Only shown when the child has `daily_app_minutes`; a separate kid phone gets it on its next sync.
+- Tests: `PlanEditRepositoryTest`, `PlansViewModelTest` (MockWebServer + contract fixtures, FakeClock), `PlansRenderTest` (en + ur RTL), `PlansScreenshotsTest` (`KIDTUBE_SCREENSHOTS=<dir>`, p1-*.png).

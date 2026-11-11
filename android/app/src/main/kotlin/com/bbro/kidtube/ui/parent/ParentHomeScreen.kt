@@ -119,7 +119,7 @@ fun ParentHomeScreen(
                     onKidMode = { viewModel.enterKidMode(onKidMode) },
                     onSettings = onSettings,
                 )
-                HomeTab.PLANS -> ComingSoon(R.string.nav_plans)
+                HomeTab.PLANS -> com.bbro.kidtube.ui.plans.PlansTab(onAddChild = { addingChild = true })
                 HomeTab.REPORTS -> ComingSoon(R.string.nav_reports)
             }
         }

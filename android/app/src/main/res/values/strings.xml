@@ -209,4 +209,119 @@
     <string name="kid_player_pause">Pause</string>
     <string name="kid_player_cannot_play">This video cannot play</string>
     <string name="kid_player_all_videos">All videos</string>
+
+    <!-- Plans tab (P1) -->
+    <string name="plans_no_children">Add a child first, then you can plan their videos.</string>
+    <string name="plans_no_plan">This child has no plan yet.</string>
+    <string name="plans_plan_title">Plan</string>
+    <string name="plans_edit">Edit</string>
+    <plurals name="plans_pace_videos">
+        <item quantity="one">%1$d video a day</item>
+        <item quantity="other">%1$d videos a day</item>
+    </plurals>
+    <plurals name="plans_pace_minutes">
+        <item quantity="one">%1$d minute a day</item>
+        <item quantity="other">%1$d minutes a day</item>
+    </plurals>
+    <string name="plans_weekday_mon">Mon</string>
+    <string name="plans_weekday_tue">Tue</string>
+    <string name="plans_weekday_wed">Wed</string>
+    <string name="plans_weekday_thu">Thu</string>
+    <string name="plans_weekday_fri">Fri</string>
+    <string name="plans_weekday_sat">Sat</string>
+    <string name="plans_weekday_sun">Sun</string>
+    <string name="plans_starts">Starts %1$s</string>
+    <string name="plans_ends">Ends %1$s</string>
+    <string name="plans_no_end">No end date</string>
+    <string name="plans_catchup_label">Catch-up after missed days</string>
+    <string name="plans_catchup_none">No extra videos</string>
+    <string name="plans_catchup_none_minutes">No extra minutes</string>
+    <plurals name="plans_catchup_videos">
+        <item quantity="one">Up to %1$d extra video a day</item>
+        <item quantity="other">Up to %1$d extra videos a day</item>
+    </plurals>
+    <plurals name="plans_catchup_minutes">
+        <item quantity="one">Up to %1$d extra minute a day</item>
+        <item quantity="other">Up to %1$d extra minutes a day</item>
+    </plurals>
+    <string name="plans_limit_label">Daily app-time limit</string>
+    <string name="plans_limit_none">No limit</string>
+    <plurals name="plans_limit_minutes">
+        <item quantity="one">%1$d minute a day</item>
+        <item quantity="other">%1$d minutes a day</item>
+    </plurals>
+    <string name="plans_extra_title">Give extra time today</string>
+    <string name="plans_extra_option">+%1$d min</string>
+    <string name="plans_extra_hint">Set a daily app-time limit to give extra time</string>
+    <string name="plans_extra_added">Extra time added. A separate kid phone gets it on its next sync.</string>
+
+    <string name="plans_items_title">Videos in this plan</string>
+    <string name="plans_items_empty">No videos yet. Add one from your library.</string>
+    <string name="plans_add_video">Add video</string>
+    <string name="plans_badge_required">Required</string>
+    <plurals name="plans_badge_times">
+        <item quantity="one">%1$d time</item>
+        <item quantity="other">%1$d times</item>
+    </plurals>
+    <string name="plans_badge_repeats">Repeats</string>
+    <string name="plans_badge_cap">Max %1$d a day</string>
+    <string name="plans_badge_anchor">On %1$s</string>
+    <string name="plans_on_miss_shift">if missed: moves on</string>
+    <string name="plans_on_miss_skip">if missed: skipped</string>
+    <string name="plans_on_miss_drop">if missed: dropped</string>
+    <string name="plans_move_up">Move up</string>
+    <string name="plans_move_down">Move down</string>
+    <string name="plans_edit_item">Video settings</string>
+    <string name="plans_remove_item">Remove from plan</string>
+
+    <string name="plans_item_title">Video settings</string>
+    <string name="plans_item_required">Must watch first</string>
+    <string name="plans_item_required_hint">A required video is shown alone, before the others.</string>
+    <string name="plans_item_target">How many times</string>
+    <string name="plans_item_target_repeat">Keeps repeating</string>
+    <string name="plans_item_cap">Most times per day</string>
+    <string name="plans_item_cap_none">No limit</string>
+    <string name="plans_save">Save</string>
+    <string name="plans_remove_title">Remove this video?</string>
+    <string name="plans_remove_body">%1$s will leave the plan. It stays in your library.</string>
+    <string name="plans_remove_confirm">Remove</string>
+    <string name="plans_pick_title">Add a video</string>
+    <string name="plans_pick_hint">It is added to watch once. Change that afterwards with the edit button.</string>
+    <string name="plans_pick_empty">Every video in your library is already in this plan.</string>
+
+    <string name="plans_next_title">What happens next</string>
+    <string name="plans_next_day_off">Day off</string>
+    <string name="plans_next_outside">Outside the plan dates</string>
+    <string name="plans_next_nothing">Nothing planned</string>
+    <string name="plans_next_unlimited">Repeating videos are not listed here: %1$s</string>
+
+    <string name="plans_error_no_connection">Needs internet. Plan changes cannot be saved offline.</string>
+    <string name="plans_error_server">Cannot reach the server. Try again in a moment.</string>
+    <string name="plans_error_already">This video is already in the plan.</string>
+    <string name="plans_error_not_found">Not found. It may have been removed on another phone. Pull down on Library to refresh.</string>
+    <string name="plans_error_invalid">The server did not accept that: %1$s</string>
+    <string name="plans_error_invalid_generic">The server did not accept that change.</string>
+
+    <string name="plans_form_title">Edit plan</string>
+    <string name="plans_form_count_by">Count by</string>
+    <string name="plans_form_videos">Videos</string>
+    <string name="plans_form_minutes">Minutes</string>
+    <string name="plans_form_per_day">Per day</string>
+    <string name="plans_form_days">Days the child can watch</string>
+    <string name="plans_form_start">Start date</string>
+    <string name="plans_form_end">End date</string>
+    <string name="plans_form_set_end">Set an end date</string>
+    <string name="plans_form_clear_end">No end date</string>
+    <string name="plans_form_catchup_hint_videos">Extra videos allowed on a day, to catch up after missed days.</string>
+    <string name="plans_form_catchup_hint_minutes">Extra minutes allowed on a day, to catch up after missed days.</string>
+    <string name="plans_form_limit_hint">The most time the child can spend in the app each day.</string>
+    <string name="plans_save_plan_saved">Plan settings: saved.</string>
+    <string name="plans_save_plan_failed">Plan settings: NOT saved.</string>
+    <string name="plans_save_limit_saved">Daily app-time limit: saved.</string>
+    <string name="plans_save_limit_failed">Daily app-time limit: NOT saved.</string>
+    <string name="plans_save_limit_not_tried">Daily app-time limit: NOT saved (it is sent after the plan settings).</string>
+    <string name="plans_save_retry">Your changes are still here. Press Save to send the missing part again.</string>
+    <string name="plans_stepper_decrease">Less</string>
+    <string name="plans_stepper_increase">More</string>
+    <string name="action_ok">OK</string>
 </resources>
