@@ -8,7 +8,6 @@ import androidx.navigation.compose.rememberNavController
 import com.bbro.kidtube.core.DeviceRole
 import com.bbro.kidtube.ui.auth.PairingScreen
 import com.bbro.kidtube.ui.auth.SignInScreen
-import com.bbro.kidtube.ui.kid.KidProfilePickerScreen
 import com.bbro.kidtube.ui.children.ManageChildrenScreen
 import com.bbro.kidtube.ui.parent.ParentHomeScreen
 import com.bbro.kidtube.ui.parent.SettingsScreen
@@ -63,10 +62,8 @@ fun KidTubeNavHost(startDestination: String) {
             )
         }
         composable(Routes.MANAGE_CHILDREN) { ManageChildrenScreen(onBack = { navController.popBackStack() }) }
-        composable(Routes.KID_PICKER) {
-            // Only a parent phone shows the "Parents" button; it asks for the PIN before this runs.
-            KidProfilePickerScreen(onLeaveKidMode = { navController.clearAndGo(Routes.PARENT_HOME) })
-        }
+        // Only a parent phone shows the "Parents" button; it asks for the PIN before this runs.
+        kidGraph(navController, onLeaveKidMode = { navController.clearAndGo(Routes.PARENT_HOME) })
     }
 }
 

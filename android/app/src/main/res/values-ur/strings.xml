@@ -33,7 +33,6 @@
 
     <!-- Placeholders for screens designed later -->
     <string name="kid_picker_title">کون دیکھ رہا ہے؟</string>
-    <string name="kid_picker_placeholder">بچوں کے پروفائل یہاں نظر آئیں گے۔</string>
     <string name="kid_picker_parents">والدین</string>
     <string name="coming_soon">جلد آ رہا ہے</string>
 
@@ -174,4 +173,30 @@
     <string name="pairing_code_label">6 ہندسوں کا کوڈ</string>
     <string name="pairing_code_description">جوڑنے کا کوڈ، %1$d ہندسے</string>
     <string name="pairing_error_wrong_code">یہ کوڈ غلط ہے یا اس کی میعاد ختم ہو چکی ہے۔ والدین سے نیا کوڈ مانگیں۔</string>
+
+    <!-- Kid mode (K2); first drafts for a native reader to fix -->
+    <string name="kid_picker_empty_title">ابھی کوئی بچہ نہیں</string>
+    <string name="kid_picker_empty_subtitle">والدین سے بچہ شامل کرنے کو کہیں</string>
+    <string name="kid_first_tag">پہلے</string>
+    <string name="kid_watched_today">آج دیکھ لیا</string>
+    <string name="kid_video_untitled">ویڈیو</string>
+    <plurals name="kid_left_today">
+        <item quantity="one">آج %d ویڈیو باقی</item>
+        <item quantity="other">آج %d ویڈیوز باقی</item>
+    </plurals>
+    <plurals name="kid_time_left">
+        <item quantity="one">%d منٹ باقی</item>
+        <item quantity="other">%d منٹ باقی</item>
+    </plurals>
+    <string name="kid_switch">بچہ بدلیں</string>
+    <string name="kid_done_title">آج کے لیے بس!</string>
+    <string name="kid_done_subtitle">کل ملیں گے، %1$s</string>
+    <string name="kid_time_up_title">آج کا وقت ختم</string>
+    <string name="kid_time_up_subtitle">آنکھوں کو آرام دیں، %1$s</string>
+    <string name="kid_day_off_title">آج کوئی ویڈیو نہیں</string>
+    <string name="kid_day_off_subtitle">آپ کا دن اچھا گزرے، %1$s</string>
+    <string name="kid_empty_title">ابھی یہاں کچھ نہیں</string>
+    <string name="kid_empty_subtitle">والدین سے ویڈیوز شامل کرنے کو کہیں</string>
+    <string name="kid_player_placeholder">پلیئر</string>
+    <string name="kid_player_all_videos">تمام ویڈیوز</string>
 </resources>

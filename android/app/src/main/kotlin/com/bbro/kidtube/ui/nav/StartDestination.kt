@@ -24,6 +24,11 @@ object Routes {
     const val KID_PICKER = "kid_picker"
     const val SETTINGS = "settings"
     const val MANAGE_CHILDREN = "manage_children"
+    const val KID_GRID = "kid_grid/{childId}"
+    const val KID_PLAYER = "kid_player/{childId}/{itemId}"
+
+    fun kidGrid(childId: String) = "kid_grid/${android.net.Uri.encode(childId)}"
+    fun kidPlayer(childId: String, itemId: String) = "kid_player/${android.net.Uri.encode(childId)}/${android.net.Uri.encode(itemId)}"
 }
 
 /** Which screen the app opens on, from what is stored. Pure, so every case is unit-tested. */

@@ -78,8 +78,9 @@ Settings, Kid mode switch + leaving it with the PIN.
 Done (android UI, U3b): fixes from the first emulator QA run (see "U3b fixes" below).
 Done (android, K1): Kotlin plan engine port (package `engine`, passes all 112 backend vectors) + `FeedRepository` (offline feed + projection
 per child from Room + the unacked-event overlay); no UI yet (see "Android engine and feed (K1)" below).
-Not yet: real Kid picker (profiles) / kid grid / player, Plans and Reports screens, plan editor.
-Next: Android kid side (kid picker, kid grid, player, using `FeedRepository`); design the "Still to design" screens in docs/DESIGN.md first.
+Done (android UI, K2): kid mode screens on `FeedRepository`: picker, grid, status screens, placeholder player route (see "Android kid mode (K2)" below).
+Not yet: the real player (K3: IFrame, watch/app-time tracking, view events), Plans and Reports screens, plan editor, lock-task.
+Next: K3 player replacing `KidPlayerPlaceholder` (same route kid_player/{childId}/{itemId}); design the remaining "Still to design" screens in docs/DESIGN.md.
 
 ## Android engine and feed (K1)
 - `engine/` (Types.kt, Feed.kt, Projection.kt) is a line-by-line port of backend/app/engine, PURE (no Android/Room/Clock; time = arguments). Same names
@@ -273,3 +274,21 @@ Next: Android kid side (kid picker, kid grid, player, using `FeedRepository`); d
 - **PinField** is four outlined circles that fill as digits are typed (hidden numeric field underneath, always LTR, never shows digits).
 - **Share sheet lock banner** counts down once a second from the PIN store's injected Clock (`ShareViewModel.refreshLock`), like the PIN dialog.
 - Share sheet stays a full-screen activity (docs/SPEC.md section 5 says so). Root `.gitignore` ignores `qa-screenshots/`.
+
+## Android kid mode (K2)
+- Routes (`ui/nav/KidNavGraph.kt`, `kidGraph(...)`): `kid_picker` -> `kid_grid/{childId}` -> `kid_player/{childId}/{itemId}`; system back pops one step; "Switch kid" pops to the picker;
+  the player's "All videos" pops to the grid. `KidScreens` is the injectable screen factory (tests pass fakes). The ONLY exit is the picker's `onLeaveKidMode`, called after PinGate on a
+  PARENT-role phone; nothing else in the kid graph can reach a parent route (`KidNavigationTest`, `KID_ROUTES`). The picker is always the start of kid mode: the last child is
+  stored (`core/KidProfileStore`, DataStore key last_kid_id) only to highlight a tile, never to skip the picker.
+- `ui/kid/KidScreenModel` (pure): FeedState -> `KidScreenState` (Loading | Gone | Grid | Status(DONE|TIME_UP|DAY_OFF|NOTHING)). done_today/all_done -> DONE, time_up -> TIME_UP,
+  day_off/outside_dates -> DAY_OFF, empty/no plan/unsupported plan -> NOTHING, child missing -> Gone (route returns to the picker). "First" tile only when the feed is locked
+  to a required item (then no other tiles). Dots = quota (max 8) with `remainingVideos` filled, videos pace only. Time bar only when the child has `daily_app_minutes`.
+  `FeedState.Ready` gained `viewedTodayItemIds`, `appTimeLimitSeconds`, `appTimeUsedSeconds` for this.
+- `KidGridViewModel` = combine(child, `FeedRepository.observe(childId, projectionDays = 0, dayCheckInterval)`); the repository polls the injected Clock, so the grid moves at local
+  (Karachi) midnight without any Instant.now. The internal constructor takes the interval (tests use 10 ms; production secondary @Inject constructor = 30 s).
+  Test gotcha: set `Dispatchers.setMain(Dispatchers.Unconfined)`, NOT a test dispatcher (its delay() is virtual time and the clock poll never fires).
+- Components (`ui/components/KidComponents.kt`): FaceCircle, KidAvatar, ClockIcon, KidTile (cd = video title; stateDescription "Watched today"), LeftTodayDots (test tags
+  `left_today_dot_filled/empty`), TimeLeftBar. Kid tiles never use the yellow pastel (it equals kidGround). `LockPortrait()` (ref-counted) is applied on every kid screen.
+- Withheld (unavailable) videos never reach the grid (engine input); pending ones are ordinary tiles. Placeholder player = text + "All videos" (K3 replaces `KidPlayerPlaceholder`).
+- Screenshots: `KIDTUBE_SCREENSHOTS=<dir> ./gradlew testDebugUnitTest --tests 'com.bbro.kidtube.ui.kid.KidScreenshots*'` renders every kid screen (en + ur) to PNG via Robolectric
+  native graphics (skipped when the variable is unset).

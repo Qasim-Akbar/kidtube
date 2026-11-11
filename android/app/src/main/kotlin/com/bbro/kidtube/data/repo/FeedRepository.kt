@@ -56,6 +56,12 @@ sealed interface FeedState {
         /** Active plan items whose video is `unavailable`: withheld from the kid and from the engine; show to the parent. */
         val unavailableItemIds: List<String>,
         val projection: Projection,
+        /** Plan items the child already viewed today (including local, unsynced views): the grid ticks them. */
+        val viewedTodayItemIds: Set<String>,
+        /** The child's daily app-time limit incl. today's parent extensions, in seconds; null = no limit. */
+        val appTimeLimitSeconds: Int?,
+        /** App (foreground) seconds used today, server plus local sessions. */
+        val appTimeUsedSeconds: Int,
     ) : FeedState
 }
 
@@ -132,7 +138,12 @@ class FeedRepository @Inject constructor(
         val feed = buildFeed(input.plan, input.items, input.views, input.seconds, input.appSeconds, input.limits, today)
         val projection = project(input.plan, input.items, input.views, input.seconds, today, projectionDays)
         val entries = feed.items.map { FeedEntry(it, input.videosByItem.getValue(it.itemId), input.watchThresholdByItem.getValue(it.itemId)) }
-        return FeedState.Ready(childId, today, input.plan.paceType, feed, entries, input.unavailableItemIds, projection)
+        return FeedState.Ready(
+            childId, today, input.plan.paceType, feed, entries, input.unavailableItemIds, projection,
+            viewedTodayItemIds = input.views.filter { it.localDate == today }.mapTo(LinkedHashSet()) { it.itemId },
+            appTimeLimitSeconds = input.limits.dailyAppMinutes?.let { it * 60 + input.limits.appTimeExtraSeconds },
+            appTimeUsedSeconds = input.appSeconds.filter { it.localDate == today }.sumOf { it.seconds },
+        )
     }
 
     private suspend fun familyZone(): ZoneId {
