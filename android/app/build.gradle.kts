@@ -66,6 +66,10 @@ android {
             val fixtures = rootProject.file("../backend/tests/contract_fixtures")
             it.systemProperty("contract.fixtures.dir", fixtures.absolutePath)
             it.inputs.dir(fixtures).withPropertyName("contractFixtures")
+            // Engine parity tests read the backend's JSON vectors at test time (never copied, never edited).
+            val vectors = rootProject.file("../backend/tests/engine_vectors")
+            it.systemProperty("engine.vectors.dir", vectors.absolutePath)
+            it.inputs.dir(vectors).withPropertyName("engineVectors")
             // Committed Room schema JSON (1.json, 2.json) for the migration test.
             it.systemProperty("room.schemas.dir", "$projectDir/schemas")
             it.inputs.dir("$projectDir/schemas").withPropertyName("roomSchemas")

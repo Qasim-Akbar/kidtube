@@ -76,8 +76,30 @@ Done (android UI, U3): U2 review fixes (email/password/address/code fields alway
 (parent role only, offline), share sheet, Parent Home = Library (Plans / Reports "Coming soon"), Add child + default plan, Manage children,
 Settings, Kid mode switch + leaving it with the PIN.
 Done (android UI, U3b): fixes from the first emulator QA run (see "U3b fixes" below).
-Not yet: Kotlin engine port, real Kid picker (profiles) / kid grid / player, Plans and Reports screens, plan editor.
-Next: Android kid side (engine port, kid picker, kid grid, player); design the "Still to design" screens in docs/DESIGN.md first.
+Done (android, K1): Kotlin plan engine port (package `engine`, passes all 112 backend vectors) + `FeedRepository` (offline feed + projection
+per child from Room + the unacked-event overlay); no UI yet (see "Android engine and feed (K1)" below).
+Not yet: real Kid picker (profiles) / kid grid / player, Plans and Reports screens, plan editor.
+Next: Android kid side (kid picker, kid grid, player, using `FeedRepository`); design the "Still to design" screens in docs/DESIGN.md first.
+
+## Android engine and feed (K1)
+- `engine/` (Types.kt, Feed.kt, Projection.kt) is a line-by-line port of backend/app/engine, PURE (no Android/Room/Clock; time = arguments). Same names
+  (`buildFeed`, `evaluateDay`, `project`, `classify`, `computeBacklog`, ...). Deliberate differences are noted at the top of each file (Kotlin enums with a
+  `wire` string, `require()` for validation, weekday = `dayOfWeek.value - 1`, id order = UTF-16 vs code point, identical for UUID/ASCII ids). A change to the
+  Python engine must be mirrored here and covered by a vector.
+- Parity tests: `EngineVectorsTest` is a JUnit4 Parameterized runner, ONE test per file in backend/tests/engine_vectors, named `run[feed/NN_name.json]`; the directory
+  comes from system property `engine.vectors.dir` (set in app/build.gradle.kts, also a Gradle test input; resolved at test time, nothing copied). Expected output
+  is compared as strict JSON equality. `EngineVectorsGuardTest` fails when the property is missing or the directory is empty. NEVER edit a vector to make Kotlin pass.
+  Run: `cd android && ./gradlew testDebugUnitTest --tests 'com.bbro.kidtube.engine.*'` (vector JSON codec = test-only `EngineVectorJson.kt`).
+  `EngineEdgeTest` adds the rules the vectors do not pin down (weekday bit per day, projection `days` truncation/cap, validation).
+- `data/repo/EngineInputs.kt` = Kotlin `engine_input.py`: snapshot rows + overlay events -> engine input. Views: server counts expanded per `count` + local `view_complete`;
+  watch seconds merged per day (overlay rounded once per day, window = last 14 days); app seconds and `time_extension` = today only (app_session = whole seconds, truncated);
+  items whose video row is missing are skipped (backend inner join); active items with an `unavailable` video are withheld and listed in `unavailableItemIds`;
+  `pending` videos stay in the feed (backend and SPEC: only unavailable is withheld; Facebook is pending for good) and each `FeedEntry` carries the video so the
+  player can handle an unplayable embed. Unknown enum values from a newer server: pace type -> `FeedState.UnsupportedPlan`, plan-item status -> item skipped, on_miss -> shift.
+- `data/repo/FeedRepository`: `current(childId)` and `observe(childId)` -> `FeedState` (NoChild | NoPlan | UnsupportedPlan | Ready(feed, entries, projection, unavailableItemIds)).
+  `observe` re-runs on every change of child/video/plan/plan_item/history_*/local_event/sync_meta (Room `invalidationTracker.createFlow`) and when the family-local date
+  changes (clock polled every `dayCheckInterval`, default 30 s). ALL Room inputs of one emission are read in ONE transaction, so a pull that replaces the history while
+  pruning acked overlay events is never seen half-applied (never double counted, not even for an instant). Zone = family timezone from the session (fallback Asia/Karachi).
 
 ## Android share target, library and children (U3)
 - Share target: `share/ShareActivity` (ACTION_SEND text/plain, own task, no recents). The manifest ships it `enabled="false"`; `share/ShareTargetManager`
