@@ -8,6 +8,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.bbro.kidtube.core.LanguageStore
 import com.bbro.kidtube.core.LocaleApplier
+import com.bbro.kidtube.share.ShareTargetManager
 import com.bbro.kidtube.sync.SyncScheduler
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.MainScope
@@ -29,6 +30,9 @@ class KidTubeApp : Application(), Configuration.Provider {
     @Inject
     lateinit var localeApplier: LocaleApplier
 
+    @Inject
+    lateinit var shareTargetManager: ShareTargetManager
+
     // On-demand WorkManager init with the Hilt factory (default initializer removed in the manifest).
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -42,6 +46,8 @@ class KidTubeApp : Application(), Configuration.Provider {
         MainScope().launch {
             languageStore.current()?.let { if (localeApplier.current() != it) localeApplier.apply(it) }
         }
+        // "Share to KidTube" is listed on parent phones only.
+        MainScope().launch { shareTargetManager.keepInSync() }
         // Process came to the foreground (also fires once at app start): sync now.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {

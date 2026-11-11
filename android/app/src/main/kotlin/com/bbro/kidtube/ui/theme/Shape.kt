@@ -12,6 +12,7 @@ object KidTubeShapes {
     val card = RoundedCornerShape(24.dp)
     val kidTile = RoundedCornerShape(32.dp)
     val chip = CircleShape
+    val thumbnail = RoundedCornerShape(14.dp)
 }
 
 object KidTubeDimens {

@@ -27,6 +27,23 @@
             </intent-filter>
         </activity>
 
+        <!-- Share target (parent phones only): shipped disabled, enabled by ShareTargetManager for the PARENT role. -->
+        <activity
+            android:name=".share.ShareActivity"
+            android:enabled="false"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/share_target_label"
+            android:taskAffinity=""
+            android:theme="@style/Theme.KidTube"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
         <!-- Per-app language below API 33: AppCompat persists the chosen locale and re-applies it at startup. -->
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

@@ -62,6 +62,10 @@ interface PlanDao {
     @Transaction
     @Query("SELECT * FROM plan WHERE childId = :childId")
     suspend fun getForChild(childId: String): PlanWithItems?
+
+    @Transaction
+    @Query("SELECT * FROM plan")
+    fun observeAll(): Flow<List<PlanWithItems>>
 }
 
 @Dao
@@ -150,6 +154,9 @@ abstract class OutboxDao {
 
     @Query("SELECT * FROM outbox_placement WHERE outboxVideoId = :outboxVideoId ORDER BY id")
     abstract suspend fun placementsFor(outboxVideoId: String): List<OutboxPlacementEntity>
+
+    @Query("SELECT * FROM outbox_placement ORDER BY id")
+    abstract fun observePlacements(): Flow<List<OutboxPlacementEntity>>
 
     // ---- state transitions used by the sync engine ----
 

@@ -28,11 +28,83 @@
     <string name="preset_must_watch_first">پہلے دیکھنا ضروری</string>
     <string name="preset_library_only">صرف لائبریری</string>
 
+    <string name="preset_custom">حسبِ ضرورت</string>
+
     <!-- Placeholders for screens designed later -->
-    <string name="parent_home_title">والدین کا ہوم</string>
-    <string name="parent_home_placeholder">لائبریری، بچے، پلان اور رپورٹیں یہاں نظر آئیں گی۔</string>
     <string name="kid_picker_title">کون دیکھ رہا ہے؟</string>
     <string name="kid_picker_placeholder">بچوں کے پروفائل یہاں نظر آئیں گے۔</string>
+    <string name="kid_picker_parents">والدین</string>
+    <string name="coming_soon">جلد آ رہا ہے</string>
+
+    <!-- Parent home: library -->
+    <string name="nav_library">لائبریری</string>
+    <string name="nav_plans">پلان</string>
+    <string name="nav_reports">رپورٹیں</string>
+    <string name="library_title">لائبریری</string>
+    <string name="kid_mode_button">بچوں کا موڈ</string>
+    <string name="library_filter_all">سب</string>
+    <string name="library_empty_title">ابھی کوئی ویڈیو نہیں</string>
+    <string name="library_empty_body">یوٹیوب میں ویڈیو کھولیں، شیئر دبائیں، پھر کِڈ ٹیوب چنیں۔</string>
+    <string name="library_empty_no_children">پہلے ایک بچہ شامل کریں تاکہ آپ چن سکیں کہ کون دیکھے گا۔</string>
+    <string name="library_empty_filtered">اس بچے کے لیے ابھی کوئی ویڈیو نہیں۔</string>
+    <string name="library_waiting_to_send">بھیجنے کا انتظار</string>
+    <string name="library_waiting_for_plan">پلان کا انتظار</string>
+    <string name="library_not_added">شامل نہیں ہو سکی</string>
+
+    <!-- Children -->
+    <string name="settings_manage_children">بچوں کا انتظام</string>
+    <string name="settings_language">زبان</string>
+    <string name="manage_children_title">بچے</string>
+    <string name="manage_children_empty">ابھی کوئی بچہ نہیں۔</string>
+    <string name="child_rename">%1$s کا نام بدلیں</string>
+    <string name="child_no_plan">ابھی کوئی پلان نہیں</string>
+    <string name="child_create_default_plan">عام پلان بنائیں</string>
+    <string name="rename_child_title">بچے کا نام بدلیں</string>
+    <string name="rename_child_action">نام محفوظ کریں</string>
+    <string name="add_child_title">بچہ شامل کریں</string>
+    <string name="add_child_action">بچہ شامل کریں</string>
+    <string name="child_name_label">نام</string>
+    <string name="child_color_label">رنگ</string>
+    <string name="add_child_needs_network">انٹرنیٹ کنکشن ضروری ہے۔</string>
+    <string name="avatar_coral">مرجانی</string>
+    <string name="avatar_sun">پیلا</string>
+    <string name="avatar_sky">آسمانی</string>
+    <string name="avatar_mint">پودینی</string>
+    <string name="avatar_lilac">جامنی</string>
+    <string name="child_error_no_connection">انٹرنیٹ کنکشن نہیں ہے۔ بچے کو شامل یا تبدیل کرنے کے لیے یہ ضروری ہے۔</string>
+    <string name="child_error_server">سرور تک رسائی نہیں ہو رہی۔ کچھ دیر بعد دوبارہ کوشش کریں۔</string>
+    <string name="child_error_invalid">نام دیکھیں اور دوبارہ کوشش کریں۔</string>
+    <string name="child_error_unknown">کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔</string>
+
+    <!-- Share sheet -->
+    <string name="share_target_label">کِڈ ٹیوب میں محفوظ کریں</string>
+    <string name="share_title">یہ ویڈیو محفوظ کریں</string>
+    <string name="share_who_label">یہ کس کے لیے ہے؟</string>
+    <string name="share_all_children">تمام بچے</string>
+    <string name="share_how_label">یہ کیسے نظر آئے؟</string>
+    <string name="share_save_for">%1$s کے لیے محفوظ کریں</string>
+    <string name="share_save_all">تمام بچوں کے لیے محفوظ کریں</string>
+    <string name="share_save_library">لائبریری میں محفوظ کریں</string>
+    <string name="share_save_generic">محفوظ کریں</string>
+    <string name="share_offline_note">انٹرنیٹ نہیں ہے۔ لنک اس فون پر محفوظ ہو گا اور انٹرنیٹ آنے پر بھیجا جائے گا۔</string>
+    <string name="share_already_saved">%1$s کے لیے پہلے سے محفوظ ہے۔</string>
+    <string name="share_already_in_library">یہ ویڈیو پہلے سے آپ کی لائبریری میں ہے۔</string>
+    <string name="share_saved_title">محفوظ ہو گیا</string>
+    <string name="share_saved_library">صرف لائبریری میں شامل ہوئی۔</string>
+    <string name="share_saved_skipped">ان کے لیے پہلے سے محفوظ تھی، اس لیے چھوڑ دی گئی: %1$s۔</string>
+    <string name="share_saved_waiting_plan">ان کے پلان کا انتظار ہے: %1$s۔ پلان بنتے ہی ویڈیو شامل ہو جائے گی۔</string>
+    <string name="share_close">بند کریں</string>
+    <string name="share_unsupported_title">یہ لنک سپورٹ نہیں ہوتا</string>
+    <string name="share_unsupported_body">کِڈ ٹیوب یوٹیوب اور فیس بک ویڈیو کے لنک محفوظ کر سکتا ہے۔</string>
+    <string name="share_parent_only_title">شیئر کرنا صرف والدین کے لیے ہے</string>
+    <string name="share_parent_only_body">ویڈیوز محفوظ کرنے کے لیے والدین کے فون پر کِڈ ٹیوب کھولیں۔</string>
+    <string name="share_add_child_first_title">پہلے بچہ شامل کریں</string>
+    <string name="share_add_child_first_body">ویڈیوز کسی بچے کے لیے محفوظ ہوتی ہیں۔ ایک بچہ شامل کریں، پھر لنک دوبارہ شیئر کریں۔</string>
+    <string name="plan_offer_title">%1$s کا ابھی کوئی پلان نہیں</string>
+    <string name="plan_offer_body">عام پلان بنائیں (روزانہ 3 ویڈیوز، ہر دن) تاکہ ویڈیو نظر آ سکے۔ آپ اسے بعد میں بدل سکتے ہیں۔</string>
+    <string name="plan_offer_offline">انٹرنیٹ نہیں ہے۔ ابھی محفوظ کریں گے تو ویڈیو پلان بننے تک انتظار کرے گی۔</string>
+    <string name="plan_offer_create">پلان بنا کر محفوظ کریں</string>
+    <string name="plan_offer_without">بغیر پلان کے محفوظ کریں</string>
 
     <!-- Common actions -->
     <string name="action_back">واپس</string>

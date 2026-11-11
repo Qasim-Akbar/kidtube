@@ -72,8 +72,44 @@ Done (android UI, U1): design foundation (KidTubeTheme, light only, tokens/typog
 Nunito + Noto Naskh Arabic), English + Urdu (RTL) with per-app language, reusable components, the Setup screen.
 Done (android UI, U2): Setup polish (subtitle, footer, equal 120dp cards), configurable server address, parent sign-in / create account,
 parent PIN (create, PinGate, change), kid-phone pairing, start destination from stored state.
-Not yet: share target, Kotlin engine port, real Parent Home / Kid picker, kid-mode switch + leaving it with the PIN.
-Next: Android MVP (share target UI on top of OutboxRepository.enqueue); design docs/DESIGN.md "Still to design" screens first.
+Done (android UI, U3): U2 review fixes (email/password/address/code fields always LTR + Latin font, code boxes left to right in Urdu), share target
+(parent role only, offline), share sheet, Parent Home = Library (Plans / Reports "Coming soon"), Add child + default plan, Manage children,
+Settings, Kid mode switch + leaving it with the PIN.
+Not yet: Kotlin engine port, real Kid picker (profiles) / kid grid / player, Plans and Reports screens, plan editor.
+Next: Android kid side (engine port, kid picker, kid grid, player); design the "Still to design" screens in docs/DESIGN.md first.
+
+## Android share target, library and children (U3)
+- Share target: `share/ShareActivity` (ACTION_SEND text/plain, own task, no recents). The manifest ships it `enabled="false"`; `share/ShareTargetManager`
+  (started in KidTubeApp) enables it only while the stored role is PARENT (`ShareTargetPolicy`), so a kid-only phone never lists it. The Activity also
+  shows "Sharing is for parents" if it is ever started on a non-parent device. Everything is local until sync: no network needed to save.
+- Links: `share/SharedLinks` (pure). `extractFirstUrl` = first http(s) URL, trailing punctuation dropped, scheme lower-cased. `check` -> Supported(platform, url,
+  key) | Unsupported | NoLink. YouTube hosts: youtube.com, www., m., youtu.be (music.youtube.com and other subdomains are NOT supported) and a video id is
+  required; Facebook: facebook.com and its subdomains, fb.watch, fb.me (a path is required). `key` (`youtube:<id>`, `facebook:<host/path>`) is the duplicate key,
+  also derived for library videos by `SharedLinks.keyOf`.
+- Presets (`share/SharePreset`, the agreed mapping; a placement is ALWAYS one explicit row per child, never "every child"): Once a day = optional,
+  view_target null, daily_cap 1 (unlimited: repeats every active day forever, never completes, excluded from projections); 3 times total = optional,
+  view_target 3, daily_cap 1; Must watch first = required, no target, no cap (engine counts it as 1 view); Library only = NO placement (video only).
+  anchor/on_miss/threshold stay default, no position is sent. `SharePreset.describe` reads stored items back (null = custom).
+- Share sheet flow (`share/ShareViewModel`): PIN is checked inline (PinField + PinStore.verify, same lock rules) when Save is pressed -> duplicates
+  (`ShareDuplicates`: video already in that child's plan, or already in the outbox for that child, or "Library only" when the video is already in the library/outbox;
+  duplicates are left out and named, nothing is added twice) -> plans (a selected child with no plan gets the "Create default plan" offer; the PIN is NOT asked again;
+  "Save without a plan" or a failed/offline creation still saves, the placement stays pending and the sync engine marks it `no_plan`) -> `OutboxRepository.enqueue`
+  (which requests a sync) -> "Saved" screen that closes itself. No children: "Add a child first" + the Add child dialog.
+- Default plan: `data/repo/ChildSetup.kt`: `DEFAULT_PLAN` = 3 videos/day, every weekday (mask 127), server default catch-up, no end date, start = the child's local
+  date (family timezone from the snapshot, fallback Asia/Karachi, via the injectable Clock). `ChildSetupRepository` (network only, parent): `addChild` (POST /children
+  then PUT /children/{id}/plan; a failed plan step still returns Success(planCreated=false)), `createDefaultPlan`, `renameChild`; each pulls the snapshot afterwards
+  so Room shows the change at once, then asks for a sync. Failures map to `ChildFailure` (NO_CONNECTION vs SERVER_UNREACHABLE decided by ConnectivityChecker).
+  Avatar = one of five colour keys (coral, sun, sky, mint, lilac) stored in the child's `avatar` field (`ui/children/AvatarColor`).
+- Library (`ui/parent/ParentHomeScreen`, `LibraryModel` pure mapper, `ParentHomeViewModel`): server videos (badge from video status; children + preset from plan items;
+  newest first) plus outbox links not yet in the snapshot (Pending + "Waiting to send"; rejected = Unavailable + "Could not be added"; a synced video whose placement
+  waits for a plan says "Waiting for a plan"). Child filter chips, pull-to-refresh (`SyncTrigger.syncNow`), Kid mode button (persists ActiveMode.KID, goes to the kid
+  picker), settings icon. Thumbnails: Coil 3 (`VideoThumbnail`), the pastel placeholder is always drawn underneath.
+- Kid mode exit: `KidProfilePickerScreen` shows a "Parents" button only on a PARENT-role device; PinGate, then `SessionStore.setActiveMode(PARENT)`. A kid-only device has no way out.
+- Settings (`ui/parent/SettingsScreen`): Manage children (`ui/children/ManageChildren`: add, rename, "Create default plan" for children without a plan), Change PIN (PinGate first),
+  language, and the debug sync panel (debug builds only). Routes: SETTINGS, MANAGE_CHILDREN.
+- Form fields: `KidTubeTextField(latinInput = true)` forces LTR layout, left alignment and the Latin theme font (Nunito) even in Urdu; `CodeField` boxes are LTR.
+- Tests: SharedLinksTest, SharePresetTest (+ outbox mapping), ShareDuplicatesTest, ShareTargetTest, ShareViewModelTest (production stack on SyncTestBase, incl. the no-plan offer),
+  ChildSetupTest (default plan creation), LibraryModelTest, ShareAndLibraryRenderTest (en + ur RTL, LTR fields). `testing/Rows` builds entities for pure tests.
 
 ## Android auth, PIN and navigation (U2)
 - Server address: `core/ServerAddressStore` (same DataStore, key server_address; default = BuildConfig.API_BASE_URL; debug default from Gradle property

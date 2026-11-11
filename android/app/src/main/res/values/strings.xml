@@ -32,11 +32,85 @@
     <string name="preset_must_watch_first">Must watch first</string>
     <string name="preset_library_only">Library only</string>
 
+    <string name="preset_custom">Custom</string>
+
     <!-- Placeholders for screens designed later -->
-    <string name="parent_home_title">Parent home</string>
-    <string name="parent_home_placeholder">Library, children, plans and reports will appear here.</string>
     <string name="kid_picker_title">Who\'s watching?</string>
     <string name="kid_picker_placeholder">Child profiles will appear here.</string>
+    <string name="kid_picker_parents">Parents</string>
+    <string name="coming_soon">Coming soon</string>
+
+    <!-- Parent home: library -->
+    <string name="nav_library">Library</string>
+    <string name="nav_plans">Plans</string>
+    <string name="nav_reports">Reports</string>
+    <string name="library_title">Library</string>
+    <string name="kid_mode_button">Kid mode</string>
+    <string name="library_filter_all">All</string>
+    <string name="library_empty_title">No videos yet</string>
+    <string name="library_empty_body">Open a video in YouTube, tap Share, then choose KidTube.</string>
+    <string name="library_empty_no_children">Add a child first, so you can choose who watches.</string>
+    <string name="library_empty_filtered">No videos for this child yet.</string>
+    <string name="library_waiting_to_send">Waiting to send</string>
+    <string name="library_waiting_for_plan">Waiting for a plan</string>
+    <string name="library_not_added">Could not be added</string>
+
+    <!-- Children -->
+    <string name="settings_manage_children">Manage children</string>
+    <string name="settings_language">Language</string>
+    <string name="manage_children_title">Children</string>
+    <string name="manage_children_empty">No children yet.</string>
+    <string name="child_rename">Rename %1$s</string>
+    <string name="child_no_plan">No plan yet</string>
+    <string name="child_create_default_plan">Create default plan</string>
+    <string name="rename_child_title">Rename child</string>
+    <string name="rename_child_action">Save name</string>
+    <string name="add_child_title">Add a child</string>
+    <string name="add_child_action">Add child</string>
+    <string name="child_name_label">Name</string>
+    <string name="child_color_label">Colour</string>
+    <string name="add_child_needs_network">Needs an internet connection.</string>
+    <string name="avatar_coral">Coral</string>
+    <string name="avatar_sun">Yellow</string>
+    <string name="avatar_sky">Sky blue</string>
+    <string name="avatar_mint">Mint</string>
+    <string name="avatar_lilac">Lilac</string>
+    <string name="child_error_no_connection">No internet connection. Adding or changing a child needs one.</string>
+    <string name="child_error_server">Cannot reach the server. Try again in a moment.</string>
+    <string name="child_error_invalid">Check the name and try again.</string>
+    <string name="child_error_unknown">Something went wrong. Please try again.</string>
+
+    <!-- Share sheet -->
+    <string name="share_target_label">Save to KidTube</string>
+    <string name="platform_youtube" translatable="false">YouTube</string>
+    <string name="platform_facebook" translatable="false">Facebook</string>
+    <string name="share_title">Save this video</string>
+    <string name="share_who_label">Who is it for?</string>
+    <string name="share_all_children">All children</string>
+    <string name="share_how_label">How should it appear?</string>
+    <string name="share_save_for">Save for %1$s</string>
+    <string name="share_save_all">Save for all children</string>
+    <string name="share_save_library">Save to library</string>
+    <string name="share_save_generic">Save</string>
+    <string name="share_offline_note">No internet. The link is saved on this phone and sent when you are back online.</string>
+    <string name="share_already_saved">Already saved for %1$s.</string>
+    <string name="share_already_in_library">This video is already in your library.</string>
+    <string name="share_saved_title">Saved</string>
+    <string name="share_saved_library">Added to the library only.</string>
+    <string name="share_saved_skipped">Left out, already saved for: %1$s.</string>
+    <string name="share_saved_waiting_plan">Waiting for a plan for: %1$s. The video is added once the plan exists.</string>
+    <string name="share_close">Close</string>
+    <string name="share_unsupported_title">This link is not supported</string>
+    <string name="share_unsupported_body">KidTube can save YouTube and Facebook video links.</string>
+    <string name="share_parent_only_title">Sharing is for parents</string>
+    <string name="share_parent_only_body">Open KidTube on a parent phone to save videos.</string>
+    <string name="share_add_child_first_title">Add a child first</string>
+    <string name="share_add_child_first_body">Videos are saved for a child. Add one, then share the link again.</string>
+    <string name="plan_offer_title">No plan yet for %1$s</string>
+    <string name="plan_offer_body">Create the default plan (3 videos a day, every day) so the video can show up. You can change it later.</string>
+    <string name="plan_offer_offline">No internet. If you save now, the video waits until a plan exists.</string>
+    <string name="plan_offer_create">Create plan and save</string>
+    <string name="plan_offer_without">Save without a plan</string>
 
     <!-- Common actions -->
     <string name="action_back">Back</string>

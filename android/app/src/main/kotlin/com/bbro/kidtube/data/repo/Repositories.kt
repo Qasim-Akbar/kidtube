@@ -34,7 +34,9 @@ import com.bbro.kidtube.data.remote.map
 import com.bbro.kidtube.data.remote.toWireString
 import com.bbro.kidtube.data.toData
 import com.bbro.kidtube.sync.SyncTrigger
+import com.bbro.kidtube.share.OutboxItem
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -71,6 +73,8 @@ class PlanRepository @Inject constructor(private val dao: PlanDao) {
     fun observePlan(childId: String): Flow<PlanWithItems?> = dao.observeForChild(childId).map { it?.ordered() }
 
     suspend fun plan(childId: String): PlanWithItems? = dao.getForChild(childId)?.ordered()
+
+    fun observeAll(): Flow<List<PlanWithItems>> = dao.observeAll().map { plans -> plans.map { it.ordered() } }
 
     private fun PlanWithItems.ordered() = copy(items = items.sortedWith(compareBy({ it.position }, { it.id })))
 }
@@ -214,6 +218,12 @@ class OutboxRepository @Inject constructor(
     suspend fun pendingVideos(): List<OutboxVideoEntity> = dao.pendingVideos()
     fun observeVideos(): Flow<List<OutboxVideoEntity>> = dao.observeVideos()
     suspend fun placementsFor(outboxVideoId: String): List<OutboxPlacementEntity> = dao.placementsFor(outboxVideoId)
+
+    /** Every outbox link with its placements, newest last (creation order). */
+    fun observeItems(): Flow<List<OutboxItem>> = combine(dao.observeVideos(), dao.observePlacements()) { videos, placements ->
+        val byVideo = placements.groupBy { it.outboxVideoId }
+        videos.map { OutboxItem(it, byVideo[it.id].orEmpty()) }
+    }
 }
 
 // ---- snapshot pull -------------------------------------------------------------------------------------

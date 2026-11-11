@@ -22,6 +22,8 @@ object Routes {
     const val CHANGE_PIN = "change_pin"
     const val PARENT_HOME = "parent_home"
     const val KID_PICKER = "kid_picker"
+    const val SETTINGS = "settings"
+    const val MANAGE_CHILDREN = "manage_children"
 }
 
 /** Which screen the app opens on, from what is stored. Pure, so every case is unit-tested. */

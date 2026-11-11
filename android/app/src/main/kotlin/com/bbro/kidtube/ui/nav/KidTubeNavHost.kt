@@ -9,7 +9,9 @@ import com.bbro.kidtube.core.DeviceRole
 import com.bbro.kidtube.ui.auth.PairingScreen
 import com.bbro.kidtube.ui.auth.SignInScreen
 import com.bbro.kidtube.ui.kid.KidProfilePickerScreen
+import com.bbro.kidtube.ui.children.ManageChildrenScreen
 import com.bbro.kidtube.ui.parent.ParentHomeScreen
+import com.bbro.kidtube.ui.parent.SettingsScreen
 import com.bbro.kidtube.ui.pin.CreatePinScreen
 import com.bbro.kidtube.ui.setup.SetupScreen
 
@@ -48,9 +50,23 @@ fun KidTubeNavHost(startDestination: String) {
             )
         }
         composable(Routes.PARENT_HOME) {
-            ParentHomeScreen(onChangePin = { navController.navigate(Routes.CHANGE_PIN) })
+            ParentHomeScreen(
+                onKidMode = { navController.clearAndGo(Routes.KID_PICKER) },
+                onSettings = { navController.navigate(Routes.SETTINGS) },
+            )
         }
-        composable(Routes.KID_PICKER) { KidProfilePickerScreen() }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onManageChildren = { navController.navigate(Routes.MANAGE_CHILDREN) },
+                onChangePin = { navController.navigate(Routes.CHANGE_PIN) },
+            )
+        }
+        composable(Routes.MANAGE_CHILDREN) { ManageChildrenScreen(onBack = { navController.popBackStack() }) }
+        composable(Routes.KID_PICKER) {
+            // Only a parent phone shows the "Parents" button; it asks for the PIN before this runs.
+            KidProfilePickerScreen(onLeaveKidMode = { navController.clearAndGo(Routes.PARENT_HOME) })
+        }
     }
 }
 

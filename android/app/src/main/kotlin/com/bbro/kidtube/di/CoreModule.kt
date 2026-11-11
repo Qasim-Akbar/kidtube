@@ -15,6 +15,8 @@ import com.bbro.kidtube.core.DeviceNameSource
 import com.bbro.kidtube.core.KeystoreCipher
 import com.bbro.kidtube.core.LocaleApplier
 import com.bbro.kidtube.core.SecretCipher
+import com.bbro.kidtube.share.AndroidShareTargetApplier
+import com.bbro.kidtube.share.ShareTargetApplier
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -42,6 +44,9 @@ abstract class CoreModule {
 
     @Binds
     abstract fun bindDeviceNameSource(impl: BuildDeviceNameSource): DeviceNameSource
+
+    @Binds
+    abstract fun bindShareTargetApplier(impl: AndroidShareTargetApplier): ShareTargetApplier
 }
 
 @Module

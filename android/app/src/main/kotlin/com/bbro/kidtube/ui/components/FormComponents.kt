@@ -88,50 +88,53 @@ fun KidTubeTextField(
     }
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap8)) {
         Text(text = label, style = MaterialTheme.typography.titleSmall, color = colors.muted)
-        Surface(
-            shape = KidTubeShapes.button,
-            color = colors.card,
-            border = BorderStroke(if (focused || error != null) KidTubeDimens.selectedBorderWidth else KidTubeDimens.borderWidth, borderColor),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                enabled = enabled,
-                singleLine = true,
-                interactionSource = interaction,
-                visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = if (password) KeyboardType.Password else keyboardType,
-                    imeAction = imeAction,
-                    autoCorrectEnabled = false,
-                ),
-                keyboardActions = KeyboardActions(onAny = { onImeAction() }),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = colors.ink,
-                    textDirection = if (latinInput) TextDirection.Ltr else TextDirection.Content,
-                ),
-                cursorBrush = SolidColor(colors.primary),
-                decorationBox = { inner ->
-                    Box(
-                        modifier = Modifier
-                            .heightIn(min = KidTubeDimens.buttonHeight)
-                            .padding(horizontal = KidTubeDimens.gap16, vertical = KidTubeDimens.gap8),
-                        contentAlignment = Alignment.CenterStart,
-                    ) {
-                        if (value.isEmpty() && placeholder != null) {
-                            Text(
-                                text = placeholder,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    textDirection = if (latinInput) TextDirection.Ltr else TextDirection.Content,
-                                ),
-                                color = colors.muted.copy(alpha = 0.7f),
-                            )
+        // Latin input (email, password, URL): the whole box is LTR and left-aligned even in the Urdu (RTL) UI, and typed in
+        // the theme's Latin font (Nunito), because the Urdu font has no Latin glyphs and would fall back to a system font.
+        val direction = if (latinInput) LayoutDirection.Ltr else LocalLayoutDirection.current
+        val fieldStyle = MaterialTheme.typography.bodyLarge.let {
+            if (latinInput) {
+                it.copy(fontFamily = KidTubeFonts.Latin, textDirection = TextDirection.Ltr, textAlign = TextAlign.Left, lineHeight = it.fontSize * 1.3f)
+            } else {
+                it.copy(textDirection = TextDirection.Content)
+            }
+        }
+        CompositionLocalProvider(LocalLayoutDirection provides direction) {
+            Surface(
+                shape = KidTubeShapes.button,
+                color = colors.card,
+                border = BorderStroke(if (focused || error != null) KidTubeDimens.selectedBorderWidth else KidTubeDimens.borderWidth, borderColor),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                BasicTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    enabled = enabled,
+                    singleLine = true,
+                    interactionSource = interaction,
+                    visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = if (password) KeyboardType.Password else keyboardType,
+                        imeAction = imeAction,
+                        autoCorrectEnabled = false,
+                    ),
+                    keyboardActions = KeyboardActions(onAny = { onImeAction() }),
+                    textStyle = fieldStyle.copy(color = colors.ink),
+                    cursorBrush = SolidColor(colors.primary),
+                    decorationBox = { inner ->
+                        Box(
+                            modifier = Modifier
+                                .heightIn(min = KidTubeDimens.buttonHeight)
+                                .padding(horizontal = KidTubeDimens.gap16, vertical = KidTubeDimens.gap8),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            if (value.isEmpty() && placeholder != null) {
+                                Text(text = placeholder, style = fieldStyle, color = colors.muted.copy(alpha = 0.7f))
+                            }
+                            inner()
                         }
-                        inner()
-                    }
-                },
-            )
+                    },
+                )
+            }
         }
         if (error != null) {
             Text(text = error, style = MaterialTheme.typography.labelMedium, color = colors.errorText)

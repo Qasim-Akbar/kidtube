@@ -121,6 +121,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
+    // Thumbnails (public image URLs only); the coloured placeholder is drawn underneath, so a failed load is harmless.
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     // HTTP body logging exists in debug builds only; src/release has a no-op stand-in.
     debugImplementation(libs.okhttp.logging.interceptor)
 
