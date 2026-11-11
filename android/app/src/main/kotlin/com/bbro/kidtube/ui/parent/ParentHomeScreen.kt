@@ -216,6 +216,7 @@ internal fun LibraryContent(
                             seed = item.id,
                             detail = detailText(item),
                             note = noteText(item.note),
+                            extraNote = if (item.facebook) stringResource(R.string.facebook_parents_only) else null,
                         )
                     }
                 }

@@ -48,6 +48,7 @@
     <string name="library_empty_no_children">پہلے ایک بچہ شامل کریں تاکہ آپ چن سکیں کہ کون دیکھے گا۔</string>
     <string name="library_empty_filtered">اس بچے کے لیے ابھی کوئی ویڈیو نہیں۔</string>
     <string name="library_waiting_to_send">بھیجنے کا انتظار</string>
+    <string name="facebook_parents_only">ابھی صرف والدین کے لیے</string>
     <string name="library_waiting_for_plan">پلان کا انتظار</string>
     <string name="library_not_added">شامل نہیں ہو سکی</string>
 

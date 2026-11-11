@@ -8,6 +8,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.bbro.kidtube.core.LanguageStore
 import com.bbro.kidtube.core.LocaleApplier
+import com.bbro.kidtube.player.KidSessionManager
 import com.bbro.kidtube.share.ShareTargetManager
 import com.bbro.kidtube.sync.SyncScheduler
 import dagger.hilt.android.HiltAndroidApp
@@ -33,6 +34,9 @@ class KidTubeApp : Application(), Configuration.Provider {
     @Inject
     lateinit var shareTargetManager: ShareTargetManager
 
+    @Inject
+    lateinit var kidSessions: KidSessionManager
+
     // On-demand WorkManager init with the Hilt factory (default initializer removed in the manifest).
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -48,6 +52,8 @@ class KidTubeApp : Application(), Configuration.Provider {
         }
         // "Share to KidTube" is listed on parent phones only.
         MainScope().launch { shareTargetManager.keepInSync() }
+        // App time follows the process lifecycle, so moving between kid screens never ends the session.
+        kidSessions.bindForeground(ProcessLifecycleOwner.get().lifecycle)
         // Process came to the foreground (also fires once at app start): sync now.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {

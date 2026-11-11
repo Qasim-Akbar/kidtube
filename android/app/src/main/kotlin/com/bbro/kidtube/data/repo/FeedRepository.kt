@@ -3,6 +3,8 @@ package com.bbro.kidtube.data.repo
 import androidx.room.withTransaction
 import com.bbro.kidtube.core.Clock
 import com.bbro.kidtube.core.FamilyTimeZone
+import com.bbro.kidtube.core.KIDS_FACEBOOK_ENABLED
+import com.bbro.kidtube.data.remote.Platform
 import com.bbro.kidtube.core.SessionStore
 import com.bbro.kidtube.core.today
 import com.bbro.kidtube.data.KidTubeDatabase
@@ -77,11 +79,15 @@ sealed interface FeedState {
  * hiding the item.
  */
 @Singleton
-class FeedRepository @Inject constructor(
+class FeedRepository internal constructor(
     private val db: KidTubeDatabase,
     private val clock: Clock,
     private val session: SessionStore,
+    private val kidsFacebookEnabled: Boolean,
 ) {
+    @Inject
+    constructor(db: KidTubeDatabase, clock: Clock, session: SessionStore) : this(db, clock, session, KIDS_FACEBOOK_ENABLED)
+
     /** One-shot computation for "now" (the injected [Clock] in the family timezone). */
     suspend fun current(childId: String, projectionDays: Int = DEFAULT_PROJECTION_DAYS): FeedState = load(childId, projectionDays)
 
@@ -132,17 +138,33 @@ class FeedRepository @Inject constructor(
         } ?: return FeedState.NoChild
         val plan = rows.plan ?: return FeedState.NoPlan(today)
 
-        val input = EngineInputs.build(rows.child, plan, rows.videos, rows.historyViews, rows.historySeconds, rows.overlay, today)
+        val fullInput = EngineInputs.build(rows.child, plan, rows.videos, rows.historyViews, rows.historySeconds, rows.overlay, today)
             ?: return FeedState.UnsupportedPlan(today)
+        // Facebook is off for kids: take those items out of the engine INPUT (the engine itself is untouched), so a required
+        // Facebook item cannot lock the feed and nothing of it counts toward quota or caps. The parent projection keeps them.
+        val input = if (kidsFacebookEnabled) fullInput else fullInput.withoutFacebook(rows.videos)
 
         val feed = buildFeed(input.plan, input.items, input.views, input.seconds, input.appSeconds, input.limits, today)
-        val projection = project(input.plan, input.items, input.views, input.seconds, today, projectionDays)
+        val projection = project(fullInput.plan, fullInput.items, fullInput.views, fullInput.seconds, today, projectionDays)
         val entries = feed.items.map { FeedEntry(it, input.videosByItem.getValue(it.itemId), input.watchThresholdByItem.getValue(it.itemId)) }
         return FeedState.Ready(
             childId, today, input.plan.paceType, feed, entries, input.unavailableItemIds, projection,
             viewedTodayItemIds = input.views.filter { it.localDate == today }.mapTo(LinkedHashSet()) { it.itemId },
             appTimeLimitSeconds = input.limits.dailyAppMinutes?.let { it * 60 + input.limits.appTimeExtraSeconds },
             appTimeUsedSeconds = input.appSeconds.filter { it.localDate == today }.sumOf { it.seconds },
+        )
+    }
+
+    /** Items of Facebook videos (and the views recorded for them) removed; everything else is passed through unchanged. */
+    private fun EngineInput.withoutFacebook(videos: List<VideoEntity>): EngineInput {
+        val facebookVideoIds = videos.filter { it.platform == Platform.FACEBOOK }.mapTo(HashSet()) { it.id }
+        val dropped = items.filter { it.videoId in facebookVideoIds }.mapTo(HashSet()) { it.id }
+        if (dropped.isEmpty()) return this
+        return copy(
+            items = items.filter { it.id !in dropped },
+            views = views.filter { it.itemId !in dropped },
+            videosByItem = videosByItem - dropped,
+            watchThresholdByItem = watchThresholdByItem - dropped,
         )
     }
 

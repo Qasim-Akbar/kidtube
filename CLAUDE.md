@@ -81,6 +81,8 @@ per child from Room + the unacked-event overlay); no UI yet (see "Android engine
 Done (android UI, K2): kid mode screens on `FeedRepository`: picker, grid, status screens (see "Android kid mode (K2)" below).
 Done (android, K3): real kid player (YouTube IFrame via android-youtube-player, Facebook plugin WebView) and offline event tracking (watch_progress, view_complete,
 playback_error, app_session) with live limits (see "Android player and tracking (K3)" below). Not run on a device with a network yet.
+Done (android, K4): Facebook off for kids (`KIDS_FACEBOOK_ENABLED = false`, see "Kids and Facebook" below), app-time session continuous across kid screens (process lifecycle + handover grace),
+YouTube cover until the first PLAYING, thumbnails cropped from a fixed 16:9 box.
 Not yet: Plans and Reports screens, plan editor, lock-task / screen pinning, a live app-time check on the grid (only the player enforces the limit live).
 Next: run K3 against real YouTube/Facebook on a device; design the remaining "Still to design" screens in docs/DESIGN.md.
 
@@ -323,3 +325,19 @@ Next: run K3 against real YouTube/Facebook on a device; design the remaining "St
 - Live limits (`KidPlayerViewModel`): every second, recorded app time from the feed + the running session's unwritten seconds >= `appTimeLimitSeconds` -> pause, flush, leave (grid shows Time's up).
   YouTube ends -> leave (a view counted at 90% never cuts the last 10% short). Facebook: once the counted view makes the item not offered any more (cap/quota/target) -> leave.
 - Gotchas: test with `Dispatchers.setMain(Dispatchers.Unconfined)` (real-time delay); `vm.exits` is a single-consumer channel flow.
+
+## Kids and Facebook, session continuity, covers (K4)
+- `core/Features.kt`: `const val KIDS_FACEBOOK_ENABLED = false` (the ONE place). `FeedRepository` takes it as an internal constructor argument (the @Inject constructor passes the constant; tests pass
+  true/false). While false, Facebook items (plan items whose video platform is FACEBOOK) and their views are removed from the engine INPUT before `buildFeed`, so a required Facebook item cannot lock
+  the kid feed and nothing of it counts toward quota/caps. The engine and vectors are untouched; the PROJECTION is built from the unfiltered input (parent side keeps Facebook). The Facebook player
+  code and its tests stay (`KidPlayerViewModelTest` builds its FeedRepository with the flag on). Library rows and the share sheet show "Parents only for now" (`facebook_parents_only`, Urdu draft) for
+  Facebook; library-only and plan placement work as before. Tests: `FeedFacebookTest`.
+- App time: `KidSessionManager` gets foreground/background from the PROCESS lifecycle (`bindForeground(ProcessLifecycleOwner...)` in KidTubeApp), NOT from nav-entry lifecycles (grid -> player paused the
+  grid's entry before the player's resumed, ending the session at every navigation). `screenLeft` to zero keeps the session open for `HANDOVER_GRACE_MS` (1.5 s); if no screen returns it ends at the moment the
+  last screen left (`AppSessionTracker.stop(atElapsedMillis)`; the ticker does not flush past that moment). Real background/screen-off still ends it at once. Tests construct the manager with `graceMs`
+  (0 = immediate) and a fake `LifecycleRegistry`.
+- YouTube cover: `PlayerUiState.Ready.covered` is true from load until the first PLAYING (a pastel + spinner over the embed, touches swallowed, no Play button/progress meanwhile) and again on ENDED; an embed error
+  replaces the area with the "cannot play" tile. Facebook has no cover.
+- Thumbnails: `CroppedThumbnail` draws the image in a 16:9 box (ContentScale.Crop) centred in and covering its parent, so the letterbox bars of `hqdefault` are cut off; used by `VideoThumbnail` (now 96x54 by
+  default; library rows, share sheet) and `KidTile` (grid, First tile). The pastel placeholder stays underneath.
+- playback_error keeps the code the library reports (101 for missing/unembeddable videos); not changed.

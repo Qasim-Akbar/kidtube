@@ -6,10 +6,13 @@ import com.bbro.kidtube.data.entity.OutboxPlacementEntity
 import com.bbro.kidtube.data.entity.OutboxVideoState
 import com.bbro.kidtube.data.entity.PlacementState
 import com.bbro.kidtube.data.entity.VideoEntity
+import com.bbro.kidtube.data.remote.Platform
 import com.bbro.kidtube.data.remote.PlanItemStatus
 import com.bbro.kidtube.data.remote.VideoStatus
 import com.bbro.kidtube.share.OutboxItem
 import com.bbro.kidtube.share.SharePreset
+import com.bbro.kidtube.share.SharedLinks
+import com.bbro.kidtube.share.LinkCheck
 import com.bbro.kidtube.sync.PlacementErrors
 import com.bbro.kidtube.ui.components.BadgeStatus
 
@@ -30,6 +33,8 @@ data class LibraryItem(
     val note: LibraryNote? = null,
     /** True for links that only exist in the outbox so far. */
     val fromOutbox: Boolean = false,
+    /** A Facebook video: kids cannot watch these for now (KIDS_FACEBOOK_ENABLED), the row says so. */
+    val facebook: Boolean = false,
 ) {
     val libraryOnly: Boolean get() = assignments.isEmpty()
 }
@@ -59,6 +64,7 @@ object LibraryMapper {
                 id = "video:${video.id}",
                 title = video.title?.takeIf { it.isNotBlank() } ?: displayUrl(video.url),
                 thumbnailUrl = video.thumbnailUrl,
+                facebook = video.platform == Platform.FACEBOOK,
                 status = badge(video.status),
                 assignments = planned + waiting.flatMap { assignmentsFor(it, children, names) }
                     .filter { w -> planned.none { it.childId == w.childId } },
@@ -87,6 +93,7 @@ object LibraryMapper {
                         .flatMap { assignmentsFor(it, children, names) }.distinctBy { it.childId },
                     note = if (rejected) LibraryNote.NOT_ADDED else LibraryNote.WAITING_TO_SEND,
                     fromOutbox = true,
+                    facebook = (SharedLinks.check(item.video.rawUrl) as? LinkCheck.Supported)?.platform == Platform.FACEBOOK,
                 )
             }
         return onlyLocal + fromServer

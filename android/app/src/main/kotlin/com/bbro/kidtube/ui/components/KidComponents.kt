@@ -124,9 +124,7 @@ fun KidTile(
                 if (viewedToday) stateDescription = watched
             },
     ) {
-        if (thumbnailUrl != null) {
-            AsyncImage(model = thumbnailUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize())
-        }
+        if (thumbnailUrl != null) CroppedThumbnail(thumbnailUrl, Modifier.matchParentSize())
         PlayCircle(Modifier.align(Alignment.Center))
         if (isFirst) {
             Row(

@@ -238,6 +238,9 @@ private fun LinkCard(link: ShareLink) {
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (link.platform == Platform.FACEBOOK) {
+                    LatinAwareText(text = stringResource(R.string.facebook_parents_only), style = MaterialTheme.typography.labelMedium, color = colors.pendingText)
+                }
             }
         }
     }

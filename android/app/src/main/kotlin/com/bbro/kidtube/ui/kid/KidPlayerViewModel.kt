@@ -59,6 +59,8 @@ sealed interface PlayerUiState {
         val isPlaying: Boolean,
         /** 0..1 through the video; only YouTube reports it. */
         val progress: Float,
+        /** A cover hides the embed (its chrome flashes while it loads) until the first PLAYING state, and again once it ended. YouTube only. */
+        val covered: Boolean = false,
     ) : PlayerUiState {
         /** Our own Play/Pause button exists for YouTube only (the Facebook plugin cannot be controlled from outside). */
         val canTogglePlay: Boolean get() = surface is PlayerSurface.YouTube
@@ -165,7 +167,7 @@ class KidPlayerViewModel internal constructor(
         }
         tracker = PlaybackTracker(clock, { zoneId }, childId, video.id, item.id, rule, writer)
         openedElapsed = clock.elapsedRealtimeMillis()
-        _state.value = PlayerUiState.Ready(video.title, surface, isPlaying = false, progress = 0f)
+        _state.value = PlayerUiState.Ready(video.title, surface, isPlaying = false, progress = 0f, covered = surface is PlayerSurface.YouTube)
         if (surface is PlayerSurface.Facebook && resumed) startTimed()
     }
 
@@ -218,6 +220,7 @@ class KidPlayerViewModel internal constructor(
         signOfLife = true
         t.onPlaying()
         setPlaying(true)
+        setCovered(false) // the first PLAYING state removes the cover
     }
 
     override fun onPaused() {
@@ -234,6 +237,7 @@ class KidPlayerViewModel internal constructor(
         val t = tracker ?: return
         t.onEnded()
         setPlaying(false)
+        setCovered(true) // hide the embed's end-screen chrome while the screen leaves
         leave()
     }
 
@@ -272,6 +276,13 @@ class KidPlayerViewModel internal constructor(
         _state.update { s -> if (s is PlayerUiState.Ready && s.isPlaying != playing) s.copy(isPlaying = playing) else s }
     }
 
+    private fun setCovered(covered: Boolean) {
+        _state.update { s ->
+            if (s is PlayerUiState.Ready && s.surface is PlayerSurface.YouTube && s.covered != covered) s.copy(covered = covered) else s
+        }
+    }
+
+    // An embed error replaces the whole video area with the "cannot play" tile (see fail), which is the cover for that case.
     private fun fail(title: String?) {
         _state.value = PlayerUiState.Error(title)
     }

@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,7 +37,7 @@ fun VideoThumbnail(
     seed: String,
     modifier: Modifier = Modifier,
     width: Dp = 96.dp,
-    height: Dp = 64.dp,
+    height: Dp = 54.dp, // 16:9
 ) {
     val pastels = KidTubeTheme.colors.thumbnailPastels
     Box(
@@ -44,13 +46,28 @@ fun VideoThumbnail(
             .clip(KidTubeShapes.thumbnail)
             .background(pastels[Math.floorMod(seed.hashCode(), pastels.size)]),
     ) {
-        if (url != null) {
-            AsyncImage(model = url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize())
-        }
+        if (url != null) CroppedThumbnail(url, Modifier.matchParentSize())
     }
 }
 
-/** One library row: 96x64 thumbnail, title, status badge, then who it is for and how it appears. */
+/**
+ * The image is drawn in a fixed 16:9 box (Crop) that covers the parent and is centred in it, so the black letterbox bars YouTube
+ * bakes into the 4:3 `hqdefault` picture are cut off whatever size the parent has (the parent clips the overflow).
+ */
+@Composable
+fun CroppedThumbnail(url: String, modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
+        val boxWidth = maxOf(maxWidth, maxHeight * (16f / 9f))
+        AsyncImage(
+            model = url,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.requiredSize(boxWidth, boxWidth * (9f / 16f)),
+        )
+    }
+}
+
+/** One library row: 96x54 (16:9) thumbnail, title, status badge, then who it is for and how it appears. */
 @Composable
 fun VideoRow(
     title: String,
@@ -60,6 +77,8 @@ fun VideoRow(
     modifier: Modifier = Modifier,
     detail: String? = null,
     note: String? = null,
+    /** A second, muted line (e.g. "Parents only for now"). */
+    extraNote: String? = null,
 ) {
     val colors = KidTubeTheme.colors
     Surface(
@@ -85,6 +104,9 @@ fun VideoRow(
                 StatusBadge(status)
                 if (detail != null) {
                     LatinAwareText(text = detail, style = MaterialTheme.typography.bodySmall, color = colors.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+                if (extraNote != null) {
+                    LatinAwareText(text = extraNote, style = MaterialTheme.typography.labelMedium, color = colors.muted)
                 }
                 if (note != null) {
                     LatinAwareText(text = note, style = MaterialTheme.typography.labelMedium, color = colors.pendingText)

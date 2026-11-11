@@ -4,6 +4,9 @@ import com.bbro.kidtube.data.RoomTestBase
 import com.bbro.kidtube.data.remote.EventType
 import com.bbro.kidtube.data.remote.KidTubeJson
 import com.bbro.kidtube.data.repo.EventRepository
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -29,7 +32,7 @@ class KidSessionManagerTest : RoomTestBase() {
     fun setUp() {
         clock.setWallClock(Instant.parse("2026-01-05T10:00:00Z"))
         writer = KidEventWriter(EventRepository(db.localEventDao(), clock, session.store), scope)
-        manager = KidSessionManager(clock, session.store, writer, scope, tickMs = 10)
+        manager = KidSessionManager(clock, session.store, writer, scope, tickMs = 10, graceMs = 0)
     }
 
     @After
@@ -111,5 +114,75 @@ class KidSessionManagerTest : RoomTestBase() {
         assertEquals(10L, sessionSeconds(CHILD_A))
         assertEquals(4L, sessionSeconds(CHILD_B))
         assertTrue(db.localEventDao().pending(100).all { it.type == EventType.APP_SESSION })
+    }
+
+    // ---- one continuous session across navigation; foreground = the process lifecycle ----------------------------
+
+    private class FakeOwner : LifecycleOwner {
+        val registry = LifecycleRegistry.createUnsafe(this)
+        override val lifecycle: Lifecycle get() = registry
+    }
+
+    private fun appSessions() = runBlocking {
+        writer.awaitIdle()
+        db.localEventDao().pending(100).filter { it.type == EventType.APP_SESSION }.map {
+            val p = KidTubeJson.instance.parseToJsonElement(it.payload).jsonObject
+            Instant.parse(p.getValue("start").jsonPrimitive.content) to Instant.parse(p.getValue("end").jsonPrimitive.content)
+        }.sortedBy { it.first }
+    }
+
+    private fun withGrace(): Pair<KidSessionManager, FakeOwner> {
+        val m = KidSessionManager(clock, session.store, writer, scope, tickMs = 10, graceMs = 300)
+        val owner = FakeOwner().also { m.bindForeground(it.lifecycle) }
+        owner.registry.currentState = Lifecycle.State.RESUMED
+        return m to owner
+    }
+
+    @Test
+    fun gridToPlayerToGridIsOneContinuousSessionEvenWhenNoScreenIsShownForAMoment() = runBlocking {
+        val (m, _) = withGrace()
+        m.screenEntered(CHILD_A) // grid
+        clock.advance(Duration.ofSeconds(10))
+        m.screenEntered(CHILD_A) // player opens ...
+        m.screenLeft(CHILD_A) // ... grid disposed
+        clock.advance(Duration.ofSeconds(10))
+        m.screenLeft(CHILD_A) // player closes first (worst case) ...
+        clock.advance(Duration.ofSeconds(1)) // ... nothing shown for a second ...
+        m.screenEntered(CHILD_A) // ... then the grid is back
+        clock.advance(Duration.ofSeconds(5))
+        m.screenLeft(CHILD_A) // leaving kid mode
+        clock.advance(Duration.ofSeconds(50)) // time passing after the last screen left is not counted
+        delay(700) // the grace runs out and the session ends where the last screen left
+        val s = appSessions()
+        assertEquals(1, s.size) // one session: no gap, no restart
+        assertEquals(26L, Duration.between(s.single().first, s.single().second).seconds)
+    }
+
+    @Test
+    fun realBackgroundAndScreenOffStillEndTheSession() = runBlocking {
+        val (m, owner) = withGrace()
+        m.screenEntered(CHILD_A)
+        clock.advance(Duration.ofSeconds(8))
+        owner.registry.currentState = Lifecycle.State.STARTED // process paused: screen off / another app
+        clock.advance(Duration.ofSeconds(100))
+        assertEquals(8L, sessionSeconds())
+        owner.registry.currentState = Lifecycle.State.RESUMED
+        clock.advance(Duration.ofSeconds(4))
+        m.screenLeft(CHILD_A)
+        delay(700)
+        assertEquals(12L, sessionSeconds())
+    }
+
+    @Test
+    fun leavingKidModeEndsItAtTheMomentTheLastScreenLeft() = runBlocking {
+        val (m, _) = withGrace()
+        m.screenEntered(CHILD_A)
+        clock.advance(Duration.ofSeconds(7))
+        m.screenLeft(CHILD_A)
+        clock.advance(Duration.ofSeconds(30))
+        delay(700)
+        assertEquals(7L, sessionSeconds())
+        clock.advance(Duration.ofSeconds(30))
+        assertEquals(7L, sessionSeconds()) // nothing keeps counting
     }
 }

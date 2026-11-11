@@ -17,7 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,8 +73,7 @@ fun KidForegroundEffect(childId: String, viewModel: KidForegroundViewModel = hil
         sessions.screenEntered(childId)
         onDispose { sessions.screenLeft(childId) }
     }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { sessions.onForeground() }
-    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { sessions.onBackground() }
+    // Foreground/background comes from the process lifecycle (KidTubeApp binds it), not from this nav entry's lifecycle.
 }
 
 @Composable
@@ -133,8 +135,9 @@ fun PlayerContent(
         is PlayerUiState.Ready -> PlayerLayout(
             title = state.title,
             onAllVideos = onAllVideos,
-            progress = if (state.canTogglePlay) state.progress else null,
-            control = if (state.canTogglePlay) ({ PlayPauseButton(state.isPlaying, onTogglePlay) }) else null,
+            progress = if (state.canTogglePlay && !state.covered) state.progress else null,
+            control = if (state.canTogglePlay && !state.covered) ({ PlayPauseButton(state.isPlaying, onTogglePlay) }) else null,
+            covered = state.covered,
         ) { surface(state.surface, Modifier.fillMaxSize()) }
     }
 }
@@ -145,6 +148,7 @@ private fun PlayerLayout(
     onAllVideos: () -> Unit,
     progress: Float?,
     control: (@Composable () -> Unit)?,
+    covered: Boolean = false,
     video: @Composable () -> Unit,
 ) {
     val colors = KidTubeTheme.colors
@@ -153,6 +157,7 @@ private fun PlayerLayout(
         Box(Modifier.fillMaxWidth().background(colors.ink).statusBarsPadding()) {
             Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
                 video()
+                if (covered) VideoCover(Modifier.matchParentSize())
                 if (control != null) Box(Modifier.align(Alignment.Center)) { control() }
                 if (progress != null) ProgressLine(progress, Modifier.align(Alignment.BottomCenter))
             }
@@ -167,6 +172,18 @@ private fun PlayerLayout(
             Box(Modifier.weight(1f))
             BigWhiteButton(text = stringResource(R.string.kid_player_all_videos), onClick = onAllVideos, modifier = Modifier.fillMaxWidth())
         }
+    }
+}
+
+/** Plain pastel with a small spinner over the embed until it really plays (its own chrome flashes while loading). Swallows touches. */
+@Composable
+private fun VideoCover(modifier: Modifier = Modifier) {
+    val colors = KidTubeTheme.colors
+    Box(
+        modifier.background(colors.thumbnailPastels[0]).pointerInput(Unit) {},
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(Modifier.size(32.dp).testTag("player_cover_spinner"), color = colors.ink, strokeWidth = 3.dp)
     }
 }
 

@@ -84,6 +84,7 @@
     <string name="share_target_label">Save to KidTube</string>
     <string name="platform_youtube" translatable="false">YouTube</string>
     <string name="platform_facebook" translatable="false">Facebook</string>
+    <string name="facebook_parents_only">Parents only for now</string>
     <string name="share_title">Save this video</string>
     <string name="share_who_label">Who is it for?</string>
     <string name="share_all_children">All children</string>

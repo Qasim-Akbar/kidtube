@@ -265,9 +265,9 @@ class AppSessionTracker(
     }
 
     /** Writes the last chunk (rounded to the nearest second) and stops. */
-    fun stop() {
+    fun stop(atElapsedMillis: Long = clock.elapsedRealtimeMillis()) {
         if (!isRunning) return
-        flush(final = true)
+        flush(final = true, nowElapsed = atElapsedMillis)
         childId = null
     }
 
@@ -281,9 +281,9 @@ class AppSessionTracker(
     }
 
     /** Writes the whole seconds elapsed so far (the remainder stays in the running chunk). */
-    fun flush(final: Boolean = false) {
+    fun flush(final: Boolean = false, nowElapsed: Long = clock.elapsedRealtimeMillis()) {
         val child = childId ?: return
-        val elapsed = clock.elapsedRealtimeMillis() - chunkStartElapsed
+        val elapsed = (nowElapsed - chunkStartElapsed).coerceAtLeast(0)
         val whole = if (final) (elapsed + 500) / 1000 else elapsed / 1000
         if (whole <= 0) return
         val end = chunkStart.plusSeconds(whole)

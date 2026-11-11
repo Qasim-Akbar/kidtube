@@ -32,6 +32,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -64,10 +65,10 @@ class KidPlayerViewModelTest : RoomTestBase() {
     fun setUp() {
         Dispatchers.setMain(Dispatchers.Unconfined) // real-time delays: the VM ticks and the feed polls the clock
         clock.setWallClock(Instant.parse("2026-01-05T10:00:00Z"))
-        feeds = FeedRepository(db, clock, session.store)
+        feeds = FeedRepository(db, clock, session.store, kidsFacebookEnabled = true) // the Facebook player code stays tested, switched on here
         events = EventRepository(db.localEventDao(), clock, session.store)
         writer = KidEventWriter(events, scope)
-        sessions = KidSessionManager(clock, session.store, writer, scope, tickMs = 10)
+        sessions = KidSessionManager(clock, session.store, writer, scope, tickMs = 10, graceMs = 0)
     }
 
     @After
@@ -167,6 +168,22 @@ class KidPlayerViewModelTest : RoomTestBase() {
     }
 
     // ---- tracking through the view model ------------------------------------------------------------------------------------
+    @Test
+    fun theYouTubeCoverStaysUntilTheFirstPlayingStateAndReturnsWhenItEnds() = runBlocking {
+        seed()
+        val vm = newVm()
+        ready(vm)
+        assertTrue((vm.state.value as PlayerUiState.Ready).covered) // loading: the embed's chrome is hidden
+        vm.onBuffering()
+        assertTrue((vm.state.value as PlayerUiState.Ready).covered)
+        vm.onPlaying()
+        assertFalse((vm.state.value as PlayerUiState.Ready).covered)
+        vm.onPaused()
+        assertFalse((vm.state.value as PlayerUiState.Ready).covered)
+        vm.onEnded()
+        assertTrue((vm.state.value as PlayerUiState.Ready).covered)
+    }
+
 
     @Test
     fun aViewIsRecordedOnceAtTheThresholdAndTheVideoIsNotCutShort() = runBlocking {
