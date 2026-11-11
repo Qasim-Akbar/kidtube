@@ -69,11 +69,11 @@ Android app (Compose)                          FastAPI backend (VPS)
 
 ## 5. Offline-first link sharing
 
-Share target is a small translucent activity, not the main app.
+Share target is its own full-screen activity (own task, so finishing it returns to the app the link was shared from), not a part of the main app UI. It is a full screen on purpose (decided in U3b): the form has child chips, presets and a PIN field, which do not fit a small sheet. It pads for the system bars (edge-to-edge) and is only listed on parent phones.
 
 1. Parent shares from YouTube, or shares a WhatsApp message (plain text).
-2. The app extracts URLs from the text with a regex. If several links are found, show a checklist.
-3. Parent PIN dialog (PIN hash stored locally via Keystore + EncryptedSharedPreferences, so it works offline).
+2. The app extracts the FIRST http(s) link from the text with a regex (a WhatsApp message has extra words around it). A checklist for several links is not built.
+3. Parent PIN, entered inline on the sheet and checked when Save is pressed (PIN hash stored locally in Keystore-backed storage, so it works offline).
 4. **Local verification** is a pattern check only: recognised YouTube/Facebook URL, video ID extracted, duplicate detected.
 5. Parent picks the quick schedule: which child(ren), required or optional, view target, daily cap (e.g. once a day, twice a day).
 6. Link is saved to Room with status `pending_sync`.

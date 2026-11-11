@@ -33,6 +33,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -61,6 +65,9 @@ import com.bbro.kidtube.ui.components.VideoRow
 import com.bbro.kidtube.ui.theme.KidTubeDimens
 import com.bbro.kidtube.ui.theme.KidTubeShapes
 import com.bbro.kidtube.ui.theme.KidTubeTheme
+
+/** Test handle for the video list. */
+internal const val LIBRARY_LIST_TAG = "library_list"
 
 private enum class HomeTab(val label: Int, val icon: ImageVector) {
     LIBRARY(R.string.nav_library, Icons.Filled.PlayArrow),
@@ -132,6 +139,14 @@ internal fun LibraryContent(
     onSettings: () -> Unit,
 ) {
     val colors = KidTubeTheme.colors
+    val listState = rememberLazyListState()
+    // A LazyColumn with stable keys keeps the row that was first anchored where it is, so a row inserted ABOVE it (a newly
+    // shared video, its "Waiting to send" row) would land off-screen above the viewport. If the parent was looking at the
+    // top of the list before this update, stay at the top. Read here (during composition) the value is still the one from
+    // before the new data is measured; a parent who scrolled down to read is left where they are.
+    val atTop by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 } }
+    val stickToTop = atTop
+    LaunchedEffect(state.items.firstOrNull()?.id) { if (stickToTop) listState.scrollToItem(0) }
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = KidTubeDimens.screenPadding, end = KidTubeDimens.gap8, top = KidTubeDimens.gap16),
@@ -188,9 +203,10 @@ internal fun LibraryContent(
         PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = onRefresh, modifier = Modifier.weight(1f).fillMaxWidth()) {
             when {
                 state.items.isNotEmpty() -> LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(horizontal = KidTubeDimens.screenPadding, vertical = KidTubeDimens.gap8),
                     verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap12),
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().testTag(LIBRARY_LIST_TAG),
                 ) {
                     items(state.items, key = { it.id }) { item ->
                         VideoRow(

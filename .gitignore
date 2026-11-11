@@ -1,0 +1,22 @@
+# Repo-wide ignores. android/.gitignore and backend/.gitignore add their own rules for their folders.
+
+# Emulator QA screenshots (created by manual QA runs)
+qa-screenshots/
+
+# Android build output and machine-specific files (also covered by android/.gitignore)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+*.iml
+
+# Secrets and local environment
+.env
+*.keystore
+*.jks
+keystore.properties
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

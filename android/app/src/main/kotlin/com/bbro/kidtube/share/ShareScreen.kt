@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -39,6 +41,7 @@ import com.bbro.kidtube.ui.theme.KidTubeFonts
 import com.bbro.kidtube.ui.children.AddChildDialog
 import com.bbro.kidtube.ui.components.Chip
 import com.bbro.kidtube.ui.components.EnglishAndUrduPreviews
+import com.bbro.kidtube.ui.components.LatinAwareText
 import com.bbro.kidtube.ui.components.MessageBanner
 import com.bbro.kidtube.ui.components.PinField
 import com.bbro.kidtube.ui.components.PreviewSurface
@@ -56,6 +59,13 @@ private const val SAVED_CLOSE_DELAY_MS = 1_400L
 fun ShareScreen(sharedText: String?, onClose: () -> Unit, viewModel: ShareViewModel = hiltViewModel()) {
     LaunchedEffect(viewModel, sharedText) { viewModel.start(sharedText) }
     val state = viewModel.state.collectAsStateWithLifecycle().value
+    // While the PIN is locked, tick once a second so the banner counts down (and the lock lifts) by itself.
+    LaunchedEffect(state.lockedSeconds > 0) {
+        while (state.lockedSeconds > 0) {
+            delay(1000)
+            viewModel.refreshLock()
+        }
+    }
     LaunchedEffect(state.phase) {
         if (state.phase == SharePhase.SAVED) {
             delay(SAVED_CLOSE_DELAY_MS)
@@ -95,6 +105,8 @@ internal fun ShareContent(
     Surface(color = colors.ground, modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
+                // edge-to-edge: keep every phase of the sheet clear of the status bar, navigation bar, cutout and keyboard
+                .safeDrawingPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(KidTubeDimens.screenPadding),
             verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap16),
@@ -156,8 +168,8 @@ internal fun ShareContent(
 
                     PinField(value = state.pin, onValueChange = onPinChange, label = stringResource(R.string.pin_label))
                     when {
-                        state.lockedSeconds > 0 -> MessageBanner(stringResource(R.string.pin_gate_locked, state.lockedSeconds.toInt()))
-                        state.attemptsLeft != null -> MessageBanner(stringResource(R.string.pin_gate_wrong, state.attemptsLeft))
+                        state.lockedSeconds > 0 -> MessageBanner(pluralStringResource(R.plurals.pin_gate_locked, state.lockedSeconds.toInt(), state.lockedSeconds.toInt()))
+                        state.attemptsLeft != null -> MessageBanner(pluralStringResource(R.plurals.pin_gate_wrong, state.attemptsLeft, state.attemptsLeft))
                     }
                     when (val note = state.note) {
                         is ShareNote.AlreadySaved -> MessageBanner(stringResource(R.string.share_already_saved, note.names.joinToString(", ")), isError = false)
@@ -171,7 +183,7 @@ internal fun ShareContent(
                         Text(stringResource(R.string.share_offline_note), style = MaterialTheme.typography.bodySmall, color = colors.muted)
                     }
                     if (state.planOffer == null) {
-                        PrimaryButton(text = saveLabel(state), onClick = onSave, enabled = state.canSave)
+                        PrimaryButton(text = saveLabel(state), onClick = onSave, enabled = state.canSave, loading = state.busy)
                     }
                     TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.action_cancel), style = MaterialTheme.typography.titleMedium, color = colors.muted)
@@ -211,12 +223,12 @@ private fun LinkCard(link: ShareLink) {
         ) {
             VideoThumbnail(url = link.thumbnailUrl, seed = link.key)
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
+                LatinAwareText(
                     text = stringResource(if (link.platform == Platform.FACEBOOK) R.string.platform_facebook else R.string.platform_youtube),
                     style = MaterialTheme.typography.labelMedium,
                     color = colors.muted,
                 )
-                Text(
+                LatinAwareText(
                     text = link.title ?: link.url.removePrefix("https://").removePrefix("http://"),
                     // a bare link is Latin and always reads left to right, also in the Urdu UI
                     style = MaterialTheme.typography.bodyMedium.let {
@@ -241,7 +253,7 @@ private fun PlanOfferCard(offer: PlanOffer, busy: Boolean, offline: Boolean, onC
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(KidTubeDimens.gap16), verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap12)) {
-            Text(stringResource(R.string.plan_offer_title, offer.childNames.joinToString(", ")), style = MaterialTheme.typography.titleMedium, color = colors.ink)
+            LatinAwareText(stringResource(R.string.plan_offer_title, offer.childNames.joinToString(", ")), style = MaterialTheme.typography.titleMedium, color = colors.ink)
             Text(stringResource(R.string.plan_offer_body), style = MaterialTheme.typography.bodyMedium, color = colors.muted)
             if (offline) Text(stringResource(R.string.plan_offer_offline), style = MaterialTheme.typography.bodySmall, color = colors.pendingText)
             PrimaryButton(text = stringResource(R.string.plan_offer_create), onClick = onCreate, enabled = !busy)
@@ -255,8 +267,8 @@ private fun PlanOfferCard(offer: PlanOffer, busy: Boolean, offline: Boolean, onC
 @Composable
 private fun Message(title: String, body: String, onClose: () -> Unit, actionText: String? = null, onAction: () -> Unit = {}) {
     val colors = KidTubeTheme.colors
-    Text(title, style = MaterialTheme.typography.headlineMedium, color = colors.ink, modifier = Modifier.semantics { heading() })
-    Text(body, style = MaterialTheme.typography.bodyLarge, color = colors.muted)
+    LatinAwareText(title, style = MaterialTheme.typography.headlineMedium, color = colors.ink, modifier = Modifier.semantics { heading() })
+    LatinAwareText(body, style = MaterialTheme.typography.bodyLarge, color = colors.muted)
     if (actionText != null) PrimaryButton(text = actionText, onClick = onAction)
     TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.share_close), style = MaterialTheme.typography.titleMedium, color = colors.ink)
@@ -266,11 +278,11 @@ private fun Message(title: String, body: String, onClose: () -> Unit, actionText
 @Composable
 private fun Saved(info: SavedInfo?) {
     val colors = KidTubeTheme.colors
-    Text(stringResource(R.string.share_saved_title), style = MaterialTheme.typography.headlineMedium, color = colors.ink, modifier = Modifier.semantics { heading() })
+    LatinAwareText(stringResource(R.string.share_saved_title), style = MaterialTheme.typography.headlineMedium, color = colors.ink, modifier = Modifier.semantics { heading() })
     if (info == null) return
-    if (info.libraryOnly) Text(stringResource(R.string.share_saved_library), style = MaterialTheme.typography.bodyLarge, color = colors.muted)
+    if (info.libraryOnly) LatinAwareText(stringResource(R.string.share_saved_library), style = MaterialTheme.typography.bodyLarge, color = colors.muted)
     if (info.skippedNames.isNotEmpty()) {
-        Text(stringResource(R.string.share_saved_skipped, info.skippedNames.joinToString(", ")), style = MaterialTheme.typography.bodyLarge, color = colors.muted)
+        LatinAwareText(stringResource(R.string.share_saved_skipped, info.skippedNames.joinToString(", ")), style = MaterialTheme.typography.bodyLarge, color = colors.muted)
     }
     if (info.waitingForPlanNames.isNotEmpty()) {
         MessageBanner(stringResource(R.string.share_saved_waiting_plan, info.waitingForPlanNames.joinToString(", ")), isError = false)

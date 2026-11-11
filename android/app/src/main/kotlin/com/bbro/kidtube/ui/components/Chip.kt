@@ -41,7 +41,7 @@ fun Chip(
         },
         modifier = modifier.toggleable(value = selected, onValueChange = { onClick() }, role = role),
     ) {
-        Text(
+        LatinAwareText(
             text = text,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier

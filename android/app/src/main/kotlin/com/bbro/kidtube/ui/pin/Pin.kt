@@ -14,6 +14,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -152,8 +153,8 @@ internal fun PinGateContent(
         )
         PinField(value = state.pin, onValueChange = onPinChange, label = stringResource(R.string.pin_label))
         when {
-            state.locked -> MessageBanner(stringResource(R.string.pin_gate_locked, state.lockedSeconds.toInt()))
-            state.attemptsLeft != null -> MessageBanner(stringResource(R.string.pin_gate_wrong, state.attemptsLeft))
+            state.locked -> MessageBanner(pluralStringResource(R.plurals.pin_gate_locked, state.lockedSeconds.toInt(), state.lockedSeconds.toInt()))
+            state.attemptsLeft != null -> MessageBanner(pluralStringResource(R.plurals.pin_gate_wrong, state.attemptsLeft, state.attemptsLeft))
         }
         Spacer(Modifier.height(KidTubeDimens.gap8))
         TextButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {

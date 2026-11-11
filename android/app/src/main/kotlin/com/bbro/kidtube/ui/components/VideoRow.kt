@@ -75,7 +75,7 @@ fun VideoRow(
         ) {
             VideoThumbnail(url = thumbnailUrl, seed = seed)
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
+                LatinAwareText(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     color = colors.ink,
@@ -84,10 +84,10 @@ fun VideoRow(
                 )
                 StatusBadge(status)
                 if (detail != null) {
-                    Text(text = detail, style = MaterialTheme.typography.bodySmall, color = colors.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    LatinAwareText(text = detail, style = MaterialTheme.typography.bodySmall, color = colors.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 if (note != null) {
-                    Text(text = note, style = MaterialTheme.typography.labelMedium, color = colors.pendingText)
+                    LatinAwareText(text = note, style = MaterialTheme.typography.labelMedium, color = colors.pendingText)
                 }
             }
         }

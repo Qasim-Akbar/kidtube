@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -139,7 +140,7 @@ internal fun authFailureMessage(failure: AuthFailure): String = when (failure) {
     AuthFailure.WrongCode -> stringResource(R.string.pairing_error_wrong_code)
     is AuthFailure.RateLimited ->
         if (failure.retryAfterSeconds != null) {
-            stringResource(R.string.error_rate_limited, failure.retryAfterSeconds.toInt())
+            pluralStringResource(R.plurals.error_rate_limited, failure.retryAfterSeconds.toInt(), failure.retryAfterSeconds.toInt())
         } else {
             stringResource(R.string.error_rate_limited_unknown)
         }

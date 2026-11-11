@@ -75,6 +75,7 @@ parent PIN (create, PinGate, change), kid-phone pairing, start destination from 
 Done (android UI, U3): U2 review fixes (email/password/address/code fields always LTR + Latin font, code boxes left to right in Urdu), share target
 (parent role only, offline), share sheet, Parent Home = Library (Plans / Reports "Coming soon"), Add child + default plan, Manage children,
 Settings, Kid mode switch + leaving it with the PIN.
+Done (android UI, U3b): fixes from the first emulator QA run (see "U3b fixes" below).
 Not yet: Kotlin engine port, real Kid picker (profiles) / kid grid / player, Plans and Reports screens, plan editor.
 Next: Android kid side (engine port, kid picker, kid grid, player); design the "Still to design" screens in docs/DESIGN.md first.
 
@@ -116,8 +117,9 @@ Next: Android kid side (engine port, kid picker, kid grid, player); design the "
   KIDTUBE_DEBUG_API_BASE_URL, else http://10.0.2.2:8001/). `ServerAddressPolicy`: https:// always, http:// only when BuildConfig.ALLOW_CLEARTEXT_API (debug);
   a stored value that fails the policy falls back to the default. The API client reads the CURRENT value: Retrofit is built with a placeholder and
   `BaseUrlInterceptor` (both OkHttp clients, so token refresh too) rewrites scheme/host/port/path prefix per request from a `BaseUrlSource`
-  (`StoreBaseUrlSource` in Hilt). `ApiWiring.create(..., baseUrlSource = null)` keeps the old fixed-URL behaviour for tests. Debug builds still only
-  permit cleartext to 10.0.2.2 (network_security_config), so another http:// host needs that file changed.
+  (`StoreBaseUrlSource` in Hilt). `ApiWiring.create(..., baseUrlSource = null)` keeps the old fixed-URL behaviour for tests. The DEBUG network_security_config (src/debug/res/xml, overrides the main one) allows cleartext to any host so a dev PC LAN address works; release
+  keeps src/main/res/xml/network_security_config.xml = no cleartext at all, and `ServerAddressPolicy` only accepts http:// when BuildConfig.ALLOW_CLEARTEXT_API (debug).
+  See "Emulator networking" below for why 10.0.2.2 may not work from the app.
 - The field lives under "Advanced" on the sign-in and pairing screens; the address is validated and saved on Sign in / Connect (an invalid one is not sent and opens Advanced).
 - Sign-in (`ui/auth/SignIn.kt`): `AuthRepository.login` saves the session and sets role = Parent. "Create account" is offered by default; there is no capability
   endpoint, so a register answer of 403/404 hides it for the rest of the screen's life and shows a plain message. Errors map through `data/repo/AuthFailures`
@@ -218,5 +220,34 @@ Next: Android kid side (engine port, kid picker, kid grid, player); design the "
 - Run checks: `cd android && ./gradlew assembleDebug testDebugUnitTest lintDebug` (Git Bash; `gradlew.bat` on cmd/PowerShell).
   Needs the Android SDK (platform 37): `sdk.dir` in android/local.properties (git-ignored) or ANDROID_HOME. See android/README.md.
 - Release builds read the backend URL from Gradle property `KIDTUBE_API_BASE_URL` (never in source); they fail while it is
-  missing, CHANGE-ME or not https. Debug uses http://10.0.2.2:8001/ with cleartext allowed to 10.0.2.2 only.
+  missing, CHANGE-ME or not https. Debug defaults to http://10.0.2.2:8001/ (override with Gradle property `KIDTUBE_DEBUG_API_BASE_URL`, see "Emulator networking"); cleartext is allowed in debug only.
 - android:allowBackup=false and backup/extraction rules exclude databases, prefs and files (PIN blobs). No analytics/ad SDKs.
+
+## U3b fixes and lessons (from the emulator QA run)
+- **Library "missing row" root cause (B3):** NOT a data or Room-invalidation problem (the state always had the new row; `LibraryLiveUpdateTest` proves the
+  outbox + snapshot flows re-emit through the real stack, also after the Library was off-screen for longer than the WhileSubscribed window). It was the UI: a
+  `LazyColumn` with stable `key`s keeps the previously-first row anchored, so a row inserted ABOVE it (every new share, and its "Waiting to send" row) landed above
+  the viewport until the parent pulled down. Fix in `LibraryContent`: if the list was at the top before the update, `scrollToItem(0)` when the newest row changes
+  (a parent who scrolled down is left alone). Regression: `LibraryScrollTest` (failed first, then green). Also `OutboxRepository.observeItems` is now ONE
+  transactional Room query (`OutboxDao.observeWithPlacements`) so a link is never seen without its placements.
+- **Edge-to-edge:** `MainActivity` and `ShareActivity` call `enableEdgeToEdge`; every screen must stay clear of the system bars. Screens built on `Scaffold` get that
+  for free; the share sheet has no Scaffold and uses `safeDrawingPadding()`. `EdgeToEdgeTest` injects window insets and checks titles start below the status bar.
+  New screens without a Scaffold must apply insets themselves.
+- **Emulator networking (B6):** from the app, `http://10.0.2.2:8001` can time out (`SocketTimeoutException: failed to connect to /10.0.2.2 (port 8001) from /10.0.2.16
+  ... after 15000ms`) although `adb shell nc 10.0.2.2 8001` connects. Not app code: no proxy, no VPN, no private DNS, the cleartext config is fine (it would fail
+  instantly), OkHttp uses exactly the stored address. Raw `nc` run as the app's uid (`adb shell run-as com.bbro.kidtube nc -w 3 -z HOST 8001`) behaves the same:
+  with Wi-Fi on and the app in the foreground it reaches the PC's LAN IP and the internet but NOT 10.0.2.2, while the shell uid reaches all three. The app's
+  sockets leave through the emulator's virtual Wi-Fi (wlan0, 10.0.2.16) while the shell uses eth0, and the emulator has two interfaces on 10.0.2.0/24. Toggling
+  Wi-Fi/airplane mode in the emulator makes it worse (app traffic can stop completely): cold boot the AVD instead.
+  Working workarounds, any one of them: (1) point the debug build at the PC's LAN address: `KIDTUBE_DEBUG_API_BASE_URL=http://192.168.x.x:8001/` in
+  `~/.gradle/gradle.properties` (picked up by Android Studio and the command line; or type it under Advanced on the sign-in screen, which stores it); with the
+  backend in WSL also run `netsh interface portproxy add v4tov4 listenaddress=<LAN IP> listenport=8001 connectaddress=<WSL IP> connectport=8001` (admin; the WSL IP
+  changes after `wsl --shutdown`). (2) `adb reverse tcp:8001 tcp:8001` and use `http://127.0.0.1:8001/` (loopback, no network interface involved; repeat after every
+  emulator start). A real phone is not affected.
+- **Plurals:** counts in messages are `<plurals>` (`pin_gate_wrong`, `pin_gate_locked`, `error_rate_limited`), used with `pluralStringResource`; English and Urdu both have one/other.
+- **Latin inside Urdu:** `ui/components/LatinAwareText` (and `latinRunsAnnotated`) draws every run of Latin letters/digits/links (names, YouTube, numbers) in Nunito when the UI is Urdu
+  (Naskh's own Latin glyphs are serif and clash). `Chip`, `PrimaryButton`, `MessageBanner`, `VideoRow` and the share sheet/children screens use it: use it wherever user data is shown inside translated text.
+- **PrimaryButton(loading = true)** shows a spinner inside the button (same size, not pressable); sign-in, pairing, create PIN, share Save and Add child use it, so nothing around the button moves.
+- **PinField** is four outlined circles that fill as digits are typed (hidden numeric field underneath, always LTR, never shows digits).
+- **Share sheet lock banner** counts down once a second from the PIN store's injected Clock (`ShareViewModel.refreshLock`), like the PIN dialog.
+- Share sheet stays a full-screen activity (docs/SPEC.md section 5 says so). Root `.gitignore` ignores `qa-screenshots/`.

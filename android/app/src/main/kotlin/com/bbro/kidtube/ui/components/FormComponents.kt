@@ -228,7 +228,7 @@ fun CodeField(
 @Composable
 fun MessageBanner(text: String, modifier: Modifier = Modifier, isError: Boolean = true) {
     val colors = KidTubeTheme.colors
-    Text(
+    LatinAwareText(
         text = text,
         style = MaterialTheme.typography.bodyMedium,
         color = if (isError) colors.errorText else colors.verifiedText,

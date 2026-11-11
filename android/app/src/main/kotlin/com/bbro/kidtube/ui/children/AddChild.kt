@@ -6,7 +6,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -137,11 +138,12 @@ fun AddChildDialog(onDismiss: () -> Unit, viewModel: AddChildViewModel = hiltVie
             onCancel = onDismiss,
             modifier = Modifier
                 .background(KidTubeTheme.colors.ground, RoundedCornerShape(24.dp))
-                .padding(KidTubeDimens.gap24),
+                .padding(KidTubeDimens.gap20),
         )
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun AddChildContent(
     state: AddChildUiState,
@@ -167,7 +169,11 @@ internal fun AddChildContent(
             enabled = !state.busy,
         )
         Text(stringResource(R.string.child_color_label), style = MaterialTheme.typography.titleSmall, color = colors.muted)
-        Row(horizontalArrangement = Arrangement.spacedBy(KidTubeDimens.gap12)) {
+        // five equal 48dp circles; on a narrow dialog the row wraps instead of squeezing the last one
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(KidTubeDimens.gap8),
+            verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap10),
+        ) {
             AvatarColor.entries.forEach { option ->
                 val selected = option == state.color
                 val label = stringResource(option.label)
@@ -188,7 +194,7 @@ internal fun AddChildContent(
         }
         Text(stringResource(R.string.add_child_needs_network), style = MaterialTheme.typography.bodySmall, color = colors.muted)
         state.error?.let { MessageBanner(stringResource(childFailureText(it))) }
-        PrimaryButton(text = stringResource(R.string.add_child_action), onClick = onSubmit, enabled = state.canSubmit)
+        PrimaryButton(text = stringResource(R.string.add_child_action), onClick = onSubmit, enabled = state.canSubmit, loading = state.busy)
         TextButton(onClick = onCancel, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.action_cancel), style = MaterialTheme.typography.titleMedium, color = colors.muted)
         }

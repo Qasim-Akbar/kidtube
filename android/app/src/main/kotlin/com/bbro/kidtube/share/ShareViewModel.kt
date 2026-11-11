@@ -168,6 +168,14 @@ class ShareViewModel @Inject constructor(
         }
     }
 
+    /** Re-reads the remaining lock time from the PIN store (it counts on the injected Clock). The screen calls this once a second while locked. */
+    fun refreshLock() {
+        viewModelScope.launch {
+            val left = pinStore.lockRemainingSeconds()
+            _state.update { if (it.lockedSeconds == left) it else it.copy(lockedSeconds = left) }
+        }
+    }
+
     /** Edits that change what would be saved forget an earlier note or offer. */
     private fun update(change: (ShareUiState) -> ShareUiState) {
         if (_state.value.busy) return

@@ -25,6 +25,7 @@
     <!-- Parent PIN -->
     <string name="pin_label">Parent PIN</string>
     <string name="pin_field_description">Parent PIN, %1$d digits</string>
+    <string name="loading_description">Loading</string>
 
     <!-- Share presets (used by Chip previews now, by the share sheet later) -->
     <string name="preset_once_a_day">Once a day</string>
@@ -140,7 +141,10 @@
     <string name="link_have_account">I already have an account</string>
     <string name="error_fields_required">Enter your email and password.</string>
     <string name="error_wrong_password">Wrong email or password.</string>
-    <string name="error_rate_limited">Too many tries. Try again in %1$d seconds.</string>
+    <plurals name="error_rate_limited">
+        <item quantity="one">Too many tries. Try again in %1$d second.</item>
+        <item quantity="other">Too many tries. Try again in %1$d seconds.</item>
+    </plurals>
     <string name="error_rate_limited_unknown">Too many tries. Wait a little and try again.</string>
     <string name="error_no_connection">No internet connection. Check your Wi-Fi or mobile data.</string>
     <string name="error_server_unreachable">Cannot reach the server. Check the server address under Advanced.</string>
@@ -158,8 +162,14 @@
     <string name="pin_error_length">The PIN must be 4 digits.</string>
     <string name="pin_error_mismatch">The two PINs do not match.</string>
     <string name="pin_gate_title">Enter parent PIN</string>
-    <string name="pin_gate_wrong">Wrong PIN. %1$d tries left.</string>
-    <string name="pin_gate_locked">Too many wrong tries. Try again in %1$d seconds.</string>
+    <plurals name="pin_gate_wrong">
+        <item quantity="one">Wrong PIN. %1$d try left.</item>
+        <item quantity="other">Wrong PIN. %1$d tries left.</item>
+    </plurals>
+    <plurals name="pin_gate_locked">
+        <item quantity="one">Too many wrong tries. Try again in %1$d second.</item>
+        <item quantity="other">Too many wrong tries. Try again in %1$d seconds.</item>
+    </plurals>
 
     <!-- Parent home settings placeholder -->
     <string name="settings_title">Settings</string>

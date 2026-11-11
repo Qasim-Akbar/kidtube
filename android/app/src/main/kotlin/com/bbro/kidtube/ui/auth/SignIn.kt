@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -233,10 +232,8 @@ internal fun SignInContent(
             text = stringResource(if (state.createMode) R.string.action_create_account else R.string.action_sign_in),
             onClick = onSubmit,
             enabled = !state.busy,
+            loading = state.busy,
         )
-        if (state.busy) {
-            CircularProgressIndicator(color = colors.primary, modifier = Modifier.heightIn(max = 32.dp))
-        }
         if (state.registrationAvailable) {
             TextButton(
                 onClick = { onSetCreateMode(!state.createMode) },

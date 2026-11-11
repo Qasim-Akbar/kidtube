@@ -36,7 +36,6 @@ import com.bbro.kidtube.data.toData
 import com.bbro.kidtube.sync.SyncTrigger
 import com.bbro.kidtube.share.OutboxItem
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -220,10 +219,8 @@ class OutboxRepository @Inject constructor(
     suspend fun placementsFor(outboxVideoId: String): List<OutboxPlacementEntity> = dao.placementsFor(outboxVideoId)
 
     /** Every outbox link with its placements, newest last (creation order). */
-    fun observeItems(): Flow<List<OutboxItem>> = combine(dao.observeVideos(), dao.observePlacements()) { videos, placements ->
-        val byVideo = placements.groupBy { it.outboxVideoId }
-        videos.map { OutboxItem(it, byVideo[it.id].orEmpty()) }
-    }
+    fun observeItems(): Flow<List<OutboxItem>> =
+        dao.observeWithPlacements().map { rows -> rows.map { OutboxItem(it.video, it.placements.sortedBy { p -> p.id }) } }
 }
 
 // ---- snapshot pull -------------------------------------------------------------------------------------

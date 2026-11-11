@@ -1,6 +1,5 @@
 package com.bbro.kidtube.ui.auth
 
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -150,10 +149,7 @@ internal fun PairingContent(
             onDone = onConnect,
         )
         state.error?.let { MessageBanner(authFailureMessage(it)) }
-        PrimaryButton(text = stringResource(R.string.action_connect), onClick = onConnect, enabled = state.canConnect)
-        if (state.busy) {
-            CircularProgressIndicator(color = KidTubeTheme.colors.primary, modifier = Modifier.heightIn(max = 32.dp))
-        }
+        PrimaryButton(text = stringResource(R.string.action_connect), onClick = onConnect, enabled = state.canConnect, loading = state.busy)
         ServerAddressSection(state.server, onServerTextChange, onToggleAdvanced)
     }
 }

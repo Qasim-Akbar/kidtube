@@ -48,6 +48,7 @@ import com.bbro.kidtube.data.repo.ChildrenRepository
 import com.bbro.kidtube.data.repo.PlanRepository
 import com.bbro.kidtube.ui.components.BackButton
 import com.bbro.kidtube.ui.components.EnglishAndUrduPreviews
+import com.bbro.kidtube.ui.components.LatinAwareText
 import com.bbro.kidtube.ui.components.KidTubeTextField
 import com.bbro.kidtube.ui.components.MessageBanner
 import com.bbro.kidtube.ui.components.PreviewSurface
@@ -186,7 +187,7 @@ private fun ChildRowCard(row: ChildRow, busy: Boolean, onRename: () -> Unit, onC
         Column(modifier = Modifier.padding(KidTubeDimens.gap16), verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap8)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(KidTubeDimens.gap12)) {
                 Box(Modifier.size(40.dp).clip(CircleShape).background(row.avatar?.color(colors) ?: colors.line))
-                Text(row.name, style = MaterialTheme.typography.titleMedium, color = colors.ink, modifier = Modifier.weight(1f))
+                LatinAwareText(row.name, style = MaterialTheme.typography.titleMedium, color = colors.ink, modifier = Modifier.weight(1f))
                 IconButton(onClick = onRename, enabled = !busy, modifier = Modifier.size(KidTubeDimens.minTouchTarget)) {
                     Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.child_rename, row.name), tint = colors.ink)
                 }

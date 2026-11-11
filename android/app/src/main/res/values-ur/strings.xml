@@ -21,6 +21,7 @@
     <!-- Parent PIN -->
     <string name="pin_label">والدین کا پن</string>
     <string name="pin_field_description">والدین کا پن، %1$d ہندسے</string>
+    <string name="loading_description">لوڈ ہو رہا ہے</string>
 
     <!-- Share presets -->
     <string name="preset_once_a_day">دن میں ایک بار</string>
@@ -133,7 +134,10 @@
     <string name="link_have_account">میرا اکاؤنٹ پہلے سے موجود ہے</string>
     <string name="error_fields_required">اپنی ای میل اور پاس ورڈ درج کریں۔</string>
     <string name="error_wrong_password">ای میل یا پاس ورڈ غلط ہے۔</string>
-    <string name="error_rate_limited">بہت زیادہ کوششیں۔ %1$d سیکنڈ بعد دوبارہ کوشش کریں۔</string>
+    <plurals name="error_rate_limited">
+        <item quantity="one">بہت زیادہ کوششیں۔ %1$d سیکنڈ بعد دوبارہ کوشش کریں۔</item>
+        <item quantity="other">بہت زیادہ کوششیں۔ %1$d سیکنڈ بعد دوبارہ کوشش کریں۔</item>
+    </plurals>
     <string name="error_rate_limited_unknown">بہت زیادہ کوششیں۔ کچھ دیر انتظار کریں اور دوبارہ کوشش کریں۔</string>
     <string name="error_no_connection">انٹرنیٹ کنکشن نہیں ہے۔ اپنا وائی فائی یا موبائل ڈیٹا چیک کریں۔</string>
     <string name="error_server_unreachable">سرور تک رسائی نہیں ہو رہی۔ \"مزید اختیارات\" میں سرور کا پتہ چیک کریں۔</string>
@@ -151,8 +155,14 @@
     <string name="pin_error_length">پن 4 ہندسوں کا ہونا چاہیے۔</string>
     <string name="pin_error_mismatch">دونوں پن ایک جیسے نہیں ہیں۔</string>
     <string name="pin_gate_title">والدین کا پن درج کریں</string>
-    <string name="pin_gate_wrong">پن غلط ہے۔ %1$d کوششیں باقی ہیں۔</string>
-    <string name="pin_gate_locked">بہت زیادہ غلط کوششیں۔ %1$d سیکنڈ بعد دوبارہ کوشش کریں۔</string>
+    <plurals name="pin_gate_wrong">
+        <item quantity="one">پن غلط ہے۔ %1$d کوشش باقی ہے۔</item>
+        <item quantity="other">پن غلط ہے۔ %1$d کوششیں باقی ہیں۔</item>
+    </plurals>
+    <plurals name="pin_gate_locked">
+        <item quantity="one">بہت زیادہ غلط کوششیں۔ %1$d سیکنڈ بعد دوبارہ کوشش کریں۔</item>
+        <item quantity="other">بہت زیادہ غلط کوششیں۔ %1$d سیکنڈ بعد دوبارہ کوشش کریں۔</item>
+    </plurals>
 
     <!-- Parent home settings placeholder -->
     <string name="settings_title">سیٹنگز</string>

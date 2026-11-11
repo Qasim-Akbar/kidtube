@@ -150,7 +150,7 @@ internal fun CreatePinContent(
                         ),
                     )
                 }
-                PrimaryButton(text = stringResource(R.string.pin_save), onClick = onSave, enabled = !state.saving)
+                PrimaryButton(text = stringResource(R.string.pin_save), onClick = onSave, enabled = !state.saving, loading = state.saving)
             }
         }
     }

@@ -132,6 +132,11 @@ interface LocalEventDao {
     fun observeRejectedCount(): Flow<Int>
 }
 
+data class OutboxVideoWithPlacements(
+    @Embedded val video: OutboxVideoEntity,
+    @Relation(parentColumn = "id", entityColumn = "outboxVideoId") val placements: List<OutboxPlacementEntity>,
+)
+
 @Dao
 abstract class OutboxDao {
     @Insert
@@ -155,8 +160,13 @@ abstract class OutboxDao {
     @Query("SELECT * FROM outbox_placement WHERE outboxVideoId = :outboxVideoId ORDER BY id")
     abstract suspend fun placementsFor(outboxVideoId: String): List<OutboxPlacementEntity>
 
-    @Query("SELECT * FROM outbox_placement ORDER BY id")
-    abstract fun observePlacements(): Flow<List<OutboxPlacementEntity>>
+    /**
+     * Every outbox link WITH its placements from ONE query, so the UI never sees a link without the placements that were
+     * saved in the same transaction (two separate flows could emit one before the other).
+     */
+    @Transaction
+    @Query("SELECT * FROM outbox_video ORDER BY createdAt, id")
+    abstract fun observeWithPlacements(): Flow<List<OutboxVideoWithPlacements>>
 
     // ---- state transitions used by the sync engine ----
 

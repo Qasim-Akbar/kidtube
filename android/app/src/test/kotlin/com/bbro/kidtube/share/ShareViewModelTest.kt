@@ -387,6 +387,31 @@ class ShareViewModelTest : SyncTestBase() {
         assertEquals(1, outboxPlacements().size)
     }
 
+    // ---- B4: the lock counts down by itself ------------------------------------------------------------------------
+
+    @Test
+    fun theLockBanner_countsDownFromTheInjectedClock_andLifts() = runBlocking<Unit> {
+        val vm = readyForm()
+        vm.onToggleChild(vm.childId("Sara"))
+        repeat(5) {
+            vm.onPinChange("0000")
+            vm.save()
+            vm.until { !it.busy && it.pin.isEmpty() }
+        }
+        assertEquals(30L, vm.state.value.lockedSeconds)
+        assertFalse("locked: saving is off", vm.state.value.canSave)
+
+        clock.advance(java.time.Duration.ofSeconds(10))
+        vm.refreshLock() // what the screen does once a second while locked
+        assertEquals(20L, vm.until { it.lockedSeconds == 20L }.lockedSeconds)
+
+        clock.advance(java.time.Duration.ofSeconds(25))
+        vm.refreshLock()
+        vm.until { it.lockedSeconds == 0L }
+        vm.onPinChange("1234")
+        assertTrue("the lock lifted without any other interaction", vm.state.value.canSave)
+    }
+
     @Test
     fun cancellingTheOffer_savesNothing() = runBlocking<Unit> {
         val vm = readyForm()
