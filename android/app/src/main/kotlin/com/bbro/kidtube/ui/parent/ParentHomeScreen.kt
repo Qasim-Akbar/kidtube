@@ -120,7 +120,7 @@ fun ParentHomeScreen(
                     onSettings = onSettings,
                 )
                 HomeTab.PLANS -> com.bbro.kidtube.ui.plans.PlansTab(onAddChild = { addingChild = true })
-                HomeTab.REPORTS -> ComingSoon(R.string.nav_reports)
+                HomeTab.REPORTS -> com.bbro.kidtube.ui.reports.ReportsTab(onAddChild = { addingChild = true })
             }
         }
     }
@@ -266,19 +266,6 @@ private fun EmptyLibrary(state: LibraryUiState, onAddChild: () -> Unit) {
             Text(stringResource(R.string.library_empty_no_children), style = MaterialTheme.typography.bodyMedium, color = colors.muted, textAlign = TextAlign.Center)
             PrimaryButton(text = stringResource(R.string.add_child_action), onClick = onAddChild)
         }
-    }
-}
-
-@Composable
-private fun ComingSoon(title: Int) {
-    val colors = KidTubeTheme.colors
-    Column(
-        modifier = Modifier.fillMaxSize().padding(KidTubeDimens.screenPadding),
-        verticalArrangement = Arrangement.spacedBy(KidTubeDimens.gap12, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(stringResource(title), style = MaterialTheme.typography.headlineMedium, color = colors.ink)
-        Text(stringResource(R.string.coming_soon), style = MaterialTheme.typography.bodyLarge, color = colors.muted)
     }
 }
 

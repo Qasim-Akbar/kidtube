@@ -341,3 +341,89 @@ data class PlanItemPatch(
         ),
     )
 }
+
+// ---- reports (schemas/report.py) ------------------------------------------------------------
+
+@Serializable
+data class ReportDayDto(
+    val date: LocalDate,
+    @SerialName("watch_seconds") val watchSeconds: Int,
+    @SerialName("app_seconds") val appSeconds: Int,
+    @SerialName("browsing_seconds") val browsingSeconds: Int = 0,
+    @SerialName("views_completed") val viewsCompleted: Int,
+)
+
+@Serializable
+data class ReportTotalsDto(
+    @SerialName("watch_seconds") val watchSeconds: Int,
+    @SerialName("app_seconds") val appSeconds: Int,
+    @SerialName("browsing_seconds") val browsingSeconds: Int = 0,
+    @SerialName("views_completed") val viewsCompleted: Int,
+)
+
+@Serializable
+data class TopVideoDto(
+    @SerialName("video_id") val videoId: String,
+    val title: String? = null,
+    @SerialName("thumbnail_url") val thumbnailUrl: String? = null,
+    val views: Int,
+    @SerialName("watch_seconds") val watchSeconds: Int,
+)
+
+@Serializable
+data class ItemCompletionDto(
+    @SerialName("item_id") val itemId: String,
+    @SerialName("video_id") val videoId: String,
+    val title: String? = null,
+    val required: Boolean,
+    val status: PlanItemStatus = PlanItemStatus.UNKNOWN,
+    @SerialName("view_target") val viewTarget: Int? = null,
+    @SerialName("views_total") val viewsTotal: Int,
+    @SerialName("views_in_range") val viewsInRange: Int,
+    val completed: Boolean,
+)
+
+@Serializable
+data class PlaybackErrorDto(
+    @SerialName("video_id") val videoId: String,
+    val title: String? = null,
+    val code: String,
+    val count: Int,
+)
+
+@Serializable
+data class PlannedVsWatchedDto(
+    @SerialName("pace_type") val paceType: PaceType = PaceType.UNKNOWN,
+    /** "videos" (videos mode) or "seconds" (minutes mode). */
+    val unit: String,
+    @SerialName("window_start") val windowStart: LocalDate? = null,
+    @SerialName("window_end") val windowEnd: LocalDate? = null,
+    @SerialName("active_days") val activeDays: Int,
+    val expected: Int,
+    val actual: Int,
+)
+
+@Serializable
+data class PlanProgressDto(
+    @SerialName("as_of") val asOf: LocalDate,
+    @SerialName("finish_date") val finishDate: LocalDate? = null,
+    @SerialName("remaining_finite_views") val remainingFiniteViews: Int,
+)
+
+/** GET /reports/children/{id}?range=&date= (parent only). Every number is used exactly as the server sends it. */
+@Serializable
+data class ReportDto(
+    @SerialName("child_id") val childId: String,
+    /** "day" | "week" | "month". */
+    val range: String,
+    val date: LocalDate,
+    val start: LocalDate,
+    val end: LocalDate,
+    val days: List<ReportDayDto>,
+    val totals: ReportTotalsDto,
+    @SerialName("top_videos") val topVideos: List<TopVideoDto> = emptyList(),
+    @SerialName("per_video") val perVideo: List<ItemCompletionDto> = emptyList(),
+    @SerialName("playback_errors") val playbackErrors: List<PlaybackErrorDto> = emptyList(),
+    @SerialName("planned_vs_watched") val plannedVsWatched: PlannedVsWatchedDto? = null,
+    @SerialName("plan_progress") val planProgress: PlanProgressDto? = null,
+)

@@ -64,6 +64,10 @@ class KidTubeRemote(private val authApi: AuthApi, private val api: KidTubeApi) {
     suspend fun reorderPlan(childId: String, itemIds: List<String>): ApiResult<PlanDto> =
         apiCall { api.reorderPlan(childId, ReorderRequest(itemIds)) }
 
+    // reports (parent only)
+    suspend fun getReport(childId: String, range: String, date: java.time.LocalDate): ApiResult<ReportDto> =
+        apiCall { api.getReport(childId, range, date.toString()) }
+
     // events and sync
     suspend fun postEvents(events: List<EventDto>): ApiResult<EventBatchResult> =
         apiCall { api.postEvents(EventBatch(events)) }

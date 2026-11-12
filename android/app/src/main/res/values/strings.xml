@@ -38,7 +38,6 @@
     <!-- Placeholders for screens designed later -->
     <string name="kid_picker_title">Who\'s watching?</string>
     <string name="kid_picker_parents">Parents</string>
-    <string name="coming_soon">Coming soon</string>
 
     <!-- Parent home: library -->
     <string name="nav_library">Library</string>
@@ -324,4 +323,62 @@
     <string name="plans_stepper_decrease">Less</string>
     <string name="plans_stepper_increase">More</string>
     <string name="action_ok">OK</string>
+
+    <!-- Reports tab (P2) -->
+    <string name="reports_range_day">Day</string>
+    <string name="reports_range_week">Week</string>
+    <string name="reports_range_month">Month</string>
+    <string name="reports_prev">Previous period</string>
+    <string name="reports_next">Next period</string>
+    <string name="reports_no_children">Add a child first, then you can see their reports.</string>
+    <string name="reports_card_views">Videos watched</string>
+    <string name="reports_card_watch">Watch time</string>
+    <string name="reports_card_app">App time</string>
+    <string name="reports_card_errors">Playback errors</string>
+    <string name="reports_chart_title">Each day</string>
+    <string name="reports_metric_watch">Watch time</string>
+    <string name="reports_metric_views">Views</string>
+    <string name="reports_chart_peak">Highest day: %1$s</string>
+    <string name="reports_bar_description">%1$s: %2$s</string>
+    <plurals name="reports_views">
+        <item quantity="one">%1$d view</item>
+        <item quantity="other">%1$d views</item>
+    </plurals>
+    <plurals name="reports_times">
+        <item quantity="one">%1$d time</item>
+        <item quantity="other">%1$d times</item>
+    </plurals>
+    <string name="reports_top_title">Top videos</string>
+    <string name="reports_day_videos_title">Watched this day</string>
+    <string name="reports_video_line">%1$s · %2$s</string>
+    <string name="reports_untitled">Untitled video</string>
+    <string name="reports_problems_title">Problems</string>
+    <string name="reports_problems_hint">These videos could not play. The link may be broken.</string>
+    <string name="reports_problem_line">Error code %1$s · %2$s</string>
+    <string name="reports_plan_title">Plan progress</string>
+    <string name="reports_plan_watched_videos">Watched %1$d of %2$d planned videos</string>
+    <string name="reports_plan_watched_time">Watched %1$s of %2$s planned</string>
+    <string name="reports_plan_finished">%1$d of %2$d videos finished</string>
+    <plurals name="reports_plan_remaining">
+        <item quantity="one">%1$d view left to reach every target</item>
+        <item quantity="other">%1$d views left to reach every target</item>
+    </plurals>
+    <string name="reports_plan_finish">Plan finishes on %1$s</string>
+    <string name="reports_plan_no_finish">No finish date yet</string>
+    <string name="reports_item_done">Done</string>
+    <string name="reports_item_progress">%1$d of %2$d</string>
+    <string name="reports_empty_day">No viewing this day</string>
+    <string name="reports_empty_week">No viewing this week</string>
+    <string name="reports_empty_month">No viewing this month</string>
+    <string name="reports_offline_title">Needs internet</string>
+    <string name="reports_offline_body">Connect to the internet to see reports.</string>
+    <string name="reports_server_title">Cannot reach the server</string>
+    <string name="reports_server_body">Try again in a moment.</string>
+    <string name="reports_error_title">Could not load the report</string>
+    <string name="reports_error_body">Something went wrong. Try again.</string>
+    <string name="reports_retry">Try again</string>
+    <string name="reports_stale">Could not refresh. Showing the last report.</string>
+    <string name="duration_seconds">%1$d s</string>
+    <string name="duration_minutes">%1$d min</string>
+    <string name="duration_hours_minutes">%1$dh %2$02dm</string>
 </resources>

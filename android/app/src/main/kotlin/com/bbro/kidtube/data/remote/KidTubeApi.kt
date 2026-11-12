@@ -10,6 +10,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * Endpoints that never carry a bearer token. Served by a client WITHOUT the auth interceptor/authenticator, so a
@@ -85,6 +86,10 @@ interface KidTubeApi {
 
     @POST("children/{childId}/plan/reorder")
     suspend fun reorderPlan(@Path("childId") childId: String, @Body body: ReorderRequest): Response<PlanDto>
+
+    // reports (parent only)
+    @GET("reports/children/{childId}")
+    suspend fun getReport(@Path("childId") childId: String, @Query("range") range: String, @Query("date") date: String): Response<ReportDto>
 
     // events
     @POST("events")

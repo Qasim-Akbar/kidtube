@@ -84,7 +84,8 @@ playback_error, app_session) with live limits (see "Android player and tracking 
 Done (android, K4): Facebook off for kids (`KIDS_FACEBOOK_ENABLED = false`, see "Kids and Facebook" below), app-time session continuous across kid screens (process lifecycle + handover grace),
 YouTube cover until the first PLAYING, thumbnails cropped from a fixed 16:9 box.
 Done (android UI, P1): the Plans tab (child chips, plan summary + edit form, item list with edit/move/remove/add, 7-day "What happens next", extra time); see "Plans tab (P1)" below.
-Not yet: Reports screen, lock-task / screen pinning, a live app-time check on the grid (only the player enforces the limit live).
+Done (android UI, P2): the Reports tab; see "Reports tab (P2)" below.
+Not yet: lock-task / screen pinning, a live app-time check on the grid (only the player enforces the limit live).
 Next: run K3 against real YouTube/Facebook on a device; design the remaining "Still to design" screens in docs/DESIGN.md.
 
 ## Android engine and feed (K1)
@@ -342,6 +343,13 @@ Next: run K3 against real YouTube/Facebook on a device; design the remaining "St
 - Thumbnails: `CroppedThumbnail` draws the image in a 16:9 box (ContentScale.Crop) centred in and covering its parent, so the letterbox bars of `hqdefault` are cut off; used by `VideoThumbnail` (now 96x54 by
   default; library rows, share sheet) and `KidTile` (grid, First tile). The pastel placeholder stays underneath.
 - playback_error keeps the code the library reports (101 for missing/unembeddable videos); not changed.
+
+## Reports tab (P2)
+- Code: `ui/reports/` (`ReportsModel` pure: `ReportPeriods` bounds/shift/label, `durationParts`/`Resources.durationText`, `chartBars`, `barHeight`, `labelIndices`; `ReportsViewModel`; `ReportsScreen`), `data/repo/Reports.kt` (`ReportRepository`, `ReportKey`, `ReportRange`), `ReportDto` in Dtos.kt, `ui/components/SegmentedControl`. Online only (GET /reports/children/{id}?range=&date=, parent only).
+- API facts: no "All children" aggregate (per child only); week = Monday..Sunday and month = calendar month, same as the backend; the report has no dropped-items or missed-days fields, so Plan progress shows planned_vs_watched, per_video completion (dropped items are not sent) and plan_progress. Day view lists `top_videos` (max 10). Numbers are shown exactly as sent.
+- Behaviour: default range Week; "today" = injected Clock in the family timezone, recomputed at each load/refresh (not on a timer); next is disabled when the next period has not started (anchor is clamped to today); last good report per (child, range, anchor) is kept in memory (`ReportRepository.cached`, 40 entries) and shown while refreshing or after a failed refresh (banner). Failures: NO_CONNECTION = "Needs internet", SERVER_UNREACHABLE, RATE_LIMITED, NOT_FOUND/UNKNOWN, all with Try again. Pull to refresh.
+- Chart: plain Compose boxes, one bar per day (watch time or views toggle), zero days keep a 2dp line, weekday labels (week) or day numbers (month) skipped by `labelIndices` when crowded, per-bar content descriptions. Durations: "1h 05m" / "5 min" / "40 s" (floored; Urdu words, Latin digits).
+- Tests: `ReportsModelTest`, `ReportsViewModelTest` (MockWebServer + report fixtures 76-80, a switchable base URL for offline), `ReportsRenderTest` (en + ur RTL), `ReportsScreenshotsTest` (`KIDTUBE_SCREENSHOTS=<dir>`, p2-*.png).
 
 ## Plans tab (P1)
 - Code: `ui/plans/` (`PlansModel` pure mapper, `PlansViewModel`, `PlansScreen`, `PlanDialogs`), `data/repo/PlanEdit.kt` (`PlanEditRepository`, `PlanOrder`), `ui/components/Stepper`. `ParentHomeScreen` shows `PlansTab` (Reports still "Coming soon"). No PIN: it is the already-unlocked parent area.

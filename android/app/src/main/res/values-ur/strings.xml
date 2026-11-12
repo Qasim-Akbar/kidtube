@@ -34,7 +34,6 @@
     <!-- Placeholders for screens designed later -->
     <string name="kid_picker_title">کون دیکھ رہا ہے؟</string>
     <string name="kid_picker_parents">والدین</string>
-    <string name="coming_soon">جلد آ رہا ہے</string>
 
     <!-- Parent home: library -->
     <string name="nav_library">لائبریری</string>
@@ -317,4 +316,62 @@
     <string name="plans_stepper_decrease">کم</string>
     <string name="plans_stepper_increase">زیادہ</string>
     <string name="action_ok">ٹھیک ہے</string>
+
+    <!-- Reports tab (P2) - Urdu first draft for a native reader to fix -->
+    <string name="reports_range_day">دن</string>
+    <string name="reports_range_week">ہفتہ</string>
+    <string name="reports_range_month">مہینہ</string>
+    <string name="reports_prev">پچھلی مدت</string>
+    <string name="reports_next">اگلی مدت</string>
+    <string name="reports_no_children">پہلے ایک بچہ شامل کریں، پھر اس کی رپورٹیں دیکھیں۔</string>
+    <string name="reports_card_views">دیکھی گئی ویڈیوز</string>
+    <string name="reports_card_watch">دیکھنے کا وقت</string>
+    <string name="reports_card_app">ایپ کا وقت</string>
+    <string name="reports_card_errors">پلے کی خرابیاں</string>
+    <string name="reports_chart_title">ہر دن</string>
+    <string name="reports_metric_watch">دیکھنے کا وقت</string>
+    <string name="reports_metric_views">بار دیکھا</string>
+    <string name="reports_chart_peak">سب سے زیادہ دن: %1$s</string>
+    <string name="reports_bar_description">%1$s: %2$s</string>
+    <plurals name="reports_views">
+        <item quantity="one">%1$d بار دیکھا</item>
+        <item quantity="other">%1$d بار دیکھا</item>
+    </plurals>
+    <plurals name="reports_times">
+        <item quantity="one">%1$d بار</item>
+        <item quantity="other">%1$d بار</item>
+    </plurals>
+    <string name="reports_top_title">سب سے زیادہ دیکھی گئی ویڈیوز</string>
+    <string name="reports_day_videos_title">اس دن دیکھی گئی</string>
+    <string name="reports_video_line">%1$s · %2$s</string>
+    <string name="reports_untitled">بے نام ویڈیو</string>
+    <string name="reports_problems_title">مسائل</string>
+    <string name="reports_problems_hint">یہ ویڈیوز نہیں چل سکیں۔ ہو سکتا ہے لنک خراب ہو۔</string>
+    <string name="reports_problem_line">خرابی کا کوڈ %1$s · %2$s</string>
+    <string name="reports_plan_title">منصوبے کی پیش رفت</string>
+    <string name="reports_plan_watched_videos">منصوبے کی %2$d میں سے %1$d ویڈیوز دیکھیں</string>
+    <string name="reports_plan_watched_time">منصوبے کے %2$s میں سے %1$s دیکھا</string>
+    <string name="reports_plan_finished">%2$d میں سے %1$d ویڈیوز مکمل</string>
+    <plurals name="reports_plan_remaining">
+        <item quantity="one">ہر ہدف تک پہنچنے کے لیے %1$d بار دیکھنا باقی</item>
+        <item quantity="other">ہر ہدف تک پہنچنے کے لیے %1$d بار دیکھنا باقی</item>
+    </plurals>
+    <string name="reports_plan_finish">منصوبہ %1$s کو مکمل ہوگا</string>
+    <string name="reports_plan_no_finish">ابھی ختم ہونے کی تاریخ نہیں ہے</string>
+    <string name="reports_item_done">مکمل</string>
+    <string name="reports_item_progress">%2$d میں سے %1$d</string>
+    <string name="reports_empty_day">اس دن کچھ نہیں دیکھا گیا</string>
+    <string name="reports_empty_week">اس ہفتے کچھ نہیں دیکھا گیا</string>
+    <string name="reports_empty_month">اس مہینے کچھ نہیں دیکھا گیا</string>
+    <string name="reports_offline_title">انٹرنیٹ چاہیے</string>
+    <string name="reports_offline_body">رپورٹیں دیکھنے کے لیے انٹرنیٹ سے جڑیں۔</string>
+    <string name="reports_server_title">سرور تک رسائی نہیں ہو رہی</string>
+    <string name="reports_server_body">کچھ دیر بعد دوبارہ کوشش کریں۔</string>
+    <string name="reports_error_title">رپورٹ لوڈ نہیں ہو سکی</string>
+    <string name="reports_error_body">کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔</string>
+    <string name="reports_retry">دوبارہ کوشش کریں</string>
+    <string name="reports_stale">تازہ نہیں ہو سکا۔ آخری رپورٹ دکھائی جا رہی ہے۔</string>
+    <string name="duration_seconds">%1$d سیکنڈ</string>
+    <string name="duration_minutes">%1$d منٹ</string>
+    <string name="duration_hours_minutes">%1$d گھنٹہ %2$02d منٹ</string>
 </resources>
