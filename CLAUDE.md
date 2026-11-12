@@ -57,7 +57,7 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 - Production (Ubuntu VPS, no Docker, nginx ALREADY serving other sites): see DEPLOY.md; files in deploy/. All settings in ONE git-ignored file,
   `deploy/deploy.env` (template `deploy.env.example`: KIDTUBE_DOMAIN, KIDTUBE_USER, KIDTUBE_PORT=8001, KIDTUBE_DIR=/opt/kidtube, DB/cert/backup values), parsed
   (never sourced) and validated by `deploy/lib.sh`, which also renders the `@PLACEHOLDER@` templates (unit, nginx, backup files, env example).
-  `check.sh` = read-only conflict report; `install.sh` = idempotent, asks before every system change, never restarts nginx/postgres (reload after `nginx -t` only);
+  `reset_data.sh` = start over with empty data (backup, type the domain, drops/recreates ONLY the kidtube DB, migrates, opens registration; `--dry-run`); `check.sh` = read-only conflict report; `install.sh` = idempotent, asks before every system change, never restarts nginx/postgres (reload after `nginx -t` only);
   `deploy.sh` = update (backup, code, venv, units, alembic as the service user, restart of kidtube only). No firewall/fail2ban/pg_hba/postgresql.conf edits.
   deploy/constraints.txt pins dependencies (tested on Python 3.12). Interactive docs are off unless APP_ENV=dev.
   New top-level API routes must also be added to the path list in deploy/nginx/kidtube.conf (the full HTTPS template; `kidtube-bootstrap.conf` is only the pre-certificate HTTP stub).
@@ -89,6 +89,8 @@ Done (android, K4): Facebook off for kids (`KIDS_FACEBOOK_ENABLED = false`, see 
 YouTube cover until the first PLAYING, thumbnails cropped from a fixed 16:9 box.
 Done (android UI, P1): the Plans tab (child chips, plan summary + edit form, item list with edit/move/remove/add, 7-day "What happens next", extra time); see "Plans tab (P1)" below.
 Done (android UI, P2): the Reports tab; see "Reports tab (P2)" below.
+Done (android, QA fixes round 2): build script fixed (see "Android release build"); dropped placements are shown on Library rows with the reason + a Remove button (see "Dropped placements" under U3); Reports tab icon = bar chart
+(`ui/components/KidTubeIcons`); share sheet preselects the only child / the last used children (`core/ShareChildStore`), one-line hint when nobody is chosen, reserved status slot so Save never jumps; `deploy/reset_data.sh` (DEPLOY.md "Start over with empty data").
 Not yet: lock-task / screen pinning, a live app-time check on the grid (only the player enforces the limit live).
 Next: run K3 against real YouTube/Facebook on a device; design the remaining "Still to design" screens in docs/DESIGN.md.
 
@@ -145,6 +147,14 @@ Next: run K3 against real YouTube/Facebook on a device; design the remaining "St
 - Tests: SharedLinksTest, SharePresetTest (+ outbox mapping), ShareDuplicatesTest, ShareTargetTest, ShareViewModelTest (production stack on SyncTestBase, incl. the no-plan offer),
   ChildSetupTest (default plan creation), LibraryModelTest, ShareAndLibraryRenderTest (en + ur RTL, LTR fields). `testing/Rows` builds entities for pure tests.
 
+- **Dropped placements (QA round 2):** `LibraryMapper` also reads FAILED outbox placements. A server video whose placement for a child failed (and the child has no active item for it) gets note NOT_ADDED + `notAddedReason`:
+  `Unavailable` (video status unavailable, or the stored server text mentions "unavailable", e.g. 422 "This video is unavailable"), `Server(text)` (the server's own words, also for a rejected outbox link's rejectReason), `Unknown` (only a code such as
+  http_500 / video_rejected: shows the old "Could not be added"). Text: "Not added to the plan: video unavailable" / "Not added to the plan: <reason>" (Urdu draft strings library_not_added_*). The Unavailable badge stays.
+  "Remove" (`LibraryItem.canDismiss`, `OutboxRepository.dismissFailed`) deletes only FAILED placements and REJECTED outbox links; never pending/done ones; a waiting placement hides the note and the button. There is NO delete-video endpoint, so a video
+  that exists on the server stays in the Library (as "Library only") after Remove; only outbox-only rejected links disappear. Tests: LibraryModelTest, OutboxAndPullTest, ShareAndLibraryRenderTest.
+- **Share sheet (QA round 2):** pre-selection when children first appear = the only child, else the children of the last save (`ShareChildStore`, DataStore key last_share_child_ids, ids that no longer exist are ignored), else nobody. Save stays off until
+  a full PIN is typed AND (for presets that add a plan item) a child is chosen; `ShareUiState.needsChild` shows the hint "Choose who this is for to save it." The hint and the offline note live in a Column with min height 64dp (`SHARE_STATUS_SLOT_TAG`) so the layout does not shift.
+
 ## Android auth, PIN and navigation (U2)
 - Server address: `core/ServerAddressStore` (same DataStore, key server_address; default = BuildConfig.API_BASE_URL; debug default from Gradle property
   KIDTUBE_DEBUG_API_BASE_URL, else http://10.0.2.2:8001/). `ServerAddressPolicy`: https:// always, http:// only when BuildConfig.ALLOW_CLEARTEXT_API (debug);
@@ -200,7 +210,14 @@ Next: run K3 against real YouTube/Facebook on a device; design the remaining "St
   Verify the signature: `$ANDROID_HOME/build-tools/<ver>/apksigner verify --print-certs app-release.apk`.
 - Install on each phone (parents' and kids'): copy the APK (USB/cloud) and open it with "install unknown apps" allowed for that file manager, or `adb install -r app-release.apk` with USB debugging.
   Same keystore for every update, so `adb install -r` / opening the new APK upgrades in place and keeps data. Parent phone: sign in with the parent account from DEPLOY.md step 8; kid phones: pair with the code.
-- Not yet verified: the signing/domain Gradle changes could not be built on the machine they were written on (no JDK/SDK there). Run `./gradlew assembleRelease` once and fix anything it reports.
+- **Gradle needs the Temurin 21 JDK** (JAVA_HOME may point at a missing Android Studio JBR). One-time, so every shell and Android Studio use it: add to `~/.gradle/gradle.properties`
+  `org.gradle.java.home=C:/Users/<you>/.gradle/jdks/eclipse_adoptium-21-amd64-windows.2` (forward slashes; the directory name under ~/.gradle/jdks may differ: check it contains bin/java.exe),
+  or per shell `export JAVA_HOME="$HOME/.gradle/jdks/eclipse_adoptium-21-amd64-windows.2"` (Git Bash). With `KIDTUBE_DOMAIN=kidtube.yourdomain.org` in the same file the full check is:
+  `cd android && ./gradlew assembleDebug assembleRelease testDebugUnitTest lintDebug` (add `-PKIDTUBE_DOMAIN=...` if it is not in gradle.properties).
+- Release build behaviour (verified): `app/build.gradle.kts` starts with `import java.util.Properties` (without it `java.util` resolves against Gradle's `java` extension and the script fails with "Unresolved reference 'util'").
+  No `keystore.properties` -> a warning is logged (only when a release/bundle task is requested) and the APK is `app-release-unsigned.apk`; a keystore.properties missing a key fails with a one-line GradleException naming the key (no stack trace).
+  No KIDTUBE_DOMAIN / API URL -> `verifyReleaseApiBaseUrl` fails with a plain message. With `-PKIDTUBE_DOMAIN=kidtube.example.org` the generated release BuildConfig has `API_BASE_URL = "https://kidtube.example.org/"` and
+  `ALLOW_CLEARTEXT_API = false`; the release manifest uses src/main/res/xml/network_security_config.xml (`cleartextTrafficPermitted="false"`). Check them in app/build/generated/source/buildConfig/release/.../BuildConfig.java.
 
 ## Android (android/)
 - Stack: Kotlin 2.4, Jetpack Compose + Material 3, single module `app`, Gradle Kotlin DSL + version catalog

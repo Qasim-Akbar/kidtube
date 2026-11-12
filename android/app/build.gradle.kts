@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -26,9 +28,9 @@ val releaseApiBaseUrl: String = if (releaseApiBaseUrlRaw.endsWith("/")) releaseA
 // ---- Release signing ------------------------------------------------------------------------
 // android/keystore.properties (git-ignored; template: keystore.properties.example) names a LOCAL keystore:
 //   storeFile=/home/you/.kidtube/kidtube-release.jks   storePassword=...   keyAlias=kidtube   keyPassword=...
-// Without the file the release APK is built UNSIGNED (it cannot be installed until signed).
+// Without the file the release APK is built UNSIGNED (it cannot be installed until signed) and a warning is printed.
 val keystorePropertiesFile: File = rootProject.file("keystore.properties")
-val keystoreProperties = java.util.Properties().apply {
+val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.isFile) keystorePropertiesFile.inputStream().use { load(it) }
 }
 
@@ -51,12 +53,20 @@ android {
 
     signingConfigs {
         if (keystorePropertiesFile.isFile) {
+            fun keystoreValue(key: String): String =
+                keystoreProperties.getProperty(key)?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: throw GradleException("keystore.properties: \"$key\" is missing. See android/keystore.properties.example.")
             create("release") {
-                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile") ?: error("keystore.properties: storeFile is missing"))
-                storePassword = keystoreProperties.getProperty("storePassword") ?: error("keystore.properties: storePassword is missing")
-                keyAlias = keystoreProperties.getProperty("keyAlias") ?: error("keystore.properties: keyAlias is missing")
-                keyPassword = keystoreProperties.getProperty("keyPassword") ?: error("keystore.properties: keyPassword is missing")
+                storeFile = rootProject.file(keystoreValue("storeFile"))
+                storePassword = keystoreValue("storePassword")
+                keyAlias = keystoreValue("keyAlias")
+                keyPassword = keystoreValue("keyPassword")
             }
+        } else if (gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) || it.contains("bundle", ignoreCase = true) }) {
+            logger.warn(
+                "WARNING: android/keystore.properties not found. Release builds will be UNSIGNED (app-release-unsigned.apk) and cannot be installed. " +
+                    "Copy keystore.properties.example to keystore.properties and fill it in (see CLAUDE.md, \"Android release build\").",
+            )
         }
     }
 

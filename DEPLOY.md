@@ -197,6 +197,25 @@ On a **new server**: run steps 1-5 first (role, env file), copy the dump over, t
 Copy `/var/backups/kidtube` **off the machine** regularly (the dumps hold e-mail addresses, password hashes and children's names; keep copies private):
 `ssh admin@host 'sudo tar -C /var/backups/kidtube -cf - .' | tar -xf - -C ~/kidtube-backups`.
 
+## Start over with empty data
+
+To throw away test accounts, children, videos and events before the real family starts (or after a bad experiment), run on the VPS, from the checkout:
+
+```bash
+sudo deploy/reset_data.sh --dry-run     # prints every command it would run, changes nothing, needs no root
+sudo deploy/reset_data.sh               # the real thing
+```
+
+It is interactive. In order it: shows what will be erased and makes you **type the domain** (`KIDTUBE_DOMAIN`) to confirm; takes a **pg_dump backup** (`kidtube-backup`) and stops if that fails; stops the `kidtube` service; **drops and recreates only the database `KIDTUBE_DB_NAME`** (owner `KIDTUBE_DB_USER`, same locked-down privileges as `install.sh`); runs `alembic upgrade head` as the service user; sets `ALLOW_REGISTRATION=true` in the env file; starts the service and checks `/health`. It refuses to run if `DATABASE_URL` in the env file names a different database than `KIDTUBE_DB_NAME`, or if that name is `postgres`/`template0`/`template1`. No other database, role, site, nginx or PostgreSQL setting is touched, and the service user, JWT secret and database password stay as they are.
+
+Afterwards: create the real parent account (step 8; phones that still hold the old test account must sign out or clear app data, and kid phones pair again), then **close registration again**:
+
+```bash
+sudo sed -i 's/^ALLOW_REGISTRATION=.*/ALLOW_REGISTRATION=false/' /etc/kidtube/kidtube.env && sudo systemctl restart kidtube
+```
+
+If something fails after the database was dropped, the script prints the backup path and the exact `pg_restore` commands. The dump is in `KIDTUBE_BACKUP_DIR` (default `/var/backups/kidtube`, mode 600).
+
 ## 11. Updating the app
 
 ```bash

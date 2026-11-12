@@ -202,6 +202,24 @@ abstract class OutboxDao {
     @Query("UPDATE outbox_placement SET state = 'failed', reason = :reason WHERE id = :id")
     abstract suspend fun markPlacementFailed(id: String, reason: String): Int
 
+    /**
+     * The parent clears a dropped share from the Library: its failed placements go, and a link the server rejected
+     * outright goes with them. Pending and done rows are never touched.
+     */
+    @Transaction
+    open suspend fun dismissFailed(outboxVideoIds: List<String>) {
+        for (id in outboxVideoIds) {
+            deleteFailedPlacements(id)
+            deleteRejectedVideo(id)
+        }
+    }
+
+    @Query("DELETE FROM outbox_placement WHERE outboxVideoId = :outboxVideoId AND state = 'failed'")
+    abstract suspend fun deleteFailedPlacements(outboxVideoId: String): Int
+
+    @Query("DELETE FROM outbox_video WHERE id = :id AND state = 'rejected'")
+    abstract suspend fun deleteRejectedVideo(id: String): Int
+
     /** Keeps the placement pending but records why it is waiting (e.g. "no_plan"). */
     @Query("UPDATE outbox_placement SET reason = :reason WHERE id = :id AND state = 'pending'")
     abstract suspend fun setPlacementReason(id: String, reason: String?): Int

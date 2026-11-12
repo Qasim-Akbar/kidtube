@@ -46,7 +46,7 @@ class ParentHomeViewModel @Inject constructor(
     childrenRepo: ChildrenRepository,
     videoRepo: VideoRepository,
     planRepo: PlanRepository,
-    outboxRepo: OutboxRepository,
+    private val outboxRepo: OutboxRepository,
 ) : ViewModel() {
     val status: Flow<SyncStatus> = statusProvider.status
 
@@ -88,6 +88,12 @@ class ParentHomeViewModel @Inject constructor(
     }
 
     fun syncNow() = trigger.syncNow()
+
+    /** Clears a dropped share (failed placements / rejected link) from the Library. */
+    fun dismiss(item: LibraryItem) {
+        if (!item.canDismiss) return
+        viewModelScope.launch { outboxRepo.dismissFailed(item.dismissibleOutboxIds) }
+    }
 
     /** Switch this parent phone into kid mode (persisted). [onDone] runs once it is stored. */
     fun enterKidMode(onDone: () -> Unit) {

@@ -226,6 +226,9 @@ class OutboxRepository @Inject constructor(
     fun observeVideos(): Flow<List<OutboxVideoEntity>> = dao.observeVideos()
     suspend fun placementsFor(outboxVideoId: String): List<OutboxPlacementEntity> = dao.placementsFor(outboxVideoId)
 
+    /** "Remove" on a dropped share: clears failed placements and rejected links only (see [OutboxDao.dismissFailed]). */
+    suspend fun dismissFailed(outboxVideoIds: List<String>) = dao.dismissFailed(outboxVideoIds)
+
     /** Every outbox link with its placements, newest last (creation order). */
     fun observeItems(): Flow<List<OutboxItem>> =
         dao.observeWithPlacements().map { rows -> rows.map { OutboxItem(it.video, it.placements.sortedBy { p -> p.id }) } }

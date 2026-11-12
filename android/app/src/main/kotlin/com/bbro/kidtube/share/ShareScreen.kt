@@ -3,6 +3,7 @@ package com.bbro.kidtube.share
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -34,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bbro.kidtube.R
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.bbro.kidtube.data.entity.ChildEntity
 import com.bbro.kidtube.data.remote.Platform
@@ -51,6 +53,9 @@ import com.bbro.kidtube.ui.theme.KidTubeDimens
 import com.bbro.kidtube.ui.theme.KidTubeShapes
 import com.bbro.kidtube.ui.theme.KidTubeTheme
 import kotlinx.coroutines.delay
+
+internal val STATUS_SLOT_MIN_HEIGHT = 64.dp
+internal const val SHARE_STATUS_SLOT_TAG = "share_status_slot"
 
 /** How long the "Saved" confirmation stays before the share sheet closes. */
 private const val SAVED_CLOSE_DELAY_MS = 1_400L
@@ -179,8 +184,17 @@ internal fun ShareContent(
                     state.planOffer?.let { offer ->
                         PlanOfferCard(offer, busy = state.busy, offline = state.offline, onCreate = onCreatePlans, onSaveWithout = onSaveWithoutPlan)
                     }
-                    if (state.offline) {
-                        Text(stringResource(R.string.share_offline_note), style = MaterialTheme.typography.bodySmall, color = colors.muted)
+                    // Reserved space for the hint and the offline note, so the Save button does not jump when they appear.
+                    Column(
+                        modifier = Modifier.fillMaxWidth().heightIn(min = STATUS_SLOT_MIN_HEIGHT).testTag(SHARE_STATUS_SLOT_TAG),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        if (state.needsChild && state.planOffer == null) {
+                            Text(stringResource(R.string.share_pick_child_hint), style = MaterialTheme.typography.bodySmall, color = colors.pendingText)
+                        }
+                        if (state.offline) {
+                            Text(stringResource(R.string.share_offline_note), style = MaterialTheme.typography.bodySmall, color = colors.muted)
+                        }
                     }
                     if (state.planOffer == null) {
                         PrimaryButton(text = saveLabel(state), onClick = onSave, enabled = state.canSave, loading = state.busy)

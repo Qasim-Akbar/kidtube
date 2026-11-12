@@ -180,4 +180,109 @@ class LibraryModelTest {
         assertEquals(setOf("video:v2"), LibraryMapper.filter(items, "sara").map { it.id }.toSet())
         assertEquals(3, LibraryMapper.filter(items, null).size) // v3 is library only: it belongs to "All"
     }
+
+    // ---- dropped placements ----------------------------------------------------------------------------------------
+
+    private fun failedOutbox(reason: String?, serverVideoId: String = "v1", childId: String = "ali") = Rows.outbox(
+        "o1", "https://youtu.be/vid", state = OutboxVideoState.SYNCED, serverVideoId = serverVideoId,
+        placements = arrayOf(Rows.placement(childId, state = PlacementState.FAILED, reason = reason)),
+    )
+
+    @Test
+    fun aPlacementRejectedBecauseTheVideoIsUnavailable_saysSo_keepsTheBadge_andCanBeRemoved() {
+        val item = map(
+            videos = listOf(Rows.video("v1", status = VideoStatus.UNAVAILABLE)),
+            outbox = listOf(failedOutbox("This video is unavailable")),
+        ).single()
+        assertEquals(BadgeStatus.UNAVAILABLE, item.status)
+        assertEquals(LibraryNote.NOT_ADDED, item.note)
+        assertEquals(NotAddedReason.Unavailable, item.notAddedReason)
+        assertEquals(listOf("o1"), item.dismissibleOutboxIds)
+        assertTrue("a server video stays in the library", !item.removesRow)
+        assertTrue(item.libraryOnly)
+    }
+
+    @Test
+    fun anUnavailableVideo_isReportedAsUnavailable_evenWhenOnlyAStatusCodeWasStored() {
+        val item = map(videos = listOf(Rows.video("v1", status = VideoStatus.UNAVAILABLE)), outbox = listOf(failedOutbox("http_422"))).single()
+        assertEquals(NotAddedReason.Unavailable, item.notAddedReason)
+    }
+
+    @Test
+    fun aPlacementRejectedWithAServerReason_showsTheServersWords() {
+        val item = map(videos = listOf(Rows.video("v1")), outbox = listOf(failedOutbox("Plan is full"))).single()
+        assertEquals(LibraryNote.NOT_ADDED, item.note)
+        assertEquals(NotAddedReason.Server("Plan is full"), item.notAddedReason)
+        assertEquals(BadgeStatus.VERIFIED, item.status)
+    }
+
+    @Test
+    fun aPlacementThatFailedWithOnlyAStatusCode_hasNoReadableReason() {
+        val item = map(videos = listOf(Rows.video("v1")), outbox = listOf(failedOutbox("http_500"))).single()
+        assertEquals(LibraryNote.NOT_ADDED, item.note)
+        assertEquals(NotAddedReason.Unknown, item.notAddedReason)
+    }
+
+    @Test
+    fun aRejectedVideoCode_hasNoReadableReason_butStillSaysNotAdded() {
+        val item = map(
+            videos = listOf(Rows.video("v1")),
+            outbox = listOf(failedOutbox(PlacementErrors.REASON_VIDEO_REJECTED)),
+        ).single()
+        assertEquals(LibraryNote.NOT_ADDED, item.note)
+        assertEquals(NotAddedReason.Unknown, item.notAddedReason)
+    }
+
+    @Test
+    fun aRejectedLinkInTheOutbox_showsTheServersReason_andRemoveDeletesTheRow() {
+        val item = map(
+            outbox = listOf(Rows.outbox("o1", "https://youtu.be/x", state = OutboxVideoState.REJECTED, rejectReason = "That link is not a video")),
+        ).single()
+        assertEquals(BadgeStatus.UNAVAILABLE, item.status)
+        assertEquals(NotAddedReason.Server("That link is not a video"), item.notAddedReason)
+        assertEquals(listOf("o1"), item.dismissibleOutboxIds)
+        assertTrue(item.removesRow)
+    }
+
+    @Test
+    fun aRejectedLinkWhoseReasonMentionsUnavailable_isUnavailable() {
+        val item = map(outbox = listOf(Rows.outbox("o1", "https://youtu.be/x", state = OutboxVideoState.REJECTED, rejectReason = "Video unavailable"))).single()
+        assertEquals(NotAddedReason.Unavailable, item.notAddedReason)
+    }
+
+    @Test
+    fun aFailedPlacementForAChildWhoDoesHaveTheVideo_isNotReported() {
+        val item = map(
+            videos = listOf(Rows.video("v1")),
+            plans = listOf(Rows.plan("ali", Rows.item("i1", "", "v1"))),
+            outbox = listOf(failedOutbox("Plan is full")),
+        ).single()
+        assertNull(item.note)
+        assertNull(item.notAddedReason)
+        assertTrue(!item.canDismiss)
+    }
+
+    @Test
+    fun pendingAndDonePlacementsAreNeverDismissible() {
+        val outbox = Rows.outbox(
+            "o1", "https://youtu.be/vid", state = OutboxVideoState.SYNCED, serverVideoId = "v1",
+            placements = arrayOf(Rows.placement("ali", state = PlacementState.DONE)),
+        )
+        val item = map(videos = listOf(Rows.video("v1")), outbox = listOf(outbox)).single()
+        assertTrue(!item.canDismiss)
+    }
+
+    @Test
+    fun aWaitingPlacement_winsOverTheOldFailureNote() {
+        val outbox = Rows.outbox(
+            "o1", "https://youtu.be/vid", state = OutboxVideoState.SYNCED, serverVideoId = "v1",
+            placements = arrayOf(
+                Rows.placement("ali", state = PlacementState.FAILED, reason = "Plan is full"),
+                Rows.placement("sara", state = PlacementState.PENDING),
+            ),
+        )
+        val item = map(videos = listOf(Rows.video("v1")), outbox = listOf(outbox)).single()
+        assertEquals(LibraryNote.WAITING_TO_SEND, item.note)
+        assertTrue("nothing can be dismissed while something is still sending", !item.canDismiss)
+    }
 }

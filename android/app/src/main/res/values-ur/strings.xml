@@ -50,6 +50,9 @@
     <string name="facebook_parents_only">ابھی صرف والدین کے لیے</string>
     <string name="library_waiting_for_plan">پلان کا انتظار</string>
     <string name="library_not_added">شامل نہیں ہو سکی</string>
+    <string name="library_not_added_unavailable">منصوبے میں شامل نہیں ہوئی: ویڈیو دستیاب نہیں</string>
+    <string name="library_not_added_reason">منصوبے میں شامل نہیں ہوئی: %1$s</string>
+    <string name="library_remove">ہٹائیں</string>
 
     <!-- Children -->
     <string name="settings_manage_children">بچوں کا انتظام</string>
@@ -86,6 +89,7 @@
     <string name="share_save_all">تمام بچوں کے لیے محفوظ کریں</string>
     <string name="share_save_library">لائبریری میں محفوظ کریں</string>
     <string name="share_save_generic">محفوظ کریں</string>
+    <string name="share_pick_child_hint">محفوظ کرنے کے لیے چنیں کہ یہ کس کے لیے ہے۔</string>
     <string name="share_offline_note">انٹرنیٹ نہیں ہے۔ لنک اس فون پر محفوظ ہو گا اور انٹرنیٹ آنے پر بھیجا جائے گا۔</string>
     <string name="share_already_saved">%1$s کے لیے پہلے سے محفوظ ہے۔</string>
     <string name="share_already_in_library">یہ ویڈیو پہلے سے آپ کی لائبریری میں ہے۔</string>

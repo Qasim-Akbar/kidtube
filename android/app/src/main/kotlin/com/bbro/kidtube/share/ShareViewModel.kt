@@ -6,6 +6,7 @@ import com.bbro.kidtube.core.ConnectivityChecker
 import com.bbro.kidtube.core.DeviceRole
 import com.bbro.kidtube.core.PinResult
 import com.bbro.kidtube.core.PinStore
+import com.bbro.kidtube.core.ShareChildStore
 import com.bbro.kidtube.core.SessionStore
 import com.bbro.kidtube.data.dao.PlanWithItems
 import com.bbro.kidtube.data.entity.ChildEntity
@@ -69,6 +70,9 @@ data class ShareUiState(
 
     val selectedNames: List<String> get() = children.filter { it.id in selected }.map { it.name }
 
+    /** The one-line reason Save is off while nobody is chosen (not shown for "Library only", which needs no child). */
+    val needsChild: Boolean get() = phase == SharePhase.FORM && preset.addsPlanItem && selected.isEmpty()
+
     /** What "Save" needs: a full PIN, and someone to save it for unless the preset is "Library only". */
     val canSave: Boolean
         get() = phase == SharePhase.FORM && !busy && pin.length == PinStore.PIN_LENGTH && lockedSeconds == 0L &&
@@ -94,6 +98,7 @@ class ShareViewModel @Inject constructor(
     private val outbox: OutboxRepository,
     private val childSetup: ChildSetupRepository,
     private val connectivity: ConnectivityChecker,
+    private val lastChildren: ShareChildStore,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ShareUiState())
     val state: StateFlow<ShareUiState> = _state
@@ -102,6 +107,7 @@ class ShareViewModel @Inject constructor(
     private var link: LinkCheck.Supported? = null
     private var data = ShareData()
     private var pending: PendingSave? = null
+    private var lastUsed: Set<String> = emptySet()
 
     /** Called once by the Activity with the shared text; repeated calls (rotation) are ignored. */
     fun start(sharedText: String?) {
@@ -119,6 +125,7 @@ class ShareViewModel @Inject constructor(
                     return@launch
                 }
             }
+            lastUsed = lastChildren.last()
             _state.update { it.copy(offline = !connectivity.isOnline()) }
             combine(childrenRepo.observeChildren(), videoRepo.observeVideos(), planRepo.observeAll(), outbox.observeItems()) { c, v, p, o ->
                 ShareData(c, v, p, o)
@@ -132,9 +139,14 @@ class ShareViewModel @Inject constructor(
         val known = latest.videos.firstOrNull { SharedLinks.keyOf(it.platform, it.platformVideoId, it.url) == supported.key }
         _state.update { s ->
             val ids = latest.children.map { it.id }.toSet()
-            // The only child is pre-selected the first time children appear; after that the parent's choice is kept.
+            // First time children appear: the only child, else the child(ren) used last time (if they still exist), else nobody.
+            // After that the parent's own choice is kept.
             val firstTime = s.phase == SharePhase.LOADING || s.phase == SharePhase.NO_CHILDREN
-            val selected = if (firstTime && ids.size == 1) ids else s.selected intersect ids
+            val selected = when {
+                !firstTime -> s.selected intersect ids
+                ids.size == 1 -> ids
+                else -> lastUsed intersect ids
+            }
             val phase = when {
                 s.phase == SharePhase.SAVED || s.phase == SharePhase.NOT_PARENT || s.phase == SharePhase.UNSUPPORTED -> s.phase
                 latest.children.isEmpty() -> SharePhase.NO_CHILDREN
@@ -255,6 +267,7 @@ class ShareViewModel @Inject constructor(
 
     private suspend fun writeToOutbox(preset: SharePreset, childIds: List<String>, info: SavedInfo) {
         val supported = link ?: return
+        if (childIds.isNotEmpty()) lastChildren.remember(childIds)
         outbox.enqueue(supported.url, SharePreset.placements(preset, childIds)) // also asks for a sync
         _state.update { it.copy(busy = false, phase = SharePhase.SAVED, saved = info, pin = "") }
     }

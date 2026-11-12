@@ -53,6 +53,9 @@
     <string name="library_waiting_to_send">Waiting to send</string>
     <string name="library_waiting_for_plan">Waiting for a plan</string>
     <string name="library_not_added">Could not be added</string>
+    <string name="library_not_added_unavailable">Not added to the plan: video unavailable</string>
+    <string name="library_not_added_reason">Not added to the plan: %1$s</string>
+    <string name="library_remove">Remove</string>
 
     <!-- Children -->
     <string name="settings_manage_children">Manage children</string>
@@ -92,6 +95,7 @@
     <string name="share_save_all">Save for all children</string>
     <string name="share_save_library">Save to library</string>
     <string name="share_save_generic">Save</string>
+    <string name="share_pick_child_hint">Choose who this is for to save it.</string>
     <string name="share_offline_note">No internet. The link is saved on this phone and sent when you are back online.</string>
     <string name="share_already_saved">Already saved for %1$s.</string>
     <string name="share_already_in_library">This video is already in your library.</string>

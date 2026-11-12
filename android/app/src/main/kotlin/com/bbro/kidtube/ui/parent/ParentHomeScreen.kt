@@ -16,7 +16,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
@@ -59,6 +58,7 @@ import com.bbro.kidtube.ui.children.AddChildDialog
 import com.bbro.kidtube.ui.components.BadgeStatus
 import com.bbro.kidtube.ui.components.Chip
 import com.bbro.kidtube.ui.components.EnglishAndUrduPreviews
+import com.bbro.kidtube.ui.components.KidTubeIcons
 import com.bbro.kidtube.ui.components.PreviewSurface
 import com.bbro.kidtube.ui.components.PrimaryButton
 import com.bbro.kidtube.ui.components.VideoRow
@@ -72,7 +72,7 @@ internal const val LIBRARY_LIST_TAG = "library_list"
 private enum class HomeTab(val label: Int, val icon: ImageVector) {
     LIBRARY(R.string.nav_library, Icons.Filled.PlayArrow),
     PLANS(R.string.nav_plans, Icons.Filled.DateRange),
-    REPORTS(R.string.nav_reports, Icons.Filled.Info),
+    REPORTS(R.string.nav_reports, KidTubeIcons.BarChart),
 }
 
 /** Parent Home: the Library tab (screen 3 in docs/DESIGN.md) with Plans and Reports still "coming soon". */
@@ -118,6 +118,7 @@ fun ParentHomeScreen(
                     onAddChild = { addingChild = true },
                     onKidMode = { viewModel.enterKidMode(onKidMode) },
                     onSettings = onSettings,
+                    onDismiss = viewModel::dismiss,
                 )
                 HomeTab.PLANS -> com.bbro.kidtube.ui.plans.PlansTab(onAddChild = { addingChild = true })
                 HomeTab.REPORTS -> com.bbro.kidtube.ui.reports.ReportsTab(onAddChild = { addingChild = true })
@@ -137,6 +138,7 @@ internal fun LibraryContent(
     onAddChild: () -> Unit,
     onKidMode: () -> Unit,
     onSettings: () -> Unit,
+    onDismiss: (LibraryItem) -> Unit = {},
 ) {
     val colors = KidTubeTheme.colors
     val listState = rememberLazyListState()
@@ -215,7 +217,9 @@ internal fun LibraryContent(
                             thumbnailUrl = item.thumbnailUrl,
                             seed = item.id,
                             detail = detailText(item),
-                            note = noteText(item.note),
+                            note = noteText(item),
+                            actionLabel = if (item.canDismiss) stringResource(R.string.library_remove) else null,
+                            onAction = if (item.canDismiss) ({ onDismiss(item) }) else null,
                             extraNote = if (item.facebook) stringResource(R.string.facebook_parents_only) else null,
                         )
                     }
@@ -235,10 +239,14 @@ private fun detailText(item: LibraryItem): String {
 }
 
 @Composable
-private fun noteText(note: LibraryNote?): String? = when (note) {
+private fun noteText(item: LibraryItem): String? = when (item.note) {
     LibraryNote.WAITING_TO_SEND -> stringResource(R.string.library_waiting_to_send)
     LibraryNote.WAITING_FOR_PLAN -> stringResource(R.string.library_waiting_for_plan)
-    LibraryNote.NOT_ADDED -> stringResource(R.string.library_not_added)
+    LibraryNote.NOT_ADDED -> when (val reason = item.notAddedReason) {
+        NotAddedReason.Unavailable -> stringResource(R.string.library_not_added_unavailable)
+        is NotAddedReason.Server -> stringResource(R.string.library_not_added_reason, reason.text)
+        NotAddedReason.Unknown, null -> stringResource(R.string.library_not_added)
+    }
     null -> null
 }
 

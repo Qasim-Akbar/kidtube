@@ -25,6 +25,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import kotlinx.coroutines.flow.first
 import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
@@ -40,6 +41,40 @@ class OutboxAndPullTest : RoomTestBase() {
     }
 
     // ---- outbox -------------------------------------------------------------------------------------------
+
+    @Test
+    fun dismissingADroppedShare_clearsOnlyFailedPlacements_andRejectedLinks() = runBlocking {
+        val repo = OutboxRepository(db.outboxDao(), clock)
+        val dao = db.outboxDao()
+        // a synced video with one failed, one done and one pending placement
+        val synced = repo.enqueue("https://youtu.be/AAAAAAAAAAA", listOf(PlacementSpec(CHILD_A), PlacementSpec(CHILD_B), PlacementSpec(childId = null)))
+        dao.markVideoSynced(synced, "srv-1")
+        val rows = dao.placementsFor(synced).sortedBy { it.id }
+        dao.markPlacementFailed(rows[0].id, "This video is unavailable")
+        dao.markPlacementDone(rows[1].id)
+        // a link the server rejected outright
+        val rejected = repo.enqueue("https://youtu.be/BBBBBBBBBBB", listOf(PlacementSpec(CHILD_A)))
+        dao.markVideoRejected(rejected, "Unsupported link")
+        dao.failPendingPlacements(rejected, "video_rejected")
+
+        repo.dismissFailed(listOf(synced, rejected))
+
+        val left = dao.placementsFor(synced)
+        assertEquals(setOf(PlacementState.DONE, PlacementState.PENDING), left.map { it.state }.toSet())
+        assertEquals(2, left.size)
+        assertTrue("the synced video row stays", dao.observeVideos().first().any { it.id == synced })
+        assertTrue("the rejected link is gone", dao.observeVideos().first().none { it.id == rejected })
+        assertTrue(dao.placementsFor(rejected).isEmpty())
+    }
+
+    @Test
+    fun dismissingAPendingLink_changesNothing() = runBlocking {
+        val repo = OutboxRepository(db.outboxDao(), clock)
+        val id = repo.enqueue("https://youtu.be/CCCCCCCCCCC", listOf(PlacementSpec(CHILD_A)))
+        repo.dismissFailed(listOf(id))
+        assertEquals(1, db.outboxDao().placementsFor(id).size)
+        assertEquals(1, repo.pendingVideos().size)
+    }
 
     @Test
     fun enqueueSavesTheLinkAndItsPlacementsTogether() = runBlocking {

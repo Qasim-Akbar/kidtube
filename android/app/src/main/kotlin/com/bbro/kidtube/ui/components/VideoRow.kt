@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,6 +81,9 @@ fun VideoRow(
     note: String? = null,
     /** A second, muted line (e.g. "Parents only for now"). */
     extraNote: String? = null,
+    /** A small text button under the notes (e.g. "Remove"); shown only when both are given. */
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
 ) {
     val colors = KidTubeTheme.colors
     Surface(
@@ -110,6 +115,11 @@ fun VideoRow(
                 }
                 if (note != null) {
                     LatinAwareText(text = note, style = MaterialTheme.typography.labelMedium, color = colors.pendingText)
+                }
+                if (actionLabel != null && onAction != null) {
+                    TextButton(onClick = onAction, contentPadding = PaddingValues(horizontal = 0.dp)) {
+                        LatinAwareText(text = actionLabel, style = MaterialTheme.typography.labelLarge, color = colors.primary)
+                    }
                 }
             }
         }

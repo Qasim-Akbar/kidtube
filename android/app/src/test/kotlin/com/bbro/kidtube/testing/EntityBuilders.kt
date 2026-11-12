@@ -60,9 +60,10 @@ object Rows {
         state: OutboxVideoState = OutboxVideoState.PENDING,
         serverVideoId: String? = null,
         createdAt: Instant = Instant.parse("2026-11-02T00:00:00Z"),
+        rejectReason: String? = null,
         vararg placements: OutboxPlacementEntity,
     ) = OutboxItem(
-        OutboxVideoEntity(id, url, state, serverVideoId, null, 0, createdAt),
+        OutboxVideoEntity(id, url, state, serverVideoId, rejectReason, 0, createdAt),
         placements.map { it.copy(outboxVideoId = id) },
     )
 

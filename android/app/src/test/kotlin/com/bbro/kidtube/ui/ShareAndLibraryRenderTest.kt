@@ -14,6 +14,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.LayoutDirection
@@ -233,6 +234,48 @@ class ShareAndLibraryRenderTest {
         compose.onNodeWithText("صرف لائبریری میں شامل ہوئی۔").assertIsDisplayed()
     }
 
+    @Test
+    @Config(qualifiers = EN)
+    fun share_noChildSelected_showsTheHint_andSaveIsOff() {
+        share(form.copy(selected = emptySet()))
+        compose.onNodeWithText("Choose who this is for to save it.").assertIsDisplayed()
+        compose.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
+    @Test
+    @Config(qualifiers = EN)
+    fun share_withAChild_hasNoHint() {
+        share(form)
+        compose.onNodeWithText("Choose who this is for to save it.").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = UR)
+    fun share_noChildSelected_hint_ur() {
+        share(form.copy(selected = emptySet()))
+        compose.onNodeWithText("محفوظ کرنے کے لیے چنیں کہ یہ کس کے لیے ہے۔").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = EN)
+    fun share_saveButtonDoesNotMove_whenTheOfflineNoteAppears() {
+        val offline = androidx.compose.runtime.mutableStateOf(false)
+        show {
+            ShareContent(
+                state = form.copy(offline = offline.value), onToggleChild = {}, onToggleAll = {}, onPreset = {}, onPinChange = {}, onSave = {},
+                onCreatePlans = {}, onSaveWithoutPlan = {}, onClose = {}, addChildDialog = { Box {} },
+            )
+        }
+        compose.waitForIdle()
+        val before = compose.onNodeWithText("Save for Ali").fetchSemanticsNode().boundsInRoot.top
+        offline.value = true
+        compose.waitForIdle()
+        compose.onNodeWithText("No internet. The link is saved on this phone and sent when you are back online.").assertIsDisplayed()
+        val after = compose.onNodeWithText("Save for Ali").fetchSemanticsNode().boundsInRoot.top
+        assertEquals("Save must not shift when the note appears", before, after, 0.5f)
+        compose.onNodeWithTag(com.bbro.kidtube.share.SHARE_STATUS_SLOT_TAG).assertIsDisplayed()
+    }
+
     // ---- library --------------------------------------------------------------------------------------------------
 
     private fun library(state: LibraryUiState, onSelect: (String?) -> Unit = {}, onKid: () -> Unit = {}, onAdd: () -> Unit = {}) = show {
@@ -366,5 +409,58 @@ class ShareAndLibraryRenderTest {
         val third = compose.onNodeWithText("3", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         assertTrue("digits must run left to right: $first, $second, $third", first.left < second.left && second.left < third.left)
         assertTrue("the first digit sits in the left half", first.left < root.width / 2)
+    }
+
+    // ---- dropped placements ------------------------------------------------------------------------------------------
+
+    private fun dropped(reason: com.bbro.kidtube.ui.parent.NotAddedReason?, ids: List<String> = listOf("o1")) = LibraryUiState(
+        loaded = true, children = listOf(ali), totalItems = 1,
+        items = listOf(
+            LibraryItem(
+                "v1", "Lost video", null, BadgeStatus.UNAVAILABLE, emptyList(), LibraryNote.NOT_ADDED,
+                notAddedReason = reason, dismissibleOutboxIds = ids,
+            ),
+        ),
+    )
+
+    @Test
+    @Config(qualifiers = EN)
+    fun library_droppedPlacement_unavailable_keepsTheBadge_andOffersRemove() {
+        var removed = 0
+        show { LibraryContent(dropped(com.bbro.kidtube.ui.parent.NotAddedReason.Unavailable), {}, {}, {}, {}, {}, onDismiss = { removed++ }) }
+        compose.onNodeWithText("Not added to the plan: video unavailable").assertIsDisplayed()
+        compose.onNodeWithText("Unavailable").assertIsDisplayed()
+        compose.onNodeWithText("Remove").performClick()
+        assertEquals(1, removed)
+    }
+
+    @Test
+    @Config(qualifiers = EN)
+    fun library_droppedPlacement_showsTheServersReason() {
+        show { LibraryContent(dropped(com.bbro.kidtube.ui.parent.NotAddedReason.Server("Plan is full")), {}, {}, {}, {}, {}) }
+        compose.onNodeWithText("Not added to the plan: Plan is full").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = EN)
+    fun library_droppedPlacement_withoutAReadableReason_saysCouldNotBeAdded() {
+        show { LibraryContent(dropped(com.bbro.kidtube.ui.parent.NotAddedReason.Unknown), {}, {}, {}, {}, {}) }
+        compose.onNodeWithText("Could not be added").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = UR)
+    fun library_droppedPlacement_ur_rtl() {
+        show { LibraryContent(dropped(com.bbro.kidtube.ui.parent.NotAddedReason.Unavailable), {}, {}, {}, {}, {}) }
+        assertLocale("ur", LayoutDirection.Rtl)
+        compose.onNodeWithText("منصوبے میں شامل نہیں ہوئی: ویڈیو دستیاب نہیں").assertIsDisplayed()
+        compose.onNodeWithText("ہٹائیں").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = EN)
+    fun library_rowsThatCannotBeDismissed_haveNoRemoveButton() {
+        show { LibraryContent(dropped(null, ids = emptyList()), {}, {}, {}, {}, {}) }
+        compose.onNodeWithText("Remove").assertDoesNotExist()
     }
 }

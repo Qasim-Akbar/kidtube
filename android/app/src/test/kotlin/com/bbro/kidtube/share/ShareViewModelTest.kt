@@ -3,6 +3,7 @@ package com.bbro.kidtube.share
 import com.bbro.kidtube.core.ConnectivityChecker
 import com.bbro.kidtube.core.PinHasher
 import com.bbro.kidtube.core.PinStore
+import com.bbro.kidtube.core.ShareChildStore
 import com.bbro.kidtube.data.remote.KidTubeJson
 import com.bbro.kidtube.data.remote.PlanWrite
 import com.bbro.kidtube.data.repo.ChildSetupRepository
@@ -37,6 +38,7 @@ import java.time.LocalDate
 class ShareViewModelTest : SyncTestBase() {
     private lateinit var pins: PinStore
     private var online = true
+    private lateinit var lastChildren: ShareChildStore
 
     private val newLink = "https://youtu.be/zzzzzzzzzzz"
     private val aliHasThis = "https://youtu.be/vid00000001" // Ali's plan already contains it (contract fixture 73)
@@ -44,6 +46,7 @@ class ShareViewModelTest : SyncTestBase() {
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
+        lastChildren = ShareChildStore(session.backing)
         pins = PinStore(session.backing, session.cipher, clock, PinHasher(SecureRandom(), 1_000))
         route("PUT /children/*") { json(ContractFixtures.load(25).status, ContractFixtures.load(25).bodyText) }
     }
@@ -58,7 +61,7 @@ class ShareViewModelTest : SyncTestBase() {
         )
         return ShareViewModel(
             session.store, pins, ChildrenRepository(db.childDao()), VideoRepository(db.videoDao()), PlanRepository(db.planDao()),
-            outboxRepo, setup, connectivity,
+            outboxRepo, setup, connectivity, lastChildren,
         )
     }
 
@@ -139,6 +142,65 @@ class ShareViewModelTest : SyncTestBase() {
     }
 
     // ---- saving ---------------------------------------------------------------------------------------------------
+
+    // ---- who is pre-selected ------------------------------------------------------------------------------------------
+
+    @Test
+    fun withTwoChildrenAndNoHistory_nobodyIsPreselected_andTheHintSaysWhy() = runBlocking<Unit> {
+        val vm = readyForm()
+        assertTrue(vm.state.value.selected.isEmpty())
+        assertTrue("the one-line hint shows", vm.state.value.needsChild)
+        vm.onToggleChild(vm.childId("Ali"))
+        assertFalse(vm.state.value.needsChild)
+        vm.onToggleChild(vm.childId("Ali"))
+        vm.onPreset(SharePreset.LIBRARY_ONLY)
+        assertFalse("library only needs no child, so no hint", vm.state.value.needsChild)
+    }
+
+    @Test
+    fun exactlyOneChild_isPreselected() = runBlocking<Unit> {
+        loginAsParent()
+        pins.setPin("1234")
+        seedSnapshot()
+        db.openHelper.writableDatabase.execSQL("DELETE FROM child WHERE name != 'Ali'")
+        val vm = viewModel().also {
+            it.start("Look! $newLink")
+            it.until { s -> s.phase == SharePhase.FORM }
+        }
+        assertEquals(listOf("Ali"), vm.state.value.selectedNames)
+        assertTrue(vm.state.value.canSave.not()) // still needs the PIN
+        vm.onPinChange("1234")
+        assertTrue(vm.state.value.canSave)
+    }
+
+    @Test
+    fun withSeveralChildren_theLastUsedChildIsPreselected_nextTime() = runBlocking<Unit> {
+        val first = readyForm()
+        first.onToggleChild(first.childId("Sara"))
+        first.onPinChange("1234")
+        first.save()
+        first.until { it.phase == SharePhase.SAVED }
+
+        val second = viewModel().also {
+            it.start("Another https://youtu.be/yyyyyyyyyyy")
+            it.until { s -> s.phase == SharePhase.FORM }
+        }
+        assertEquals(listOf("Sara"), second.state.value.selectedNames)
+        assertFalse(second.state.value.needsChild)
+    }
+
+    @Test
+    fun aRememberedChildWhoNoLongerExists_isIgnored() = runBlocking<Unit> {
+        loginAsParent()
+        pins.setPin("1234")
+        seedSnapshot()
+        lastChildren.remember(listOf("deleted-child-id"))
+        val vm = viewModel().also {
+            it.start("Look! $newLink")
+            it.until { s -> s.phase == SharePhase.FORM }
+        }
+        assertTrue(vm.state.value.selected.isEmpty())
+    }
 
     @Test
     fun save_needsAPin_andSomeone() = runBlocking<Unit> {
@@ -282,7 +344,7 @@ class ShareViewModelTest : SyncTestBase() {
         first.until { it.phase == SharePhase.SAVED }
 
         val second = readyFormFor(newLink)
-        second.onToggleChild(sara)
+        assertEquals("Sara is pre-selected as the last used child", listOf("Sara"), second.state.value.selectedNames)
         second.onPinChange("1234")
         second.save()
 
