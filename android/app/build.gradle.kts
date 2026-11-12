@@ -11,10 +11,26 @@ val debugApiBaseUrlRaw: String = (providers.gradleProperty("KIDTUBE_DEBUG_API_BA
 val debugApiBaseUrl: String = if (debugApiBaseUrlRaw.endsWith("/")) debugApiBaseUrlRaw else "$debugApiBaseUrlRaw/"
 
 // ---- Release API base URL -------------------------------------------------------------------
-// Never hard-coded in source: taken from the Gradle property KIDTUBE_API_BASE_URL.
-// Release tasks fail (see verifyReleaseApiBaseUrl) while it is missing, CHANGE-ME or not https.
-val releaseApiBaseUrlRaw: String = (providers.gradleProperty("KIDTUBE_API_BASE_URL").orNull ?: "").trim()
+// Never hard-coded in source. Either Gradle property KIDTUBE_API_BASE_URL (full URL) or KIDTUBE_DOMAIN (host name only,
+// becomes https://<domain>/). A real KIDTUBE_API_BASE_URL wins; the committed gradle.properties value CHANGE-ME does not.
+// Release tasks fail (see verifyReleaseApiBaseUrl) while neither is set, or the result is not https.
+val releaseDomain: String = (providers.gradleProperty("KIDTUBE_DOMAIN").orNull ?: "").trim()
+val explicitReleaseUrl: String = (providers.gradleProperty("KIDTUBE_API_BASE_URL").orNull ?: "").trim()
+val releaseApiBaseUrlRaw: String = when {
+    explicitReleaseUrl.isNotEmpty() && !explicitReleaseUrl.contains("CHANGE-ME", ignoreCase = true) -> explicitReleaseUrl
+    releaseDomain.isNotEmpty() -> "https://$releaseDomain"
+    else -> explicitReleaseUrl
+}
 val releaseApiBaseUrl: String = if (releaseApiBaseUrlRaw.endsWith("/")) releaseApiBaseUrlRaw else "$releaseApiBaseUrlRaw/"
+
+// ---- Release signing ------------------------------------------------------------------------
+// android/keystore.properties (git-ignored; template: keystore.properties.example) names a LOCAL keystore:
+//   storeFile=/home/you/.kidtube/kidtube-release.jks   storePassword=...   keyAlias=kidtube   keyPassword=...
+// Without the file the release APK is built UNSIGNED (it cannot be installed until signed).
+val keystorePropertiesFile: File = rootProject.file("keystore.properties")
+val keystoreProperties = java.util.Properties().apply {
+    if (keystorePropertiesFile.isFile) keystorePropertiesFile.inputStream().use { load(it) }
+}
 
 android {
     namespace = "com.bbro.kidtube"
@@ -33,6 +49,17 @@ android {
         buildConfig = true
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.isFile) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile") ?: error("keystore.properties: storeFile is missing"))
+                storePassword = keystoreProperties.getProperty("storePassword") ?: error("keystore.properties: storePassword is missing")
+                keyAlias = keystoreProperties.getProperty("keyAlias") ?: error("keystore.properties: keyAlias is missing")
+                keyPassword = keystoreProperties.getProperty("keyPassword") ?: error("keystore.properties: keyPassword is missing")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             // Emulator -> host machine. Cleartext to this host only, see src/debug/res/xml.
@@ -45,6 +72,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "API_BASE_URL", "\"$releaseApiBaseUrl\"")
             buildConfigField("boolean", "ALLOW_CLEARTEXT_API", "false")
+            if (keystorePropertiesFile.isFile) signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -147,21 +175,23 @@ dependencies {
 // ---- Fail release builds early when the base URL is not configured ---------------------------
 val verifyReleaseApiBaseUrl = tasks.register("verifyReleaseApiBaseUrl") {
     group = "verification"
-    description = "Fails if KIDTUBE_API_BASE_URL is missing, CHANGE-ME or not an https URL."
+    description = "Fails if neither KIDTUBE_DOMAIN nor KIDTUBE_API_BASE_URL gives a real https URL."
     val raw = releaseApiBaseUrlRaw
+    val domain = releaseDomain
     doLast {
         val problem = when {
             raw.isEmpty() -> "is not set"
             raw.contains("CHANGE-ME", ignoreCase = true) -> "is still CHANGE-ME"
+            domain.isNotEmpty() && !Regex("^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$").matches(domain) -> "KIDTUBE_DOMAIN must be a bare host name such as kidtube.example.org, no https:// and no slash (got '$domain')"
             !raw.startsWith("https://") -> "must start with https:// (got '$raw')"
             else -> null
         }
         if (problem != null) {
             throw GradleException(
-                "Release build blocked: Gradle property KIDTUBE_API_BASE_URL $problem.\n" +
-                    "Set it to your backend URL, e.g. add this line to ~/.gradle/gradle.properties:\n" +
-                    "    KIDTUBE_API_BASE_URL=https://kidtube.example.com/\n" +
-                    "or pass -PKIDTUBE_API_BASE_URL=https://kidtube.example.com/ on the command line.",
+                "Release build blocked: the backend address $problem.\n" +
+                    "Set your domain, e.g. add this line to ~/.gradle/gradle.properties:\n" +
+                    "    KIDTUBE_DOMAIN=kidtube.example.org\n" +
+                    "or pass -PKIDTUBE_DOMAIN=kidtube.example.org (or a full -PKIDTUBE_API_BASE_URL=https://.../) on the command line.",
             )
         }
     }

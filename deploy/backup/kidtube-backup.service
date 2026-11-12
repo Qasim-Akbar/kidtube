@@ -1,4 +1,4 @@
-# /etc/systemd/system/kidtube-backup.service  (installed by deploy/deploy.sh; run by kidtube-backup.timer)
+# /etc/systemd/system/kidtube-backup.service  (rendered by deploy/deploy.sh; run by kidtube-backup.timer)
 [Unit]
 Description=KidTube PostgreSQL backup (pg_dump, custom format)
 After=postgresql.service
@@ -11,7 +11,7 @@ Group=postgres
 ExecStart=/usr/local/sbin/kidtube-backup
 NoNewPrivileges=yes
 ProtectSystem=strict
-ReadWritePaths=/var/backups/kidtube
+ReadWritePaths=@KIDTUBE_BACKUP_DIR@
 ProtectHome=yes
 PrivateTmp=yes
 PrivateDevices=yes

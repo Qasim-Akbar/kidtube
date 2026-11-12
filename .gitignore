@@ -20,3 +20,6 @@ keystore.properties
 # OS / editor noise
 .DS_Store
 Thumbs.db
+
+# Deployment settings with this machine's domain and email (copy of deploy/deploy.env.example)
+deploy/deploy.env

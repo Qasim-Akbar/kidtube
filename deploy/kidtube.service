@@ -1,19 +1,20 @@
-# /etc/systemd/system/kidtube.service  (installed by deploy/deploy.sh)
+# /etc/systemd/system/kidtube.service  (rendered and installed by deploy/deploy.sh; placeholders are filled from deploy/deploy.env)
 [Unit]
 Description=KidTube API (FastAPI / uvicorn)
 After=network-online.target postgresql.service
-Wants=network-online.target postgresql.service
+Wants=network-online.target
 # Give up after 5 crashes in a minute instead of restarting forever; `systemctl reset-failed kidtube` to retry.
 StartLimitIntervalSec=60
 StartLimitBurst=5
 
 [Service]
 Type=simple
-User=kidtube
-Group=kidtube
+User=@KIDTUBE_USER@
+Group=@KIDTUBE_USER@
 # No .env file lives here: all settings come from the EnvironmentFile below.
-WorkingDirectory=/opt/kidtube
-EnvironmentFile=/etc/kidtube/kidtube.env
+WorkingDirectory=@KIDTUBE_DIR@
+# 0600 root:root is fine: systemd (root) reads it, the service process never sees the file, only the variables.
+EnvironmentFile=@KIDTUBE_ENV_FILE@
 Environment=PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
 # EXACTLY ONE WORKER. The login / pairing rate limiters (app/core/ratelimit.py) keep their failure counters in this
@@ -23,8 +24,8 @@ Environment=PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 #
 # --no-proxy-headers: uvicorn must NOT rewrite the client address or scheme from X-Forwarded-* headers. The app does that
 # itself, and only when TRUST_PROXY_HEADERS=true (see DEPLOY.md, "Proxy headers"), so there is one switch, not two.
-ExecStart=/opt/kidtube/venv/bin/uvicorn app.main:app \
-    --host 127.0.0.1 --port 8000 \
+ExecStart=@KIDTUBE_DIR@/venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 --port @KIDTUBE_PORT@ \
     --workers 1 \
     --no-proxy-headers \
     --no-server-header \

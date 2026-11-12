@@ -54,16 +54,20 @@ with Parent mode and Kid mode, plus a Python FastAPI backend on a VPS.
 - Time: never call datetime.now() directly in app code; use the injectable get_now clock (app/core/clock.py).
 - Everything is scoped by family_id. Another family's rows must return 404, not 403.
 - Run uvicorn with a single worker (in-memory rate limiter).
-- Production (Ubuntu VPS, no Docker): see DEPLOY.md; files in deploy/ (systemd unit, nginx, deploy.sh, backups, ufw).
+- Production (Ubuntu VPS, no Docker, nginx ALREADY serving other sites): see DEPLOY.md; files in deploy/. All settings in ONE git-ignored file,
+  `deploy/deploy.env` (template `deploy.env.example`: KIDTUBE_DOMAIN, KIDTUBE_USER, KIDTUBE_PORT=8001, KIDTUBE_DIR=/opt/kidtube, DB/cert/backup values), parsed
+  (never sourced) and validated by `deploy/lib.sh`, which also renders the `@PLACEHOLDER@` templates (unit, nginx, backup files, env example).
+  `check.sh` = read-only conflict report; `install.sh` = idempotent, asks before every system change, never restarts nginx/postgres (reload after `nginx -t` only);
+  `deploy.sh` = update (backup, code, venv, units, alembic as the service user, restart of kidtube only). No firewall/fail2ban/pg_hba/postgresql.conf edits.
   deploy/constraints.txt pins dependencies (tested on Python 3.12). Interactive docs are off unless APP_ENV=dev.
-  New top-level API routes must also be added to the path list in deploy/nginx/kidtube.conf.
+  New top-level API routes must also be added to the path list in deploy/nginx/kidtube.conf (the full HTTPS template; `kidtube-bootstrap.conf` is only the pre-certificate HTTP stub).
 
 ## Status
 Done (backend): scaffold, models + migrations, auth, children, devices/pairing, login rate limit,
 videos + oEmbed, pure plan engine (+ JSON vectors), plan/events/feed/projection endpoints,
 sync (snapshot pull with ETag; per-child event history in the snapshot for offline engine use, built by the same
 loader as the feed; combined push), per-child reports.
-Deployment files done (deploy/, DEPLOY.md; not yet run on a real VPS).
+Deployment files done (deploy/, DEPLOY.md; reworked for a shared-nginx VPS; not yet run on a real VPS).
 Verified on PostgreSQL 18 as well as SQLite: the full test suite and the Alembic migrations.
 Done (android): project skeleton; data layer, networking and auth (Retrofit API + DTOs, SessionStore, token refresh,
 Room, repositories); sync engine + WorkManager (SyncEngine push -> placements -> pull -> reverify, SyncWorker, SyncScheduler,
@@ -184,6 +188,19 @@ Next: run K3 against real YouTube/Facebook on a device; design the remaining "St
   PrimaryButton, Chip, StatusBadge (+ BadgeStatus), PinField (digits only, default length 4 = DEFAULT_PIN_LENGTH, not yet a spec decision), KidTubeLogo.
   Still to build: VideoRow, KidAvatar, KidTile, LeftTodayDots, TimeLeftBar.
 - UI tests: Compose tests run under Robolectric with `@Config(qualifiers = "ur-ldrtl")` (plain "ur" does NOT give RTL in Robolectric).
+
+## Android release build for the VPS (signed APK)
+- Domain: never in source. Set the Gradle property `KIDTUBE_DOMAIN=kidtube.yourdomain.org` (bare host name) in `~/.gradle/gradle.properties`, or pass `-PKIDTUBE_DOMAIN=...`; release `BuildConfig.API_BASE_URL`
+  becomes `https://<domain>/`. A real `KIDTUBE_API_BASE_URL` (full URL) still works and wins; the committed `CHANGE-ME` in android/gradle.properties does not. Release tasks fail while neither gives an https URL.
+- Keystore (once; keep it OUT of the repo and back it up: a lost keystore means phones must uninstall before a differently signed update installs):
+  `mkdir -p ~/.kidtube && keytool -genkeypair -v -keystore ~/.kidtube/kidtube-release.jks -alias kidtube -keyalg RSA -keysize 4096 -validity 10000`
+  then `cp android/keystore.properties.example android/keystore.properties` and fill in `storeFile` (absolute path), `storePassword`, `keyAlias`, `keyPassword`.
+  `keystore.properties`, `*.jks`, `*.keystore` are git-ignored. Without `keystore.properties` the release APK is built UNSIGNED (cannot be installed).
+- Build: `cd android && ./gradlew assembleRelease` -> `app/build/outputs/apk/release/app-release.apk` (`-PKIDTUBE_DOMAIN=...` if not in ~/.gradle/gradle.properties). Release is minified, https only, no cleartext.
+  Verify the signature: `$ANDROID_HOME/build-tools/<ver>/apksigner verify --print-certs app-release.apk`.
+- Install on each phone (parents' and kids'): copy the APK (USB/cloud) and open it with "install unknown apps" allowed for that file manager, or `adb install -r app-release.apk` with USB debugging.
+  Same keystore for every update, so `adb install -r` / opening the new APK upgrades in place and keeps data. Parent phone: sign in with the parent account from DEPLOY.md step 8; kid phones: pair with the code.
+- Not yet verified: the signing/domain Gradle changes could not be built on the machine they were written on (no JDK/SDK there). Run `./gradlew assembleRelease` once and fix anything it reports.
 
 ## Android (android/)
 - Stack: Kotlin 2.4, Jetpack Compose + Material 3, single module `app`, Gradle Kotlin DSL + version catalog

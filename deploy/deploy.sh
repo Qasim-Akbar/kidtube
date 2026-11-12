@@ -1,32 +1,40 @@
-#!/usr/bin/env bash
-# KidTube deploy / update. Run ON THE VPS by an admin, from a checkout of this repository:
+# KidTube deploy / UPDATE. Run ON THE VPS by an admin, from a checkout of this repository, AFTER deploy/install.sh
+# has done the one-time setup (user, database, env file, nginx, certificate):
 #
 #     git pull                       # as yourself, in the checkout (or use --pull below)
 #     sudo deploy/deploy.sh [--pull] [--skip-backup]
 #
-# Idempotent: safe to run again after any failure. Stops at the first error. Never prints secrets: it does not read
-# the contents of the env file except to test for placeholders, and it passes no secret on any command line.
+# Settings come from deploy/deploy.env (see deploy.env.example). Idempotent: safe to run again after any failure.
+# Stops at the first error. Never prints secrets: it does not read the env file except to test for placeholders.
 #
-# What it does: user + directories -> env file check -> pre-deploy database backup -> copy code to /opt/kidtube/src ->
-# venv + pinned dependencies + non-editable install -> systemd units -> alembic upgrade head -> restart ->
-# smoke check on http://127.0.0.1:8000. Nginx, certbot, ufw, fail2ban and PostgreSQL setup are one-time manual steps
-# (DEPLOY.md).
+# What it does: directories -> env file check -> pre-deploy database backup -> copy code to $KIDTUBE_DIR/src ->
+# venv + pinned dependencies + non-editable install -> systemd units (rendered) -> alembic upgrade head (as the service
+# user) -> restart OF THE KIDTUBE SERVICE ONLY -> smoke check on http://127.0.0.1:$KIDTUBE_PORT.
+# It never touches nginx, certbot, PostgreSQL's configuration or any other service.
 set -Eeuo pipefail
 umask 022
 
-APP_USER="kidtube"
-APP_HOME="/opt/kidtube"
-SRC_DIR="$APP_HOME/src"
-VENV="$APP_HOME/venv"
-ENV_DIR="/etc/kidtube"
-ENV_FILE="$ENV_DIR/kidtube.env"
-BACKUP_DIR="/var/backups/kidtube"
-BACKUP_BIN="/usr/local/sbin/kidtube-backup"
-RESTORE_BIN="/usr/local/sbin/kidtube-restore-test"
-HEALTH_URL="http://127.0.0.1:8000"
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
+die() {
+    printf 'ERROR: %s\n' "$*" >&2
+    if declare -F print_rollback > /dev/null; then print_rollback; fi
+    exit 1
+}
+# shellcheck source=deploy/lib.sh
+. "$SCRIPT_DIR/lib.sh"
+load_config
+
+APP_USER="$KIDTUBE_USER"
+APP_HOME="$KIDTUBE_DIR"
+SRC_DIR="$APP_HOME/src"
+VENV="$APP_HOME/venv"
+ENV_FILE="$KIDTUBE_ENV_FILE"
+ENV_DIR="$(dirname "$ENV_FILE")"
+BACKUP_DIR="$KIDTUBE_BACKUP_DIR"
+BACKUP_BIN="/usr/local/sbin/kidtube-backup"
+RESTORE_BIN="/usr/local/sbin/kidtube-restore-test"
+HEALTH_URL="http://127.0.0.1:$KIDTUBE_PORT"
 
 DO_PULL=0
 DO_BACKUP=1
@@ -34,12 +42,10 @@ for arg in "$@"; do
     case "$arg" in
         --pull) DO_PULL=1 ;;
         --skip-backup) DO_BACKUP=0 ;;
-        -h | --help) sed -n '2,13p' "${BASH_SOURCE[0]}"; exit 0 ;;
+        -h | --help) sed -n '2,15p' "${BASH_SOURCE[0]}"; exit 0 ;;
         *) echo "unknown option: $arg (see --help)" >&2; exit 2 ;;
     esac
 done
-
-log() { printf '==> %s\n' "$*"; }
 
 PREV_REVISION="(unknown: first deploy or database not reachable)"
 BACKUP_FILE="(none taken)"
@@ -76,12 +82,6 @@ print_rollback() {
     } >&2
 }
 
-die() {
-    printf 'ERROR: %s\n' "$*" >&2
-    print_rollback
-    exit 1
-}
-
 on_error() {  # unexpected command failure (set -e)
     local code=$?
     print_rollback
@@ -116,7 +116,7 @@ if ! id "$APP_USER" > /dev/null 2>&1; then
     useradd --system --user-group --home-dir /nonexistent --no-create-home --shell /usr/sbin/nologin "$APP_USER"
 fi
 install -d -m 755 -o root -g root "$APP_HOME"
-install -d -m 750 -o root -g "$APP_USER" "$ENV_DIR"
+install -d -m 750 -o root -g root "$ENV_DIR"
 # Backups: only meaningful once PostgreSQL (and its `postgres` user) exist.
 if id postgres > /dev/null 2>&1; then
     install -d -m 700 -o postgres -g postgres "$BACKUP_DIR"
@@ -124,14 +124,9 @@ fi
 
 # ------------------------------------------------------------------------------------------------ env file
 STAGE="checking $ENV_FILE"
-if [ ! -f "$ENV_FILE" ]; then
-    install -m 640 -o root -g "$APP_USER" "$SCRIPT_DIR/kidtube.env.example" "$ENV_FILE"
-    echo "Created $ENV_FILE from the example. Edit it now (JWT_SECRET, database password), then run this script again:" >&2
-    echo "    sudo nano $ENV_FILE" >&2
-    exit 3
-fi
-chown root:"$APP_USER" "$ENV_FILE"
-chmod 640 "$ENV_FILE"
+[ -f "$ENV_FILE" ] || die "$ENV_FILE does not exist: run sudo deploy/install.sh first (it creates the file with generated secrets)"
+chown root:root "$ENV_FILE"
+chmod 600 "$ENV_FILE"
 if grep -v '^[[:space:]]*#' "$ENV_FILE" | grep -q 'CHANGE_ME'; then
     die "$ENV_FILE still contains CHANGE_ME placeholders (JWT_SECRET / database password). Edit it and run again."
 fi
@@ -198,11 +193,14 @@ log "installing pinned dependencies and the project (non-editable)"
 
 # ------------------------------------------------------------------------------------------------ systemd units
 STAGE="installing systemd units"
-install -m 644 -o root -g root "$SCRIPT_DIR/kidtube.service" /etc/systemd/system/kidtube.service
-install -m 755 -o root -g root "$SCRIPT_DIR/backup/kidtube-backup.sh" "$BACKUP_BIN"
-install -m 755 -o root -g root "$SCRIPT_DIR/backup/kidtube-restore-test.sh" "$RESTORE_BIN"
-install -m 644 -o root -g root "$SCRIPT_DIR/backup/kidtube-backup.service" /etc/systemd/system/kidtube-backup.service
-install -m 644 -o root -g root "$SCRIPT_DIR/backup/kidtube-backup.timer" /etc/systemd/system/kidtube-backup.timer
+install_rendered() { # install_rendered MODE TEMPLATE DEST
+    render "$2" | install -m "$1" -o root -g root /dev/stdin "$3"
+}
+install_rendered 644 "$SCRIPT_DIR/kidtube.service" /etc/systemd/system/kidtube.service
+install_rendered 755 "$SCRIPT_DIR/backup/kidtube-backup.sh" "$BACKUP_BIN"
+install_rendered 755 "$SCRIPT_DIR/backup/kidtube-restore-test.sh" "$RESTORE_BIN"
+install_rendered 644 "$SCRIPT_DIR/backup/kidtube-backup.service" /etc/systemd/system/kidtube-backup.service
+install_rendered 644 "$SCRIPT_DIR/backup/kidtube-backup.timer" /etc/systemd/system/kidtube-backup.timer
 systemctl daemon-reload
 systemctl enable kidtube.service > /dev/null 2>&1
 if id postgres > /dev/null 2>&1; then

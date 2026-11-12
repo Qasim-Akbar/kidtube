@@ -1,422 +1,259 @@
-# Deploying KidTube on a single Ubuntu VPS (no Docker)
+# Deploying KidTube on a VPS that already runs nginx
 
-Runbook for a fresh **Ubuntu 24.04** server and the domain **api.example.com** (replace it everywhere with your real
-domain). Follow it top to bottom. Commands starting with `sudo` run on the VPS; "your workstation" means your own computer.
+Runbook for an **Ubuntu** VPS where nginx (and possibly PostgreSQL) already serve **other sites**. KidTube is added as one more
+nginx site on **one host name you own** (for example `kidtube.yourdomain.org`). Nothing else on the machine is changed: no edits to
+`nginx.conf` or other sites, no nginx or PostgreSQL restart, no change to other databases, `pg_hba.conf` or the firewall.
 
-What you end up with:
+All settings live in **one file**, `deploy/deploy.env`, which every script reads. Below, `KIDTUBE_*` names refer to its values.
 
 ```
-Android app ──HTTPS──► nginx (443, TLS from Let's Encrypt)
-                         └─► uvicorn, ONE worker, 127.0.0.1:8000   (systemd unit "kidtube", user "kidtube")
-                               └─► PostgreSQL, localhost only        (role + database "kidtube")
+Android app ──HTTPS──► nginx (existing, :443)  server_name KIDTUBE_DOMAIN only
+                         └─► uvicorn, ONE worker, 127.0.0.1:KIDTUBE_PORT   (systemd "kidtube", unprivileged user KIDTUBE_USER)
+                               └─► PostgreSQL 127.0.0.1, own role + database  (no superuser)
 ```
 
 | Path | What |
 |---|---|
-| `/opt/kidtube/venv` | Python virtualenv (owned by root, read-only for the service) |
-| `/opt/kidtube/src` | copy of `backend/` (migrations live here; `src.prev` is the previous deploy) |
-| `/opt/kidtube/constraints.txt` | pinned dependency versions |
-| `/etc/kidtube/kidtube.env` | all settings and secrets, mode 640 `root:kidtube` |
-| `/var/backups/kidtube` | nightly database dumps, mode 700 `postgres` |
-| `deploy/` in the repo | every file this runbook installs |
-
-You need: the VPS with root or sudo access, a domain with an **A (and AAAA, if the VPS has IPv6) record pointing at the
-VPS** before step 7, and an SSH key pair on your workstation (`ssh-keygen -t ed25519` if you have none).
+| `KIDTUBE_DIR` (`/opt/kidtube`) | `src/` code copy (`src.prev` = previous), `venv/`, `constraints.txt`, `VERSION` |
+| `/etc/kidtube/kidtube.env` | all app settings and secrets, **mode 0600 root:root** |
+| `/etc/nginx/sites-available/kidtube.conf` | the site; symlink in `sites-enabled/` |
+| `/var/log/nginx/kidtube.access.log`, `kidtube.error.log` | nginx logs for this site only |
+| `/var/backups/kidtube` | nightly `pg_dump` files, mode 700 `postgres` |
+| `deploy/` in the repo | everything this runbook installs |
 
 ---
 
-## 1. SSH key login, a non-root sudo user, no password login
+## 1. Prerequisites
 
-First login is as root (or the image's default user). Create your admin user:
+* **DNS**: an **A record** (and AAAA only if the VPS has working IPv6) for `KIDTUBE_DOMAIN` pointing at the VPS. Check: `dig +short kidtube.yourdomain.org`.
+* **Ports 80 and 443** reachable from the internet (they already are if nginx serves other sites; port 80 is needed for certificate issuing **and** renewal).
+* Root/sudo access. nginx and PostgreSQL already installed and running.
+* Packages (installing missing ones does not touch running services):
+  ```bash
+  sudo apt install -y python3 python3-venv rsync curl git openssl certbot
+  ```
+  Python 3.10 or newer (24.04 has 3.12). `psql` and `pg_dump` must exist (`postgresql-client` or the server package).
+* The system clock must be synchronised (`timedatectl`): token expiry depends on it.
 
-```bash
-adduser admin                      # choose any name; set a password (sudo will ask for it)
-usermod -aG sudo admin
-```
-
-On your workstation, install your public key for that user and test it **in a new terminal**:
-
-```bash
-ssh-copy-id admin@api.example.com   # or the VPS IP address, if DNS is not ready yet
-ssh admin@api.example.com           # must log in without asking for the account password
-sudo whoami                         # must print: root
-```
-
-Only now turn off password and root login. Keep your working session open until the test at the end succeeds:
+## 2. Copy the code
 
 ```bash
-sudo tee /etc/ssh/sshd_config.d/10-kidtube-hardening.conf >/dev/null <<'EOF'
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-PermitRootLogin no
-EOF
-sudo sshd -t && sudo systemctl restart ssh
-sudo sshd -T | grep -iE '^(passwordauthentication|permitrootlogin|kbdinteractiveauthentication)'   # all "no"
-```
-
-(`10-` sorts before cloud-init's `50-cloud-init.conf`; sshd uses the first value it reads, so this file wins.)
-In a **second new terminal** confirm `ssh admin@api.example.com` still works. From now on work as `admin`.
-
-## 2. Packages
-
-```bash
-sudo apt update && sudo apt full-upgrade -y
-sudo apt install -y ufw fail2ban nginx certbot python3 python3-venv rsync curl git unattended-upgrades
-sudo dpkg-reconfigure -plow unattended-upgrades     # answer Yes: automatic security updates
-timedatectl | grep -E 'System clock synchronized|NTP service'    # both "yes"/"active": token expiry depends on the clock
-```
-
-Python is the system one (3.12 on 24.04). `requires-python` in `backend/pyproject.toml` is `>=3.10`, so 3.12 is fine.
-`nginx` starts immediately with Ubuntu's default site on port 80; step 7 relies on that for the certificate.
-
-Get the code onto the server, in your home directory (this checkout is only the *source*; deploy.sh copies it to `/opt/kidtube`):
-
-```bash
-git clone <your-repository-url> ~/kidtube          # private repo: add a read-only deploy key first
-# or, from your workstation, without git on the server:
-#   rsync -a --exclude .venv --exclude .git --exclude __pycache__ ./ admin@api.example.com:kidtube/
+git clone <your-repository-url> ~/kidtube      # private repository: add a read-only deploy key first
 cd ~/kidtube
 ```
 
-## 3. Firewall and fail2ban
+(This checkout is only the source; `deploy.sh` copies `backend/` to `KIDTUBE_DIR/src`.)
 
-Make sure the SSH rule exists before the firewall is switched on (the script does that in order). If SSH listens on a
-port other than 22, run it as `sudo SSH_PORT=2222 deploy/firewall/ufw.sh`.
-
-```bash
-sudo deploy/firewall/ufw.sh
-sudo ufw status verbose            # allow: OpenSSH, 80/tcp, 443/tcp (v4 and v6); default: deny incoming
-
-sudo install -m 644 deploy/firewall/fail2ban-sshd.local /etc/fail2ban/jail.d/kidtube-sshd.local
-sudo systemctl enable --now fail2ban && sudo systemctl restart fail2ban
-sudo fail2ban-client status sshd   # "Currently banned" appears here when someone guesses wrongly
-```
-
-Add your own fixed IP to `ignoreip` in that file if you have one. PostgreSQL is never opened in the firewall (step 4
-also makes it listen on localhost only).
-
-## 4. PostgreSQL
-
-**Option A: Ubuntu's package** (PostgreSQL 16 on 24.04, security updates through `apt`):
+## 3. Configure `deploy/deploy.env`
 
 ```bash
-sudo apt install -y postgresql
+cp deploy/deploy.env.example deploy/deploy.env       # git-ignored: it holds your domain and e-mail
+nano deploy/deploy.env
 ```
 
-**Option B: PGDG** (the PostgreSQL project's repository, newer majors; the development suite was run on 18):
+Fill in **`KIDTUBE_DOMAIN`** and **`LETSENCRYPT_EMAIL`**. The defaults are `KIDTUBE_USER=kidtube`, `KIDTUBE_PORT=8001`,
+`KIDTUBE_DIR=/opt/kidtube`, database and role `kidtube`, `KIDTUBE_PG_PORT=5432` (`pg_lsclusters` shows the right port of the cluster
+you want), certificates by the `webroot` method. Values are validated; a typo or unknown key stops the scripts.
+
+## 4. Look for conflicts (read-only)
 
 ```bash
-sudo apt install -y postgresql-common
-sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh      # adds the repository
-sudo apt install -y postgresql-18                                  # or another current major
+sudo deploy/check.sh
 ```
 
-Either way, find the major version and apply the settings. Listening only on localhost and SCRAM passwords:
+It changes nothing and prints `OK` / `NOTE` / `CONFLICT` / `UNKNOWN` lines: port in use, user/role/database/`server_name` already present,
+DNS, nginx/certbot/PostgreSQL found, whether PostgreSQL listens beyond localhost (reported, **never changed**), whether the existing `pg_hba.conf`
+already accepts a password login from 127.0.0.1 for the new role. Fix every `CONFLICT` (usually by changing a value in `deploy.env`) until it ends with
+*No conflicts found*. Run it without `sudo` to see what it can check unprivileged (the PostgreSQL checks are then `UNKNOWN`).
+
+## 5. Install (asks before every system change)
 
 ```bash
-pg_lsclusters                                  # e.g. "16  main  5432  online" -> major = 16, port = 5432
-PGV=16                                         # <- set to YOUR major version
-sudo install -m 644 -o root -g root deploy/postgres/99-kidtube.conf /etc/postgresql/$PGV/main/conf.d/99-kidtube.conf
-sudo systemctl restart postgresql
-sudo ss -ltnp | grep 5432                      # only 127.0.0.1:5432 and [::1]:5432, never 0.0.0.0 or [::]
+sudo deploy/install.sh --dry-run     # optional: prints each step, changes nothing
+sudo deploy/install.sh
 ```
 
-Create the role and database (no superuser, no CREATEDB) and set its password interactively:
+Every step explains what it will change and waits for `y` (anything else skips it). It is **idempotent**: run it again after a failure or after
+skipping a step; finished steps are detected and skipped. It never restarts nginx or PostgreSQL; nginx is only **reloaded**, after `nginx -t` passed.
 
+| Step | What happens |
+|---|---|
+| 1 | system user `KIDTUBE_USER` (no login shell, no home), `KIDTUBE_DIR`, `/etc/kidtube` |
+| 2 | PostgreSQL role `KIDTUBE_DB_USER` (LOGIN only: **no superuser, no CREATEDB, no CREATEROLE**) with a **generated password** (only its SCRAM hash is sent to the server) and database `KIDTUBE_DB_NAME` owned by it, connectable only by it. Writes **`/etc/kidtube/kidtube.env`** (0600) with a generated `JWT_SECRET`, `DATABASE_URL` (127.0.0.1 + the password), `APP_ENV=prod`, `ENABLE_DOCS=false`, `TRUST_PROXY_HEADERS=true`, `ALLOW_REGISTRATION=true` (**for the first run only**, step 8). Then it tests the password login over 127.0.0.1; see "pg_hba" below if it fails |
+| 3 | runs `deploy/deploy.sh`: copies the code, builds `venv` with the pinned dependencies (non-editable), installs `kidtube.service` and the backup timer, **runs `alembic upgrade head` as `KIDTUBE_USER`**, starts the service on `127.0.0.1:KIDTUBE_PORT`, checks `/health` (200), `/children` (401), `/docs` (404) |
+| 4 | the HTTP-only nginx site (`server_name` = your domain **only**, no `default_server`) that serves just the certbot challenge; `nginx -t`; **reload** |
+| 5 | `certbot certonly` for **this domain only** (webroot `KIDTUBE_WEBROOT`, or `KIDTUBE_CERT_METHOD=nginx`); no `--redirect`, no other site touched; the renewal reload hook is stored with this certificate only |
+| 6 | the full HTTPS site; `nginx -t`; **reload** |
+
+### What the nginx site does (`deploy/nginx/kidtube.conf`)
+One standalone file for **one** `server_name`: HTTP redirects to HTTPS; HTTPS proxies to `127.0.0.1:KIDTUBE_PORT` with `X-Forwarded-For` overwritten by the
+real peer address and `X-Forwarded-Proto` (this is what `TRUST_PROXY_HEADERS=true` relies on); `client_max_body_size 256k`, short client and 30 s proxy timeouts
+(300 s for `/sync/` which verifies new links); security headers (`nosniff`, `X-Frame-Options`, `Referrer-Policy`, a restrictive CSP; HSTS is a commented-out option);
+`server_tokens off` for this server only; separate logs `kidtube.access.log` / `kidtube.error.log` (Ubuntu's logrotate already rotates `/var/log/nginx/*.log`).
+Only the API's path prefixes are forwarded, everything else (including `/docs`, `/openapi.json`) is 404. It also rate-limits `/auth/` and `/devices/pair`.
+TLS protocols/ciphers and HTTP/2 are **not** set here: they belong to the shared listen socket and stay as your existing nginx configuration has them.
+IPv6 `listen` lines are added only if nginx already listens on IPv6 (`KIDTUBE_NGINX_IPV6=auto`).
+
+### Testing and rolling back nginx changes by hand
 ```bash
-sudo -u postgres psql -v ON_ERROR_STOP=1 -f deploy/postgres/setup.sql
-openssl rand -hex 24                           # copy this: it is the database password (step 5)
-sudo -u postgres psql -c '\password kidtube'   # paste it twice
+sudo nginx -t                                   # ALWAYS before a reload; a failing test changes nothing
+sudo systemctl reload nginx                     # reload, never restart: other sites keep serving
+# roll back this site completely (other sites untouched):
+sudo rm /etc/nginx/sites-enabled/kidtube.conf && sudo nginx -t && sudo systemctl reload nginx
 ```
+`install.sh` restores the previous site file and symlink by itself when `nginx -t` fails. To change the site later, edit `deploy/nginx/kidtube.conf`, then run
+`sudo deploy/install.sh` (step 6 shows a diff first) or render by hand: `sudo bash -c '. deploy/lib.sh; load_config; render deploy/nginx/kidtube.conf > /etc/nginx/sites-available/kidtube.conf' && sudo nginx -t && sudo systemctl reload nginx`.
 
-Check `pg_hba.conf` uses `scram-sha-256` and nothing weaker (`deploy/postgres/pg_hba.conf.example` shows the shape; the
-default of both Ubuntu and PGDG already matches it):
+### Certificates
+`sudo certbot renew --dry-run` must succeed (renewal needs port 80, DNS still pointing here, and `KIDTUBE_WEBROOT`). `systemctl list-timers certbot.timer` shows the schedule (Ubuntu's package).
+Alternative to the webroot method: `KIDTUBE_CERT_METHOD=nginx` uses certbot's nginx plugin (`certbot certonly --nginx -d DOMAIN`), which briefly edits and reloads nginx for that domain.
 
-```bash
-sudo -u postgres psql -c "select line_number, type, database, user_name, address, auth_method from pg_hba_file_rules"
-psql -h 127.0.0.1 -U kidtube kidtube -c 'select current_user'     # asks for the password: proves TCP + scram works
+### pg_hba (only if step 2 says the login failed)
+The service connects to `127.0.0.1` as `KIDTUBE_DB_USER` with a password. Ubuntu's default `pg_hba.conf` already contains
+`host all all 127.0.0.1/32 scram-sha-256`, so nothing is needed. If your file is stricter, add **only this line**, **above** any broader rule that would reject it:
 ```
-
-If the `auth_method` column shows `trust`, `md5` or `password` on any line, edit
-`/etc/postgresql/$PGV/main/pg_hba.conf` to match the example and `sudo systemctl reload postgresql`.
-
-## 5. Environment file and first deploy
-
-Generate the JWT secret (once; see "things that will bite you"):
-
-```bash
-python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+host    kidtube    kidtube    127.0.0.1/32    scram-sha-256
 ```
+then `sudo systemctl reload postgresql` (reload, not restart) and run `install.sh` again. The scripts never edit `pg_hba.conf` themselves.
+(Alternative without a password: unix socket + peer authentication needs an OS user and role with the same name and `DATABASE_URL=postgresql+psycopg://kidtube@/kidtube?host=/var/run/postgresql`; the default rules allow it, but the service user must be able to reach the socket.)
 
-First run of the deploy script creates `/etc/kidtube/kidtube.env` (mode 640, `root:kidtube`) from the example and stops
-so you can fill it in:
+## 6. The environment file
 
-```bash
-sudo deploy/deploy.sh                          # prints "Created /etc/kidtube/kidtube.env ... Edit it now" and exits
-sudo nano /etc/kidtube/kidtube.env
-#   JWT_SECRET=<the generated secret>
-#   DATABASE_URL=postgresql+psycopg://kidtube:<the database password>@127.0.0.1:5432/kidtube     (change 5432 if pg_lsclusters said otherwise)
-#   leave APP_ENV=prod, TRUST_PROXY_HEADERS=true, ALLOW_REGISTRATION=true (for now), DEFAULT_TIMEZONE=Asia/Karachi
-ls -l /etc/kidtube/kidtube.env                 # -rw-r----- root kidtube
-sudo deploy/deploy.sh                          # the real deploy
-```
+`/etc/kidtube/kidtube.env` is created by step 2 (never overwritten afterwards). Mode **0600 root:root** (systemd reads it as root). Check: `sudo ls -l /etc/kidtube/kidtube.env`.
+Keys: `APP_ENV=prod`, `JWT_SECRET` (generated; **back it up** - changing it logs every parent out), `DATABASE_URL`, `ENABLE_DOCS=false`, `TRUST_PROXY_HEADERS=true`, `ALLOW_REGISTRATION=true` (until step 8),
+`DEFAULT_TIMEZONE=Asia/Karachi` and the rate-limit knobs. The format is `KEY=value` (systemd syntax: no quotes, no trailing comments). After editing: `sudo systemctl restart kidtube`.
 
-The script stops at the first error, refuses to run while a `CHANGE_ME` placeholder is left, never prints secrets, and
-on failure prints how to roll back. It: creates the `kidtube` system user, copies the code to `/opt/kidtube/src`, builds
-`/opt/kidtube/venv` with the pinned dependencies and a **non-editable** install, installs the systemd units (service,
-backup service and timer), runs `alembic upgrade head`, restarts the service, and checks `/health` on
-`127.0.0.1:8000`, that `/children` answers 401 and that `/docs` is off.
+## 7. The service
 
+`kidtube.service` (rendered from `deploy/kidtube.service`): dedicated unprivileged user, uvicorn on **`127.0.0.1:KIDTUBE_PORT` only**, **`--workers 1`** (the login/pairing rate limiter lives in process memory),
+`--no-proxy-headers` (only the app reads `X-Forwarded-For`, via `TRUST_PROXY_HEADERS`), `Restart=on-failure`, and hardening: `NoNewPrivileges`, `ProtectSystem=strict`, `ProtectHome`, `PrivateTmp`,
+`PrivateDevices`, no capabilities, syscall filter, `MemoryMax=512M`.
 ```bash
 systemctl status kidtube --no-pager
-curl -s http://127.0.0.1:8000/health          # {"status":"ok"}
+curl -s http://127.0.0.1:8001/health            # {"status":"ok"}   (use your KIDTUBE_PORT)
 ```
 
-## 6. Proxy headers: what the app does with `X-Forwarded-For`
+## 8. Create the first parent, then close registration
 
-Two things could rewrite the client address: uvicorn's own proxy-header handling and the app's `TRUST_PROXY_HEADERS`.
-The service runs uvicorn with **`--no-proxy-headers`** so only the app does it:
-
-* The app needs the real client IP for the login and pairing rate limits. With `TRUST_PROXY_HEADERS=true` it takes the
-  **last** entry of `X-Forwarded-For`. nginx **overwrites** that header with the connection's real address
-  (`proxy_set_header X-Forwarded-For $remote_addr;`), so the header contains exactly one value and a client cannot
-  prepend a fake one.
-* If uvicorn also processed the header, the same information would be applied twice by two independent switches, and
-  turning one off would silently change what the other sees. One switch is easier to reason about.
-* The scheme (`https`) is not needed by the app. The only visible effect would be absolute redirect URLs, which nginx
-  fixes with `proxy_redirect`.
-* uvicorn listens on `127.0.0.1` only, so nobody can reach it without passing through nginx. That is what makes
-  `TRUST_PROXY_HEADERS=true` safe.
-
-## 7. nginx and certbot
-
-DNS must already point `api.example.com` at this server (`dig +short api.example.com`). Ubuntu's default nginx site is
-still active on port 80 and serves `/var/www/html`, which is all certbot needs for the first certificate:
+`ALLOW_REGISTRATION=true` exists only for this step. Type the password at the prompt (it stays out of your shell history; avoid `"` and `\`):
 
 ```bash
-sudo certbot certonly --webroot -w /var/www/html -d api.example.com --agree-tos -m you@example.com
-```
-
-Install the site (this substitutes your domain, replacing every `api.example.com`) and take the default site out:
-
-```bash
-sed 's/api\.example\.com/YOUR.DOMAIN/g' deploy/nginx/kidtube.conf | sudo tee /etc/nginx/sites-available/kidtube >/dev/null
-sudo ln -sf /etc/nginx/sites-available/kidtube /etc/nginx/sites-enabled/kidtube
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-Reload nginx after every renewal, and check that renewal works **now**, not in 60 days:
-
-```bash
-sudo install -m 755 deploy/certbot/reload-nginx.sh /etc/letsencrypt/renewal-hooks/deploy/reload-nginx
-systemctl list-timers certbot.timer --no-pager      # a next run is scheduled (Ubuntu's apt certbot)
-sudo certbot renew --dry-run                        # "Congratulations, all simulated renewals succeeded"
-```
-
-The nginx site only forwards the paths the API has (`/health`, `/auth/`, `/children`, `/videos`, `/plan-items`,
-`/events`, `/devices`, `/sync/`, `/reports`) and answers 404 to everything else, so `/docs`, `/redoc` and
-`/openapi.json` are unreachable even if the app flag were wrong. It also limits `/auth/` (60 requests/minute/IP) and
-`/devices/pair` (30/minute/IP), far above what the app's own lockout (5 failures per 10 minutes) allows.
-
-## 8. Create the first parent account, then close registration
-
-`ALLOW_REGISTRATION=true` is only for this step. Type the password at the prompt (it stays out of your shell history;
-do not use `"` or `\` in it, it goes into JSON):
-
-```bash
+DOMAIN=kidtube.yourdomain.org
 read -rp 'Parent e-mail: ' EMAIL
 read -rsp 'Password (min 8 chars): ' PW; echo
-curl -sS -X POST https://api.example.com/auth/register -H 'Content-Type: application/json' \
+curl -sS -X POST https://$DOMAIN/auth/register -H 'Content-Type: application/json' \
   -d "$(printf '{"email":"%s","password":"%s","family_name":"Our Family","timezone":"Asia/Karachi"}' "$EMAIL" "$PW")"
-# -> {"parent_id":"...","family_id":"...","email":"..."}        (HTTP 201)
-curl -sS -X POST https://api.example.com/auth/login -H 'Content-Type: application/json' \
-  -d "$(printf '{"email":"%s","password":"%s"}' "$EMAIL" "$PW")" | cut -c1-60      # {"access_token":"eyJ...  = it works
+# -> {"parent_id":"...","family_id":"...","email":"..."}   (HTTP 201)
+curl -sS -X POST https://$DOMAIN/auth/login -H 'Content-Type: application/json' \
+  -d "$(printf '{"email":"%s","password":"%s"}' "$EMAIL" "$PW")" | cut -c1-40        # {"access_token":"eyJ...  = login works
 unset PW
 ```
 
-**Now close registration, or anyone who finds the URL can create a family on your server:**
-
+**Now close registration**, or anyone who finds the URL can create a family:
 ```bash
 sudo sed -i 's/^ALLOW_REGISTRATION=.*/ALLOW_REGISTRATION=false/' /etc/kidtube/kidtube.env
 sudo systemctl restart kidtube
-curl -sS -X POST https://api.example.com/auth/register -H 'Content-Type: application/json' \
-  -d '{"email":"x@example.com","password":"12345678"}'          # must say: {"detail":"Registration is disabled"}
+curl -sS -X POST https://$DOMAIN/auth/register -H 'Content-Type: application/json' \
+  -d '{"email":"x@example.com","password":"12345678"}'        # must say: {"detail":"Registration is disabled"}
 ```
 
 ## 9. Smoke test
 
-From any machine with `curl` (your workstation is best, because it tests the real public path):
-
+From your workstation (tests the real public path):
 ```bash
-deploy/smoke_test.sh https://api.example.com
+deploy/smoke_test.sh https://kidtube.yourdomain.org
 ```
+PASS/FAIL for `/health` over HTTPS with a valid certificate, HTTP redirecting to HTTPS, `/docs` `/redoc` `/openapi.json` not exposed, unauthenticated `/children` = 401,
+unknown path = 404, security headers. Optional HSTS: remove the `#` before `add_header Strict-Transport-Security` in `deploy/nginx/kidtube.conf`, rerun install step 6, and run the test again.
 
-It prints PASS/FAIL for: `/health` over HTTPS (with a valid certificate), HTTP redirecting to HTTPS, `/docs`, `/redoc`
-and `/openapi.json` not exposed, an unauthenticated `/children` being 401, an unknown path being 404, and the
-security headers. When everything passes, turn on HSTS (browsers then refuse plain HTTP for a year, so do this last):
+## 10. Backups and restore
 
-```bash
-sudo sed -i 's/^    #add_header Strict-Transport-Security/    add_header Strict-Transport-Security/' /etc/nginx/sites-available/kidtube
-sudo nginx -t && sudo systemctl reload nginx
-deploy/smoke_test.sh https://api.example.com      # now also reports "PASS  HSTS enabled"
-```
-
-## 10. Backups and a restore test
-
-`deploy.sh` installed a daily timer (03:15 server time) that runs `pg_dump` in custom format into
-`/var/backups/kidtube` (mode 600, kept 14 days, pruned only after a new dump succeeded).
-
+`deploy.sh` installs a timer (`kidtube-backup.timer`, daily 03:15 server time) running `pg_dump` (custom format) into `KIDTUBE_BACKUP_DIR`, mode 600, keeping the **newest 14** (`KIDTUBE_BACKUP_KEEP`);
+old ones are pruned only after a new dump succeeded and was verified with `pg_restore --list`.
 ```bash
 systemctl list-timers kidtube-backup.timer --no-pager
-sudo systemctl start kidtube-backup.service          # run one now
-journalctl -u kidtube-backup --no-pager -n 20
-sudo ls -l /var/backups/kidtube                      # kidtube-<UTC timestamp>.dump
+sudo systemctl start kidtube-backup.service                 # a dump right now
+journalctl -u kidtube-backup -n 20 --no-pager
+sudo ls -l /var/backups/kidtube                              # kidtube-<UTC timestamp>.dump
 ```
 
-**Test that a dump really restores** (into a scratch database named `kidtube_restore_test`, dropped afterwards; the live
-database is not touched). Do this once now and after any big change:
-
+**Test restore into a scratch database** (`<KIDTUBE_DB_NAME>_restore_test`; refuses to run if a database of that name already exists, drops only what it created; the live database is not touched):
 ```bash
-sudo -u postgres /usr/local/sbin/kidtube-restore-test                    # newest dump
-sudo -u postgres /usr/local/sbin/kidtube-restore-test /var/backups/kidtube/kidtube-20260101T031500Z.dump
-# ends with: PASS: dump restores cleanly   (it prints the alembic revision and a row count per table)
+sudo -u postgres /usr/local/sbin/kidtube-restore-test                       # newest dump
+sudo -u postgres /usr/local/sbin/kidtube-restore-test /var/backups/kidtube/kidtube-<timestamp>.dump
+# ends with: PASS: dump restores cleanly   (prints the alembic revision and a row count per table)
 ```
+Do it once now and after big changes.
 
-### Restore (disaster recovery)
-
-On the same server, replacing the live database with a dump:
-
+**Restore (disaster recovery)**, replacing the live database from a dump:
 ```bash
 sudo systemctl stop kidtube
-sudo -u postgres psql -c 'DROP DATABASE kidtube WITH (FORCE)'
-sudo -u postgres psql -v ON_ERROR_STOP=1 -f deploy/postgres/setup.sql        # recreates the empty database (the role keeps its password)
-sudo -u postgres pg_restore --exit-on-error --dbname=kidtube /var/backups/kidtube/kidtube-<timestamp>.dump
-sudo systemctl start kidtube && curl -s http://127.0.0.1:8000/health
+sudo -u postgres psql -p 5432 -c 'DROP DATABASE kidtube WITH (FORCE)'                     # your KIDTUBE_DB_NAME / port
+sudo -u postgres psql -p 5432 -c 'CREATE DATABASE kidtube OWNER kidtube ENCODING '"'"'UTF8'"'"' TEMPLATE template0'
+sudo -u postgres pg_restore -p 5432 --exit-on-error --dbname=kidtube /var/backups/kidtube/kidtube-<timestamp>.dump
+sudo systemctl start kidtube && curl -s http://127.0.0.1:8001/health
 ```
+On a **new server**: run steps 1-5 first (role, env file), copy the dump over, then the same commands; run `sudo deploy/deploy.sh` afterwards if the code is newer than the dump.
+Copy `/var/backups/kidtube` **off the machine** regularly (the dumps hold e-mail addresses, password hashes and children's names; keep copies private):
+`ssh admin@host 'sudo tar -C /var/backups/kidtube -cf - .' | tar -xf - -C ~/kidtube-backups`.
 
-On a **new server**: do steps 1 to 5 first (so the `kidtube` role, its password and `/etc/kidtube/kidtube.env` exist),
-copy the dump over, skip the DROP, and run the last three commands. The dump contains the schema revision; run
-`sudo deploy/deploy.sh` afterwards if the code is newer than the dump.
-
-### Off-machine copies
-
-A backup on the same disk does not survive losing the VPS. Pull `/var/backups/kidtube` to another machine regularly,
-for example from your workstation (needs sudo without a password prompt for this command, or copy with a root-owned
-helper of your own):
-
-```bash
-mkdir -p ~/kidtube-backups && ssh admin@api.example.com 'sudo tar -C /var/backups/kidtube -cf - .' | tar -xf - -C ~/kidtube-backups
-```
-
-The dumps hold parent e-mail addresses, password hashes and children's names: keep the copies private.
-
-## 11. Updating
+## 11. Updating the app
 
 ```bash
 cd ~/kidtube && git pull
-sudo deploy/deploy.sh                 # or: sudo deploy/deploy.sh --pull   (does the git pull as you)
-deploy/smoke_test.sh https://api.example.com
+sudo deploy/deploy.sh                # or: sudo deploy/deploy.sh --pull
+deploy/smoke_test.sh https://kidtube.yourdomain.org
 ```
-
-`deploy.sh` takes a database backup first, keeps the previous code in `/opt/kidtube/src.prev`, applies migrations,
-restarts, and checks health. `--skip-backup` skips the backup. If anything fails it prints the exact rollback commands
-(previous code, `alembic downgrade <revision>`, or restore the pre-deploy dump). It is safe to run again after fixing the cause.
-
-Dependency versions are pinned in `deploy/constraints.txt`. They only change when you change that file (see its header);
-security fixes in Python packages are therefore a deliberate update, not automatic.
-
-If the nginx site changed, `sudo nginx -t && sudo systemctl reload nginx` after copying it as in step 7 (deploy.sh does
-not touch nginx).
+`deploy.sh` takes a database backup first (`--skip-backup` to skip), keeps the previous code in `KIDTUBE_DIR/src.prev`, re-renders the units, **applies migrations as `KIDTUBE_USER`**,
+restarts **only the kidtube service** and checks health. On failure it prints the exact rollback commands; it is safe to run again. It never touches nginx, certbot or PostgreSQL.
+Dependency versions are pinned in `deploy/constraints.txt`. If `deploy/nginx/kidtube.conf` changed (for example a new API route prefix), re-run `sudo deploy/install.sh` (step 6).
 
 ## 12. Logs
 
 ```bash
-journalctl -u kidtube -f                       # the API (follow); add -n 200 --no-pager for the last lines
+journalctl -u kidtube -f                                  # the API; add -n 200 --no-pager for the last lines
 journalctl -u kidtube --since "1 hour ago" -p warning
-sudo tail -f /var/log/nginx/access.log /var/log/nginx/error.log     # who called what (429 = the nginx rate limit)
-journalctl -u kidtube-backup -n 30 --no-pager  # the nightly backup
-sudo fail2ban-client status sshd               # banned SSH addresses
-systemctl status kidtube --no-pager            # restarts, memory
+sudo tail -f /var/log/nginx/kidtube.access.log /var/log/nginx/kidtube.error.log     # 429 = the nginx rate limit
+journalctl -u kidtube-backup -n 30 --no-pager
 ```
+uvicorn's access log is off (nginx has it, with real client addresses). Logs can hold request paths and ids, never passwords or tokens.
 
-uvicorn's access log is off (nginx has it, with real client addresses). Logs can contain request paths and ids, never
-passwords or tokens (they travel in headers and bodies).
+## 13. Rollback and uninstall
 
-## 13. Optional: run the PostgreSQL test suite on the VPS
-
-Runs all tests on the **server's** PostgreSQL version and Python, against a throwaway database. The test fixtures wipe
-the database they are pointed at, and pytest refuses to start unless its name ends in `_test`. Never use the production database.
-
-```bash
-sudo -u postgres psql -c "CREATE ROLE kidtube_test LOGIN CREATEDB PASSWORD 'test-only-pw'"     # CREATEDB: one migration test makes a scratch database
-sudo -u postgres psql -c "CREATE DATABASE kidtube_test OWNER kidtube_test"
-
-cd ~/kidtube/backend
-python3 -m venv /tmp/kidtube-test-venv
-/tmp/kidtube-test-venv/bin/pip install -q -c ../deploy/constraints.txt '.[dev]'
-TEST_DATABASE_URL=postgresql+psycopg://kidtube_test:test-only-pw@localhost:5432/kidtube_test \
-  /tmp/kidtube-test-venv/bin/pytest -q                 # about 3 minutes; expect "1531 passed"
-
-sudo -u postgres psql -c "DROP DATABASE IF EXISTS kidtube_test" -c "DROP DATABASE IF EXISTS kidtube_mig_test" -c "DROP ROLE kidtube_test"
-rm -rf /tmp/kidtube-test-venv
-```
-
-(Use port 5433 or whatever `pg_lsclusters` shows if it is not 5432.)
+* **Bad deploy**: follow the commands `deploy.sh` printed (previous code in `src.prev`, `alembic downgrade <revision>`, or restore the pre-deploy dump).
+* **Take the site offline, keep everything**: `sudo rm /etc/nginx/sites-enabled/kidtube.conf && sudo nginx -t && sudo systemctl reload nginx` and `sudo systemctl disable --now kidtube`.
+* **Remove KidTube entirely** (destructive; take a last dump first). Nothing here touches other sites or databases:
+  ```bash
+  sudo systemctl disable --now kidtube kidtube-backup.timer
+  sudo rm /etc/systemd/system/kidtube.service /etc/systemd/system/kidtube-backup.service /etc/systemd/system/kidtube-backup.timer && sudo systemctl daemon-reload
+  sudo rm -f /etc/nginx/sites-enabled/kidtube.conf /etc/nginx/sites-available/kidtube.conf && sudo nginx -t && sudo systemctl reload nginx
+  sudo certbot delete --cert-name kidtube.yourdomain.org
+  sudo -u postgres psql -c 'DROP DATABASE kidtube' -c 'DROP ROLE kidtube'
+  sudo rm -rf /opt/kidtube /etc/kidtube /var/backups/kidtube /var/www/kidtube-acme /usr/local/sbin/kidtube-backup /usr/local/sbin/kidtube-restore-test
+  sudo userdel kidtube
+  ```
 
 ---
 
 ## Things that will bite you
 
-* **One worker only.** The login and pairing rate limiters live in the memory of a single process. With two workers
-  (or two instances) each counts separately: attackers get N times the guesses and lockouts become random. The unit file
-  says `--workers 1`; do not "scale up" by changing it. To scale you first need a shared limiter store.
-* **`TRUST_PROXY_HEADERS` must match the proxy setup.** Behind this nginx it must be `true`. If it were `false`, every
-  request would look like it comes from 127.0.0.1, so five wrong passwords from anyone would lock out the whole family.
-  If you ever let clients reach uvicorn directly (don't: it binds to 127.0.0.1), it must be `false`, because clients
-  could then forge the header.
-* **Keep `JWT_SECRET` stable.** Changing it invalidates every access and refresh token: all parents are logged out and
-  must sign in again. Kid devices keep working (their own tokens are separate). Back it up with the env file; losing it
-  is the same as changing it.
-* **Close registration** after creating the first parent (`ALLOW_REGISTRATION=false`, step 8).
-* **Certificate renewal** needs port 80 open, `/var/www/html` present and DNS still pointing here. Check
-  `sudo certbot renew --dry-run` after any change to nginx, the firewall or DNS, and look at
-  `systemctl list-timers certbot.timer` once in a while. Let's Encrypt certificates last 90 days. Expiry makes the
-  Android app fail with certificate errors.
-* **New API routes need an nginx line.** The site only forwards a fixed list of path prefixes (step 7). If a future
-  version adds a top-level route (say `/notifications`), add it to the regex `location` in
-  `deploy/nginx/kidtube.conf`, or nginx answers 404 for it. Run `deploy/smoke_test.sh` after updates.
-* **PostgreSQL major-version upgrades are not automatic.** Ubuntu security updates stay on the same major (16.x).
-  A new major arrives through `do-release-upgrade` or by installing a new PGDG package, and it creates a *second*
-  cluster (often on port 5433) next to the old one. Take a backup first (`sudo systemctl start kidtube-backup.service`),
-  use `pg_upgradecluster` (or dump and restore into the new cluster), then update `DATABASE_URL` (port) in the env file,
-  and the `conf.d` path (`/etc/postgresql/<major>/main/conf.d/`). Do not delete the old cluster until the
-  restore test and the smoke test pass. A dump from major N can be restored into N or newer, not older.
-* **A new Ubuntu release or a new system Python breaks the virtualenv.** Recreate it: `sudo rm -rf /opt/kidtube/venv &&
-  sudo deploy/deploy.sh`. Dependency pins were tested on Python 3.12.
-* **Backups on the same disk are not backups.** Copy them off the machine (step 10) and run the restore test now and then.
-* **The firewall can lock you out.** Keep a working SSH session open when changing `ufw` or `sshd` settings, and test
-  with a second session before closing the first.
-* **Disk and memory.** The service is capped at 512 MB (`MemoryMax` in the unit); if `systemctl status kidtube` shows
-  it was killed ("oom-kill"), raise it. Dumps pile up for 14 days; `df -h /var/backups` should stay far from full.
-* **Backup time is server local time**; `timedatectl` shows the zone. Day boundaries inside the app always use the
-  family timezone (`Asia/Karachi`), independent of the server.
+* **One worker only.** The rate limiters are in process memory; two workers = N times the guesses. The unit says `--workers 1`; to scale you first need a shared limiter store.
+* **`TRUST_PROXY_HEADERS` must match the proxy.** Behind this nginx: `true`. If it were `false`, every request would look like 127.0.0.1 and five wrong passwords from anyone would lock out the family. Never expose uvicorn directly (it binds to 127.0.0.1).
+* **Keep `JWT_SECRET` stable** and back it up with the env file; kid devices are unaffected by a change, parents must sign in again.
+* **Close registration** after the first parent (step 8).
+* **Certificate renewal** needs port 80, DNS and `KIDTUBE_WEBROOT`. Another site's `return 301`/catch-all on port 80 that matches your host name would break it; this site's own server block answers the challenge. Expiry makes the Android app fail with certificate errors.
+* **New API routes need an nginx line** (the regex `location` in `deploy/nginx/kidtube.conf`, then install step 6). Run `smoke_test.sh` after updates.
+* **Another site wins if it claims the same `server_name`** or if nginx has a conflicting `listen` option: `check.sh` and `nginx -t` report these; fix the name, never "solve" it with `default_server`.
+* **PostgreSQL major upgrades are not automatic**: a new cluster appears (often on another port); update `KIDTUBE_PG_PORT` and the port in `DATABASE_URL`, take a dump first, run the restore test.
+* **A new Ubuntu release or system Python breaks the virtualenv**: `sudo rm -rf /opt/kidtube/venv && sudo deploy/deploy.sh`.
+* **Backups on the same disk are not backups**: copy them off the machine.
+* **Memory**: `MemoryMax=512M` in the unit; raise it if `systemctl status kidtube` shows an oom-kill.
+* **Backup time is server local time**; day boundaries inside the app always use the family timezone.
 
-## What was and was not verified before this was written
+## What was and was not verified
 
-Verified on a development machine, **not on a real VPS**:
+Verified on a development machine: the backend test suites (SQLite and PostgreSQL) and, earlier, a clean non-editable install under Python 3.12 with the pinned dependencies and a uvicorn start with the unit's flags;
+`bash -n` on every script; template rendering of every file with sample values (no placeholder left); `deploy/check.sh` and `install.sh --dry-run` (read-only paths) on a machine without nginx.
 
-* Python 3.12.13 with the pinned dependencies (`deploy/constraints.txt`): the whole test suite passes on SQLite (1530
-  passed, 1 skipped) and on PostgreSQL 18 (1531 passed).
-* Installing the project non-editable into a clean 3.12 virtualenv, running `alembic upgrade head` from a copy of
-  `backend/`, and starting uvicorn with exactly the flags of the unit file (`--workers 1 --no-proxy-headers ...`) with
-  `APP_ENV=prod`: `/health` 200; `/docs`, `/redoc`, `/openapi.json` 404; `/children` 401; no `Server` header.
-* The login rate limit keys on the last `X-Forwarded-For` entry (a prepended fake address changes nothing).
-* `shellcheck` 0.11.0 is clean on every script; `systemd-analyze verify` found no syntax problem in the three units
-  (it only complains that the installed paths do not exist on a development machine).
-* `kidtube.env.example` parses the way systemd reads it and passes the app's settings validation.
-
-**Not run**: `nginx -t` on `deploy/nginx/kidtube.conf` (nginx is not installed on the development machine and could not
-be built there). The config targets nginx 1.24 (Ubuntu 24.04). Step 7 runs `sudo nginx -t` before reloading, so a mistake
-shows up there. Also not run: `deploy.sh`, `ufw.sh`, the backup and restore scripts and `smoke_test.sh` against real
-systems, certbot, fail2ban, and PostgreSQL 16 (the 24.04 package). The first real deploy is the test of those.
+**Not run anywhere**: `nginx -t` on the rendered site (nginx is not installed on the development machine; the config uses only long-standing directives), `install.sh` and `deploy.sh` against a real system, certbot, the SCRAM
+password hash against a real PostgreSQL, the backup/restore scripts, `smoke_test.sh`, and the Android release build with signing. The first real run is the test; every step stops on the first error and nginx is only reloaded after `nginx -t`.

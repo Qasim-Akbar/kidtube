@@ -7,8 +7,10 @@
 set -euo pipefail
 cd /   # the caller's working directory (often a home directory) may not be readable by postgres
 
-SCRATCH="kidtube_restore_test"        # fixed on purpose: this is the only database this script ever drops
-DEST="${KIDTUBE_BACKUP_DIR:-/var/backups/kidtube}"
+SCRATCH="@KIDTUBE_DB_NAME@_restore_test"   # fixed on purpose: this is the only database this script ever drops
+DEST="${KIDTUBE_BACKUP_DIR:-@KIDTUBE_BACKUP_DIR@}"
+PGPORT="${PGPORT:-@KIDTUBE_PG_PORT@}"
+export PGPORT
 
 dump="${1:-}"
 if [ -z "$dump" ]; then
@@ -18,10 +20,16 @@ fi
 [ -n "$dump" ] && [ -s "$dump" ] || { echo "FAIL: no dump file found (looked in $DEST)" >&2; exit 1; }
 echo "Restoring $dump into scratch database $SCRATCH ..."
 
-cleanup() { dropdb --if-exists "$SCRATCH" > /dev/null 2>&1 || true; }
+# Never drop something we did not create: a pre-existing database with this name is somebody else's.
+if [ "$(psql --no-psqlrc -tA -d postgres -c "select 1 from pg_database where datname='$SCRATCH'")" = 1 ]; then
+    echo "FAIL: a database named $SCRATCH already exists; drop it yourself if it is a leftover (dropdb $SCRATCH)" >&2
+    exit 1
+fi
+created=0
+cleanup() { if [ "$created" -eq 1 ]; then dropdb --if-exists "$SCRATCH" > /dev/null 2>&1 || true; fi; }
 trap cleanup EXIT
-dropdb --if-exists "$SCRATCH"
 createdb --encoding=UTF8 --template=template0 "$SCRATCH"
+created=1
 
 # --no-owner: the scratch database does not need the application role's ownership.
 pg_restore --no-owner --exit-on-error --dbname="$SCRATCH" "$dump"
